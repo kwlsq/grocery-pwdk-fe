@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useProductStore } from '../../store/productStore';
+import { useLocationStore } from '../../store/locationStore';
 import ProductCard from './ProductCard';
 
 export default function ProductGrid() {
@@ -10,9 +11,25 @@ export default function ProductGrid() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
 
+  // Location
+  const [coords, setCoords] = useState<{ latitude?: number; longitude?: number }>({});
+  
   useEffect(() => {
-    fetchProducts(currentPage, 10, searchTerm, selectedCategory);
-  }, [fetchProducts, currentPage, searchTerm, selectedCategory]);
+    const { coords: initial } = useLocationStore.getState();
+    console.log('Initial coords:', initial);
+    setCoords({ latitude: initial?.userLatitude, longitude: initial?.userLongitude });
+
+    const unsubscribe = useLocationStore.subscribe((state) => {
+      console.log('Location state changed:', state.coords);
+      setCoords({ latitude: state.coords?.userLatitude, longitude: state.coords?.userLongitude });
+    });
+
+    return unsubscribe;
+  }, []);
+
+  useEffect(() => {
+    fetchProducts(currentPage, 10, searchTerm, selectedCategory, '', coords.latitude, coords.longitude, 1000);
+  }, [fetchProducts, currentPage, searchTerm, selectedCategory, coords.latitude, coords.longitude]);
 
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
@@ -40,7 +57,7 @@ export default function ProductGrid() {
           </div>
           <div className="text-gray-600 mb-4">{error}</div>
           <button
-            onClick={() => fetchProducts(currentPage, 10, searchTerm, selectedCategory)}
+            onClick={() => fetchProducts(currentPage, 10, searchTerm, selectedCategory, '', coords.latitude, coords.longitude, 1000)}
             className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
           >
             Try Again

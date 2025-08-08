@@ -53,8 +53,14 @@ export interface ProductState {
   loading: boolean;
   error: string | null;
   pagination: PaginationInfo | null;
-  fetchProducts: (page?: number, size?: number, search?: string, category?: string, sort?: string) => Promise<void>;
-  addToCart: (product: Product) => void;
-  removeFromCart: (productId: string) => void;
-  cart: Product[];
+  fetchProducts: (
+    page?: number,
+    size?: number,
+    search?: string,
+    category?: string,
+    sort?: string,
+    userLatitude?: number,
+    userLongitude?: number,
+    maxDistanceKM?: number
+  ) => Promise<void>;
 } 

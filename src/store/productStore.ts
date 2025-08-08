@@ -10,15 +10,28 @@ export const useProductStore = create<ProductState>((set, get) => ({
   cart: [],
   pagination: null,
 
-  fetchProducts: async (page = 0, size = 10, search = '', category = '', sort = '') => {
+  fetchProducts: async (
+    page = 0,
+    size = 10,
+    search = '',
+    category = '',
+    sort = '',
+    userLatitude?: number,
+    userLongitude?: number,
+    maxDistanceKM?: number
+  ) => {
     set({ loading: true, error: null });
+    console.log(userLatitude, userLongitude, maxDistanceKM);
     try {
       const response = await axios.get<ApiResponse>(buildApiUrl(API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.PRODUCTS, {
         page,
         size,
         search,
         category,
-        sort
+        sort,
+        ...(userLatitude !== undefined ? { userLatitude: userLatitude } : {}),
+        ...(userLongitude !== undefined ? { userLongitude: userLongitude } : {}),
+        ...(maxDistanceKM !== undefined ? { maxDistanceKM: maxDistanceKM } : {})
       }));
       
       if (response.data.success) {
@@ -30,7 +43,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
             totalElements: response.data.data.totalElements,
             totalPages: response.data.data.totalPages,
             hasNext: response.data.data.hasNext,
-            hasPrevious: response.data.data.hasPrevious,
+            hasPrevious: response.data.data.hasPrevious
           },
           loading: false 
         });
@@ -47,23 +60,5 @@ export const useProductStore = create<ProductState>((set, get) => ({
         loading: false 
       });
     }
-  },
-
-  addToCart: (product: Product) => {
-    const { cart } = get();
-    const existingItem = cart.find(item => item.id === product.id);
-    
-    if (existingItem) {
-      // If item already exists, you might want to increase quantity
-      // For now, we'll just add it again
-      set({ cart: [...cart, product] });
-    } else {
-      set({ cart: [...cart, product] });
-    }
-  },
-
-  removeFromCart: (productId: string) => {
-    const { cart } = get();
-    set({ cart: cart.filter(item => item.id !== productId) });
   }
 })); 
