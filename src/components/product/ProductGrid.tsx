@@ -4,32 +4,55 @@ import { useEffect, useState } from 'react';
 import { useProductStore } from '../../store/productStore';
 import { useLocationStore } from '../../store/locationStore';
 import ProductCard from './ProductCard';
+import LocationPrompt from '../location/LocationPrompt';
 
 const ProductGrid = () => {
+
+  const [mounted, setMounted] = useState(false);
+
+
   const { products, loading, error, pagination, fetchProducts } = useProductStore();
+  const { status, coords } = useLocationStore(); // ✅ Get status + coords directly
+
   const [currentPage, setCurrentPage] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
 
-  // Location
-  const [coords, setCoords] = useState<{ latitude?: number; longitude?: number }>({});
-  
-  useEffect(() => {
-    const { coords: initial } = useLocationStore.getState();
-    console.log('Initial coords:', initial);
-    setCoords({ latitude: initial?.userLatitude, longitude: initial?.userLongitude });
-
-    const unsubscribe = useLocationStore.subscribe((state) => {
-      console.log('Location state changed:', state.coords);
-      setCoords({ latitude: state.coords?.userLatitude, longitude: state.coords?.userLongitude });
-    });
-
-    return unsubscribe;
-  }, []);
 
   useEffect(() => {
-    fetchProducts(currentPage, 10, searchTerm, selectedCategory, '', coords.latitude, coords.longitude, 1000);
-  }, [fetchProducts, currentPage, searchTerm, selectedCategory, coords.latitude, coords.longitude]);
+    if (!mounted) return;
+
+    if (
+      status === 'granted' &&
+      coords?.userLatitude &&
+      coords?.userLongitude
+    ) {
+      fetchProducts(
+        currentPage,
+        10,
+        searchTerm,
+        selectedCategory,
+        '',
+        coords.userLatitude,
+        coords.userLongitude,
+        1000
+      );
+    }
+  }, [
+    mounted,
+    status,
+    coords?.userLatitude,
+    coords?.userLongitude,
+    currentPage,
+    searchTerm,
+    selectedCategory,
+    fetchProducts
+  ]);
+
+  // ✅ If location not granted, show prompt instead of message
+  if (status !== 'granted') {
+    return <LocationPrompt />;
+  }
 
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
@@ -37,7 +60,7 @@ const ProductGrid = () => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    setCurrentPage(0); // Reset to first page when searching
+    setCurrentPage(0);
   };
 
   if (loading && products.length === 0) {
@@ -57,7 +80,18 @@ const ProductGrid = () => {
           </div>
           <div className="text-gray-600 mb-4">{error}</div>
           <button
-            onClick={() => fetchProducts(currentPage, 10, searchTerm, selectedCategory, '', coords.latitude, coords.longitude, 1000)}
+            onClick={() =>
+              fetchProducts(
+                currentPage,
+                10,
+                searchTerm,
+                selectedCategory,
+                '',
+                coords?.userLatitude,
+                coords?.userLongitude,
+                1000
+              )
+            }
             className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
           >
             Try Again
@@ -133,23 +167,22 @@ const ProductGrid = () => {
           >
             Previous
           </button>
-          
+
           <div className="flex items-center space-x-1">
             {Array.from({ length: pagination.totalPages }, (_, i) => (
               <button
                 key={i}
                 onClick={() => handlePageChange(i)}
-                className={`px-3 py-2 rounded-lg transition-colors ${
-                  currentPage === i
+                className={`px-3 py-2 rounded-lg transition-colors ${currentPage === i
                     ? 'bg-green-600 text-white'
                     : 'border border-gray-300 hover:bg-gray-50'
-                }`}
+                  }`}
               >
                 {i + 1}
               </button>
             ))}
           </div>
-          
+
           <button
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={!pagination.hasNext}
@@ -170,6 +203,6 @@ const ProductGrid = () => {
       )}
     </div>
   );
-} 
+};
 
-export default ProductGrid
+export default ProductGrid;
