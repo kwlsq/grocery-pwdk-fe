@@ -7,7 +7,6 @@ export const useProductStore = create<ProductState>((set, get) => ({
   products: [],
   loading: false,
   error: null,
-  cart: [],
   pagination: null,
 
   fetchProducts: async (

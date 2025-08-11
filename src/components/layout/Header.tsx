@@ -1,8 +1,6 @@
 'use client';
 
-import { useProductStore } from '../../store/productStore';
-
-export default function Header() {
+const Header = () => {
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
@@ -45,3 +43,5 @@ export default function Header() {
     </header>
   );
 } 
+
+export default Header

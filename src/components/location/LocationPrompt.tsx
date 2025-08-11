@@ -1,17 +1,28 @@
 "use client";
 
-import { useEffect } from 'react';
-import { useLocationStore } from '../../store/locationStore';
+import { useEffect, useState } from "react";
+import { useLocationStore } from "../../store/locationStore";
 
-export default function LocationPrompt() {
+const LocationPrompt = () => {
   const { status, error, requestLocation } = useLocationStore();
+  const [ready, setReady] = useState(false);
 
-  // Optionally auto-prompt on first load once
   useEffect(() => {
-    // Do not auto-request to avoid intrusive behavior; keep manual button
+    setReady(true);
   }, []);
 
-  if (status === 'granted') return
+  if (!ready) {
+    return (
+      <div
+        className="bg-yellow-50 border border-yellow-200 px-4 py-3"
+        style={{ visibility: "hidden" }}
+      >
+        placeholder
+      </div>
+    );
+  }
+
+  if (status === "granted") return null;
 
   return (
     <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3">
@@ -21,9 +32,7 @@ export default function LocationPrompt() {
           <p className="text-sm text-yellow-700">
             We use your location to show availability and accurate delivery options near you.
           </p>
-          {error && (
-            <p className="text-sm text-red-600 mt-1">{error}</p>
-          )}
+          {error && <p className="text-sm text-red-600 mt-1">{error}</p>}
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -32,9 +41,11 @@ export default function LocationPrompt() {
           >
             Allow Location
           </button>
-          {status === 'denied' && (
+          {status === "denied" && (
             <a
-              href="https://support.google.com/chrome/answer/142065?hl=en" target="_blank" rel="noreferrer"
+              href="https://support.google.com/chrome/answer/142065?hl=en"
+              target="_blank"
+              rel="noreferrer"
               className="text-sm text-green-700 underline"
             >
               How to enable in browser
@@ -44,4 +55,6 @@ export default function LocationPrompt() {
       </div>
     </div>
   );
-} 
+};
+
+export default LocationPrompt;

@@ -5,7 +5,7 @@ import { useProductStore } from '../../store/productStore';
 import { useLocationStore } from '../../store/locationStore';
 import ProductCard from './ProductCard';
 
-export default function ProductGrid() {
+const ProductGrid = () => {
   const { products, loading, error, pagination, fetchProducts } = useProductStore();
   const [currentPage, setCurrentPage] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
@@ -171,3 +171,5 @@ export default function ProductGrid() {
     </div>
   );
 } 
+
+export default ProductGrid

@@ -1,19 +1,13 @@
 'use client';
 
 import { Product } from '../../types/product';
-import { useProductStore } from '../../store/productStore';
 import Image from 'next/image';
 
 interface ProductCardProps {
   product: Product;
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
-  const { addToCart } = useProductStore();
-
-  const handleAddToCart = () => {
-    addToCart(product);
-  };
+const ProductCard = ({ product }: ProductCardProps) => {
 
   // Get the primary image or first image available
   const primaryImage = product.productImages.find(img => img.primary) || product.productImages[0];
@@ -85,26 +79,14 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
         
         <button
-          onClick={handleAddToCart}
           disabled={totalStock === 0}
           className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
         >
-          <svg 
-            className="w-4 h-4" 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
-          >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" 
-            />
-          </svg>
           {totalStock === 0 ? 'Out of Stock' : 'Add to Cart'}
         </button>
       </div>
     </div>
   );
 } 
+
+export default ProductCard;
