@@ -63,4 +63,5 @@ export interface ProductState {
     userLongitude?: number,
     maxDistanceKM?: number
   ) => Promise<void>;
+  fetchProductById: (id: string) => Promise<Product>;
 } 
