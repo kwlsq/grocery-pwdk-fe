@@ -1,7 +1,6 @@
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { useProductStore } from '@/store/productStore';
-import { Product } from '../../../types/product';
 
 interface ProductDetailsPageProps {
   params: { id: string };

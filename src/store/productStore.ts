@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import axios from "axios";
-import { Product, ProductState, ApiResponse } from "../types/product";
+import { ProductState, ApiResponse } from "../types/product";
 import { buildApiUrl, API_CONFIG } from "../config/api";
 
 export const useProductStore = create<ProductState>((set, get) => ({
@@ -76,7 +76,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
       );
       if (response.data.success) {
         const product = response.data.data;
-        set({ products: [product], loading: false }); // optional: store in products
+        set({ products: [product], loading: false });
         return product;
       } else {
         throw new Error(response.data.message || "Failed to fetch product");
