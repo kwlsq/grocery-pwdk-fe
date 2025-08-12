@@ -1,6 +1,5 @@
 import Header from '@/components/layout/Header';
 import ProductGrid from '@/components/product/ProductGrid';
-import LocationPrompt from '@/components/location/LocationPrompt';
 
 export default function Home() {
   return (
