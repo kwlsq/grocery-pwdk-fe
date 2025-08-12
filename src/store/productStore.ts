@@ -1,10 +1,11 @@
 import { create } from "zustand";
 import axios from "axios";
-import { ProductState, ApiResponse } from "../types/product";
+import { ProductState, ApiResponse, ProductCategory } from "../types/product";
 import { buildApiUrl, API_CONFIG } from "../config/api";
 
 export const useProductStore = create<ProductState>((set, get) => ({
   products: [],
+  categories: [],
   loading: false,
   error: null,
   pagination: null,
@@ -20,7 +21,6 @@ export const useProductStore = create<ProductState>((set, get) => ({
     maxDistanceKM?: number
   ) => {
     set({ loading: true, error: null });
-    console.log(userLatitude, userLongitude, maxDistanceKM);
     try {
       const response = await axios.get<ApiResponse>(
         buildApiUrl(API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.PRODUCTS, {
@@ -89,6 +89,33 @@ export const useProductStore = create<ProductState>((set, get) => ({
         loading: false,
       });
       return null;
+    }
+  },
+
+  fetchCategories: async () => {
+    set({ loading: true, error: null });
+
+    try {
+      const response = await axios.get(
+        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CATEGORY}`
+      );
+
+      if (response.data.success) {
+        const categories: ProductCategory[] = response.data.data;
+        set({ categories, loading: false });
+      } else {
+        set({
+          error: response.data.message || "Failed to fetch categories",
+          loading: false,
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      set({
+        error:
+          error instanceof Error ? error.message : "Failed to fetch categories",
+        loading: false,
+      });
     }
   },
 }));

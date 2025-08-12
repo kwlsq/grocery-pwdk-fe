@@ -10,14 +10,23 @@ const ProductGrid = () => {
 
   const [mounted, setMounted] = useState(false);
 
-
-  const { products, loading, error, pagination, fetchProducts } = useProductStore();
-  const { status, coords } = useLocationStore(); // ✅ Get status + coords directly
+  const { products, categories, loading, error, pagination, fetchProducts, fetchCategories } = useProductStore();
+  const { status, coords } = useLocationStore();
 
   const [currentPage, setCurrentPage] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+
+    // Fetch categories when component mounts
+    fetchCategories();
+  }, [mounted, fetchCategories]);
 
   useEffect(() => {
     if (!mounted) return;
@@ -49,7 +58,6 @@ const ProductGrid = () => {
     fetchProducts
   ]);
 
-  // ✅ If location not granted, show prompt instead of message
   if (status !== 'granted') {
     return <LocationPrompt />;
   }
@@ -122,10 +130,11 @@ const ProductGrid = () => {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
             >
               <option value="">All Categories</option>
-              <option value="fruits">Fruits</option>
-              <option value="vegetables">Vegetables</option>
-              <option value="dairy">Dairy</option>
-              <option value="bakery">Bakery</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
             </select>
           </div>
           <button

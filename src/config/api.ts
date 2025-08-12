@@ -3,6 +3,7 @@ export const API_CONFIG = {
   BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080/api/v1',
   ENDPOINTS: {
     PRODUCTS: '/products/public',
+    CATEGORY: '/products/public/categories'
   },
   DEFAULT_PAGE_SIZE: 10,
 };
