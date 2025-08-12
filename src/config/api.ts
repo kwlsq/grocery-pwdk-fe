@@ -5,6 +5,7 @@ export const API_CONFIG = {
     PRODUCTS: '/products/public',
     CATEGORY: '/products/public/categories',
     PRODUCTS_CREATE: '/products/create',
+    CART: '/cart-items',
   },
   DEFAULT_PAGE_SIZE: 10,
 };
