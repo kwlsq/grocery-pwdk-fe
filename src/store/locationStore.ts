@@ -21,7 +21,7 @@ interface LocationState {
 const saveToStorage = (state: Partial<LocationState>) => {
   if (typeof window !== 'undefined') {
     try {
-      localStorage.setItem('freshgrocer-location', JSON.stringify(state));
+      localStorage.setItem('grocereach-user-location', JSON.stringify(state));
     } catch (error) {
       console.error('Error saving location to localStorage:', error);
     }
@@ -35,7 +35,7 @@ const loadFromStorage = (): Partial<LocationState> => {
   }
   
   try {
-    const stored = localStorage.getItem('freshgrocer-location');
+    const stored = localStorage.getItem('grocereach-user-location');
     if (stored) {
       return JSON.parse(stored);
     }

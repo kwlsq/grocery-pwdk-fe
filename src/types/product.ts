@@ -24,6 +24,12 @@ export interface Product {
   productImages: ProductImage[];
 }
 
+export interface ProductCategory {
+  id: string;
+  parentID: string;
+  name: string;
+}
+
 export interface PaginationInfo {
   page: number;
   size: number;
@@ -49,6 +55,7 @@ export interface ApiResponse {
 }
 
 export interface ProductState {
+  categories: ProductCategory[];
   products: Product[];
   loading: boolean;
   error: string | null;
@@ -64,4 +71,5 @@ export interface ProductState {
     maxDistanceKM?: number
   ) => Promise<void>;
   fetchProductById: (id: string) => Promise<Product>;
+  fetchCategories: () => Promise<void>;
 } 

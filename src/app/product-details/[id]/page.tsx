@@ -7,6 +7,7 @@ interface ProductDetailsPageProps {
 }
 
 export default async function ProductDetailsPage({ params }: ProductDetailsPageProps) {
+  
   const product = await useProductStore.getState().fetchProductById(params.id);
 
   if (!product) return notFound();
