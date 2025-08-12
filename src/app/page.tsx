@@ -1,10 +1,10 @@
-'use client'; 
 
-import React, { useEffect } from 'react';
+
+import React from 'react';
 import Navbar from '@/components/Navbar/Index';
 import Footer from '@/components/Footer/Index';
 import LocationPrompt from '@/components/Location/LocationPrompt';
-import ProductGrid from '@/components/Product/ProductGrid';
+import ProductGrid from '@/components/product/ProductGrid';
 import { HeroSection } from '@/components/HeroSection/Index';
 
 
@@ -26,6 +26,8 @@ export default function HomePage() {
             Your groceries, delivered fast.
           </p>
         </div>
+        
+        <ProductGrid />
       </main>
 <ProductGrid/>
       <Footer/>
