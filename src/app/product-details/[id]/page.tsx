@@ -2,11 +2,7 @@ import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { useProductStore } from '@/store/productStore';
 
-interface ProductDetailsPageProps {
-  params: { id: string };
-}
-
-export default async function ProductDetailsPage({ params }: ProductDetailsPageProps) {
+export default async function ProductDetailsPage({ params }: { params: { id: string } }) {
   
   const product = await useProductStore.getState().fetchProductById(params.id);
 
