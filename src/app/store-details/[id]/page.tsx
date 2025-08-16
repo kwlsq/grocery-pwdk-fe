@@ -5,12 +5,13 @@ import { useParams, useRouter } from 'next/navigation';
 import { useStoreStore } from '../../../store/storeStore';
 import { useWarehouseStore } from '../../../store/warehouseStore';
 import WarehouseGrid from '../../../components/warehouse/WarehouseGrid';
+import AddWarehouseDialog from '../../../components/warehouse/AddWarehouseDialog';
 
 export default function StoreDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const storeId = params.id as string;
-  
+
   const [mounted, setMounted] = useState(false);
   const { stores, fetchStores } = useStoreStore();
   const { warehouses, loading, error, fetchWarehouses } = useWarehouseStore();
@@ -24,12 +25,12 @@ export default function StoreDetailsPage() {
 
   useEffect(() => {
     if (!mounted) return;
-    
+
     // Fetch stores if not already loaded
     if (stores.length === 0) {
       fetchStores();
     }
-    
+
     // Fetch warehouses for this store
     if (storeId) {
       fetchWarehouses(storeId);
@@ -76,17 +77,16 @@ export default function StoreDetailsPage() {
                 <span className="text-gray-600">{currentStore.address}</span>
               </div>
               <div className="flex items-center gap-2 mt-2">
-                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                  currentStore.active 
-                    ? 'bg-green-500 text-white' 
+                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${currentStore.active
+                    ? 'bg-green-500 text-white'
                     : 'bg-red-500 text-white'
-                }`}>
+                  }`}>
                   {currentStore.active ? 'Active' : 'Inactive'}
                 </span>
                 <span className="text-xs text-gray-500">Store ID: {currentStore.id}</span>
               </div>
             </div>
-            
+
             <div className="flex flex-col sm:flex-row gap-3">
               <button
                 onClick={handleCreateProduct}
@@ -117,13 +117,8 @@ export default function StoreDetailsPage() {
               </p>
             </div>
             <div className="flex gap-3">
-              <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                Add Warehouse
-              </button>
-              <button 
+              <AddWarehouseDialog/>
+              <button
                 onClick={() => fetchWarehouses(storeId)}
                 className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
               >
@@ -135,10 +130,10 @@ export default function StoreDetailsPage() {
             </div>
           </div>
 
-          <WarehouseGrid 
-            warehouses={warehouses} 
-            loading={loading} 
-            error={error} 
+          <WarehouseGrid
+            warehouses={warehouses}
+            loading={loading}
+            error={error}
           />
         </div>
 

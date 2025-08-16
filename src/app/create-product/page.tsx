@@ -10,6 +10,7 @@ import { useFieldArray, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Textarea } from '@/components/ui/textarea';
 
 const productSchema = z.object({
   name: z.string().min(1, 'Name cannot be blank'),
@@ -114,17 +115,16 @@ export default function CreateProductPage() {
         {/* Name */}
         <div>
           <label className="block text-sm font-medium text-gray-700">Name</label>
-          <Input type="text" {...register('name')} />
+          <Input type="text" {...register('name')} placeholder='Input your product name' />
           {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>}
         </div>
 
         {/* Description */}
         <div>
           <label className="block text-sm font-medium text-gray-700">Description</label>
-          <textarea
-            {...register('description')}
-            className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            rows={4}
+          <Textarea
+          {...register('description')}
+            placeholder="Your product's description"
           />
           {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>}
         </div>
@@ -133,7 +133,7 @@ export default function CreateProductPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Price</label>
-            <Input type="number" step="0.01" {...register('price')} />
+            <Input type="number" step="0.01" {...register('price')} placeholder="Product prices" />
             {errors.price && <p className="mt-1 text-sm text-red-600">{errors.price.message}</p>}
           </div>
 
@@ -179,7 +179,7 @@ export default function CreateProductPage() {
                 />
 
                 {/* Warehouse name */}
-                <p className="w-32">{warehouses[index].name}</p>
+                <p className="w-full">{warehouses[index].name}</p>
 
                 <Input
                   type="number"
