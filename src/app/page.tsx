@@ -1,17 +1,18 @@
+"use client"
 
-
+import "@/app/globals.css"
+import { useProductStore } from '@/store/productStore';
 import React from 'react';
 import Navbar from '@/components/Navbar/Index';
 import Footer from '@/components/Footer/Index';
-import LocationPrompt from '@/components/Location/LocationPrompt';
+import LocationPrompt from '@/components/location/LocationPrompt';
 import ProductGrid from '@/components/product/ProductGrid';
 import { HeroSection } from '@/components/HeroSection/Index';
 
+export default function Home() {
 
+  const {products, error, loading} = useProductStore();
 
-
-
-export default function HomePage() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <Navbar/>
@@ -27,9 +28,8 @@ export default function HomePage() {
           </p>
         </div>
         
-        <ProductGrid />
+        <ProductGrid products={products} error={error} loading={loading} fetchAll={true}/>
       </main>
-<ProductGrid/>
       <Footer/>
     </div>
   );

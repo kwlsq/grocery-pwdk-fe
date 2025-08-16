@@ -57,6 +57,7 @@ export interface ApiResponse {
 export interface ProductState {
   categories: ProductCategory[];
   products: Product[];
+  productsThisStore: Product[],
   loading: boolean;
   error: string | null;
   pagination: PaginationInfo | null;
@@ -71,5 +72,13 @@ export interface ProductState {
     maxDistanceKM?: number
   ) => Promise<void>;
   fetchProductById: (id: string) => Promise<Product>;
+  fetchProductByStoreID: (
+    id: string, 
+    page?: number,
+    size?: number,
+    search?: string,
+    category?: string,
+    sort?: string
+  ) => Promise<Product[]>;
   fetchCategories: () => Promise<void>;
 } 
