@@ -1,82 +1,99 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect } from 'react';
 import axios, { AxiosError } from 'axios';
 import { API_CONFIG } from '../../config/api';
 import { useProductStore } from '../../store/productStore';
+import { useWarehouseStore } from '@/store/warehouseStore';
+import { z } from 'zod';
+import { useFieldArray, useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+
+const productSchema = z.object({
+  name: z.string().min(1, 'Name cannot be blank'),
+  description: z.string().min(1, 'Description cannot be blank'),
+  price: z
+    .string()
+    .refine((val) => !isNaN(Number(val)) && Number(val) > 0, 'Price must be a positive number'),
+  weight: z
+    .string()
+    .refine((val) => !isNaN(Number(val)) && Number(val) > 0, 'Weight must be a positive number'),
+  categoryID: z.string().min(1, 'Category ID is required'),
+  stocks: z.array(
+    z.object({
+      warehouseId: z.string(),
+      selected: z.boolean(),
+      quantity: z
+        .string()
+        .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, 'Quantity must be a positive number')
+        .optional(),
+    })
+  ),
+});
+
+type ProductFormValues = z.infer<typeof productSchema>;
 
 export default function CreateProductPage() {
   const { categories, fetchCategories } = useProductStore();
+  const { warehouses } = useWarehouseStore();
 
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [price, setPrice] = useState('');
-  const [weight, setWeight] = useState('');
-  const [categoryID, setCategoryID] = useState('');
-
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
+  const {
+    register,
+    control,
+    handleSubmit,
+    reset,
+    watch,
+    setValue,
+    formState: { errors, isSubmitting },
+    setError,
+  } = useForm<ProductFormValues>({
+    resolver: zodResolver(productSchema),
+    defaultValues: {
+      name: '',
+      description: '',
+      price: '',
+      weight: '',
+      categoryID: '',
+      stocks: warehouses.map((w) => ({
+        warehouseId: w.id,
+        selected: false,
+        quantity: '',
+      })),
+    },
+    mode: 'onBlur',
+  });
 
   useEffect(() => {
     fetchCategories();
   }, [fetchCategories]);
 
-  const validate = useMemo(() => {
-    return () => {
-      const newErrors: Record<string, string> = {};
+  const { fields } = useFieldArray({
+    control,
+    name: 'stocks',
+  });
 
-      if (!name.trim()) newErrors.name = 'Name cannot be blank';
-      if (!description.trim()) newErrors.description = 'Description cannot be blank';
-
-      if (!price.trim()) {
-        newErrors.price = 'Price is required';
-      } else if (isNaN(Number(price)) || Number(price) <= 0) {
-        newErrors.price = 'Price must be a positive number';
-      }
-
-      if (!weight.trim()) {
-        newErrors.weight = 'Weight is required';
-      } else if (isNaN(Number(weight)) || Number(weight) <= 0) {
-        newErrors.weight = 'Weight must be a positive number';
-      }
-
-      if (!categoryID.trim()) newErrors.categoryID = 'Category ID is required';
-
-      return newErrors;
-    };
-  }, [name, description, price, weight, categoryID]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitError(null);
-    setSubmitSuccess(null);
-
-    const validationErrors = validate();
-    setErrors(validationErrors);
-    if (Object.keys(validationErrors).length > 0) return;
-
-    setIsSubmitting(true);
+  const onSubmit = async (data: ProductFormValues) => {
     try {
       const payload = {
-        name: name.trim(),
-        description: description.trim(),
-        price: Number(price),
-        weight: Number(weight),
-        categoryID: categoryID,
+        name: data.name.trim(),
+        description: data.description.trim(),
+        price: Number(data.price),
+        weight: Number(data.weight),
+        categoryID: data.categoryID,
       };
 
-      await axios.post(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS_CREATE}`, payload, {
-        headers: { 'Content-Type': 'application/json' },
-      });
+      await axios.post(
+        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS_CREATE}`,
+        payload,
+        {
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
 
-      setSubmitSuccess('Product created successfully');
-      setName('');
-      setDescription('');
-      setPrice('');
-      setWeight('');
-      setCategoryID('');
+      reset();
+      alert('✅ Product created successfully');
     } catch (error: unknown) {
       let message = 'Failed to create product';
       if (axios.isAxiosError(error)) {
@@ -85,9 +102,7 @@ export default function CreateProductPage() {
       } else if (error instanceof Error) {
         message = error.message;
       }
-      setSubmitError(message);
-    } finally {
-      setIsSubmitting(false);
+      setError('name', { message });
     }
   };
 
@@ -95,67 +110,45 @@ export default function CreateProductPage() {
     <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-sm border border-gray-200">
       <h1 className="text-2xl font-semibold mb-4">Create Product</h1>
 
-      {submitError && (
-        <div className="mb-4 p-3 border border-red-300 bg-red-50 text-red-700 rounded">{submitError}</div>
-      )}
-      {submitSuccess && (
-        <div className="mb-4 p-3 border border-green-300 bg-green-50 text-green-700 rounded">{submitSuccess}</div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        {/* Name */}
         <div>
           <label className="block text-sm font-medium text-gray-700">Name</label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-          />
-          {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+          <Input type="text" {...register('name')} />
+          {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>}
         </div>
 
+        {/* Description */}
         <div>
           <label className="block text-sm font-medium text-gray-700">Description</label>
           <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            {...register('description')}
             className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
             rows={4}
           />
-          {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description}</p>}
+          {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>}
         </div>
 
+        {/* Price & Weight */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Price</label>
-            <input
-              type="number"
-              step="0.01"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            />
-            {errors.price && <p className="mt-1 text-sm text-red-600">{errors.price}</p>}
+            <Input type="number" step="0.01" {...register('price')} />
+            {errors.price && <p className="mt-1 text-sm text-red-600">{errors.price.message}</p>}
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700">Weight</label>
-            <input
-              type="number"
-              step="0.01"
-              value={weight}
-              onChange={(e) => setWeight(e.target.value)}
-              className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            />
-            {errors.weight && <p className="mt-1 text-sm text-red-600">{errors.weight}</p>}
+            <Input type="number" step="0.01" {...register('weight')} />
+            {errors.weight && <p className="mt-1 text-sm text-red-600">{errors.weight.message}</p>}
           </div>
         </div>
 
+        {/* Category */}
         <div>
           <label className="block text-sm font-medium text-gray-700">Category</label>
           <select
-            value={categoryID}
-            onChange={(e) => setCategoryID(e.target.value)}
+            {...register('categoryID')}
             className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
           >
             <option value="">Select category</option>
@@ -165,9 +158,49 @@ export default function CreateProductPage() {
               </option>
             ))}
           </select>
-          {errors.categoryID && <p className="mt-1 text-sm text-red-600">{errors.categoryID}</p>}
+          {errors.categoryID && <p className="mt-1 text-sm text-red-600">{errors.categoryID.message}</p>}
         </div>
 
+        {/* Stock per warehouse */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Stock</label>
+          {fields.map((field, index) => {
+            const isChecked = watch(`stocks.${index}.selected`);
+
+            return (
+              <div key={field.id} className="flex items-center gap-5">
+                <Checkbox
+                  checked={isChecked}
+                  onCheckedChange={(checked) =>
+                    setValue(`stocks.${index}.selected`, !!checked, {
+                      shouldValidate: true,
+                    })
+                  }
+                />
+
+                {/* Warehouse name */}
+                <p className="w-32">{warehouses[index].name}</p>
+
+                <Input
+                  type="number"
+                  step="0.01"
+                  {...register(`stocks.${index}.quantity` as const)}
+                  disabled={!isChecked}
+                />
+
+                {/* Error message */}
+                {errors.stocks?.[index]?.quantity && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.stocks[index]?.quantity?.message}
+                  </p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+
+        {/* Submit button */}
         <div className="pt-2">
           <button
             type="submit"

@@ -1,5 +1,6 @@
 import Header from '@/components/layout/Header';
 import ProductGrid from '@/components/product/ProductGrid';
+import "@/app/globals.css"
 
 export default function Home() {
   return (

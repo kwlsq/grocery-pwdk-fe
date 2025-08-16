@@ -39,7 +39,7 @@ const WarehouseGrid = ({ warehouses, loading = false, error = null }: WarehouseG
             No warehouses found
           </div>
           <p className="text-gray-400 mt-2">
-            This store doesn't have any warehouses yet
+            This store doesn&apos;t have any warehouses yet
           </p>
         </div>
       </div>
