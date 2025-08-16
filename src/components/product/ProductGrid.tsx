@@ -1,16 +1,24 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { useProductStore } from '../../store/productStore';
 import { useLocationStore } from '../../store/locationStore';
 import ProductCard from './ProductCard';
 import LocationPrompt from '../location/LocationPrompt';
+import { Product } from '@/types/product';
 
-const ProductGrid = () => {
+interface ProductGridProps {
+  products: Product[];
+  loading: boolean;
+  error?: string | null;
+  fetchAll: boolean
+}
+
+const ProductGrid:FC<ProductGridProps> = ({ products, loading, error, fetchAll }) => {
 
   const [mounted, setMounted] = useState(false);
 
-  const { products, categories, loading, error, pagination, fetchProducts, fetchCategories } = useProductStore();
+  const { categories, pagination, fetchProducts, fetchCategories } = useProductStore();
   const { status, coords } = useLocationStore();
 
   const [currentPage, setCurrentPage] = useState(0);
@@ -32,6 +40,7 @@ const ProductGrid = () => {
     if (!mounted) return;
 
     if (
+      fetchAll &&
       status === 'granted' &&
       coords?.userLatitude &&
       coords?.userLongitude
@@ -55,7 +64,8 @@ const ProductGrid = () => {
     currentPage,
     searchTerm,
     selectedCategory,
-    fetchProducts
+    fetchProducts,
+    fetchAll
   ]);
 
   if (status !== 'granted') {

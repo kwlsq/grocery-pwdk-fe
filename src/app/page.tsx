@@ -1,8 +1,12 @@
 import Header from '@/components/layout/Header';
 import ProductGrid from '@/components/product/ProductGrid';
 import "@/app/globals.css"
+import { useProductStore } from '@/store/productStore';
 
 export default function Home() {
+
+  const {products, error, loading} = useProductStore();
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -17,7 +21,7 @@ export default function Home() {
           </p>
         </div>
         
-        <ProductGrid />
+        <ProductGrid products={products} error={error} loading={loading} fetchAll={true}/>
       </main>
     </div>
   );

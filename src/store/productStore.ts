@@ -1,10 +1,11 @@
 import { create } from "zustand";
 import axios from "axios";
-import { ProductState, ApiResponse, ProductCategory } from "../types/product";
+import { ProductState, ApiResponse, ProductCategory, Product } from "../types/product";
 import { buildApiUrl, API_CONFIG } from "../config/api";
 
 export const useProductStore = create<ProductState>((set) => ({
   products: [],
+  productsThisStore: [],
   categories: [],
   loading: false,
   error: null,
@@ -89,6 +90,44 @@ export const useProductStore = create<ProductState>((set) => ({
         loading: false,
       });
       return null;
+    }
+  },
+
+  fetchProductByStoreID: async (
+    id: string,
+    page = 0,
+    size = 10,
+    search = "",
+    category = "",
+    sort = ""
+  ): Promise<Product[]> => {
+    set({ loading: true, error: null });
+    try {
+      const response = await axios.get<ApiResponse>(
+        buildApiUrl(API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.PRODUCTS_ADMIN + "/" + id, {
+          page,
+          size,
+          search,
+          category,
+          sort
+        })
+      );
+
+      if (response.data.success) {
+        const product = response.data.data.content;
+        set({ productsThisStore: product, loading: false });
+        return product;
+      } else {
+        throw new Error(response.data.message || "Failed to fetch product");
+      }
+    } catch (error) {
+      console.error("Error fetching product by ID:", error);
+      set({
+        error:
+          error instanceof Error ? error.message : "Failed to fetch product",
+        loading: false,
+      });
+      return [];
     }
   },
 
