@@ -81,4 +81,18 @@ export interface ProductState {
     sort?: string
   ) => Promise<Product[]>;
   fetchCategories: () => Promise<void>;
+  createProduct: (data: CreateProductDTO) => Promise<Product>;
 } 
+
+export interface CreateProductDTO {
+  name: string;
+  description: string;
+  price: number;
+  weight: number;
+  categoryID: string;
+  storeID: string;
+  inventories: {
+    warehouseID: string;
+    stock: number;
+  }[];
+}

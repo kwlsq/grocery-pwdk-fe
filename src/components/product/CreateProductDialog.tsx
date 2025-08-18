@@ -15,7 +15,9 @@ import { Select, SelectTrigger, SelectContent, SelectGroup, SelectLabel, SelectI
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import UploadMultiImage from './UploadMultiImage';
+import Image from 'next/image';
+import { cn } from '@/lib/utils';
+import { CreateProductDTO } from '@/types/product';
 
 const productSchema = z.object({
   name: z.string().min(1, 'Name cannot be blank'),
@@ -41,10 +43,14 @@ const productSchema = z.object({
 
 type ProductFormValues = z.infer<typeof productSchema>;
 
-export default function CreateProduct() {
-  const { categories, fetchCategories } = useProductStore();
+export default function CreateProduct({ storeID }: { storeID: string }) {
+  const { categories, fetchCategories, createProduct } = useProductStore();
   const { warehouses } = useWarehouseStore();
   const [open, setOpen] = useState(false);
+  const [files, setFiles] = useState<FileList | null>(null);
+  const [thumbnail, setThumbnail] = useState<FileList | null>(null);
+  const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
+  const [mediaPreviews, setMediaPreviews] = useState<string[]>();
 
 
   const {
@@ -82,26 +88,57 @@ export default function CreateProduct() {
     name: 'stocks',
   });
 
+  const handleMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = e.target.files;
+
+    if (selectedFiles) {
+      setFiles(selectedFiles);
+
+      const mediaUrls = Array.from(selectedFiles).map((file) =>
+        URL.createObjectURL(file)
+      );
+      setMediaPreviews(mediaUrls);
+    }
+  }
+
+  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = e.target.files;
+
+    if (selectedFiles) {
+      setThumbnail(selectedFiles);
+      setThumbnailPreview(URL.createObjectURL(selectedFiles[0]));
+    }
+  }
+
   const onSubmit = async (data: ProductFormValues) => {
     try {
-      const payload = {
+
+      const inventories = data.stocks
+        .filter((stock) => stock.quantity !== undefined && stock.quantity !== "")
+        .map((stock) => ({
+          warehouseID: stock.warehouseId,
+          stock: stock.selected ? Number(stock.quantity) : 0,
+        }));
+
+      const newProduct: CreateProductDTO = {
         name: data.name.trim(),
         description: data.description.trim(),
         price: Number(data.price),
         weight: Number(data.weight),
         categoryID: data.categoryID,
+        storeID: storeID,
+        inventories: inventories
       };
 
-      await axios.post(
-        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS_CREATE}`,
-        payload,
-        {
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
+      console.log(newProduct);
+      
+
+      const productID = await createProduct(newProduct);
+
+      console.log(productID);
 
       reset();
-      alert('✅ Product created successfully');
+
     } catch (error: unknown) {
       let message = 'Failed to create product';
       if (axios.isAxiosError(error)) {
@@ -126,7 +163,7 @@ export default function CreateProduct() {
       <DialogTrigger asChild>
         <Button>Create Product</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Product</DialogTitle>
         </DialogHeader>
@@ -243,10 +280,58 @@ export default function CreateProduct() {
           {/* Upload Image */}
           <div className="flex flex-col">
             <div className="flex flex-col gap-2">
-              <Label className="block text-sm font-medium text-gray-700">Description</Label>
-              <UploadMultiImage/>
+              <Label className="block text-sm font-medium text-gray-700">Product Image</Label>
+
+              {/* Upload event image */}
+              <div className="flex flex-col gap-4 p-6 border border-neutral-300 rounded-xl">
+                <div className="flex flex-col gap-2">
+                  <Label>Thumbnail</Label>
+                  <div className={cn("relative w-32 aspect-square border-[1px] border-gray-100 rounded-2xl", !thumbnail && "hidden")}>
+                    <Image
+                      src={thumbnailPreview}
+                      fill
+                      alt="image of event"
+                      className="object-contain"
+                    />
+                  </div>
+                  <div>
+                    <input
+                      type="file"
+                      name="multipartFiles"
+                      accept="image/*"
+                      multiple
+                      onChange={handleThumbnailChange}
+                      className={cn("p-4 border-neutral-200 border-dashed border-[1px] rounded-md w-full hover:bg-neutral-100", thumbnail && "hidden")}
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label>Product carousel</Label>
+                  <div className="flex gap-2 w-full flex-wrap">
+                    {mediaPreviews?.map((media, index) => (
+                      <div key={index} className="relative w-32 aspect-square border-[1px] border-gray-100 rounded-2xl">
+                        <Image
+                          src={media}
+                          fill
+                          alt="image of event"
+                          className="object-contain"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <div>
+                    <input
+                      type="file"
+                      name="multipartFiles"
+                      accept="image/*"
+                      multiple
+                      onChange={handleMediaChange}
+                      className={cn("p-4 border-neutral-200 border-dashed border-[1px] rounded-md w-full hover:bg-neutral-100", files?.length === 5 && "hidden")}
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
-            {errors.description && <p className="mt-1 text-xs text-red-600">{errors.description.message}</p>}
           </div>
 
           <div className="flex justify-end gap-2 pt-4">

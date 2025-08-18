@@ -168,4 +168,23 @@ export const useProductStore = create<ProductState>((set) => ({
       });
     }
   },
+
+  createProduct: async (data) => {
+    set({ loading: true, error: null });
+    try {
+      const response = await axios.post(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS_CREATE}`, data, {
+        headers: { "Content-Type": "application/json" }
+      });
+
+      // Optionally update products list
+      set((state) => ({
+        products: [response.data, ...state.products],
+        loading: false
+      }));
+
+      return response.data.data.id;
+    } catch (e) {
+      console.error(e)
+    }
+  }
 }));
