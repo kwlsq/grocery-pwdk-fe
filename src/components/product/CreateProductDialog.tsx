@@ -15,6 +15,7 @@ import { Select, SelectTrigger, SelectContent, SelectGroup, SelectLabel, SelectI
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import UploadMultiImage from './UploadMultiImage';
 
 const productSchema = z.object({
   name: z.string().min(1, 'Name cannot be blank'),
@@ -237,6 +238,15 @@ export default function CreateProduct() {
                 </div>
               );
             })}
+          </div>
+
+          {/* Upload Image */}
+          <div className="flex flex-col">
+            <div className="flex flex-col gap-2">
+              <Label className="block text-sm font-medium text-gray-700">Description</Label>
+              <UploadMultiImage/>
+            </div>
+            {errors.description && <p className="mt-1 text-xs text-red-600">{errors.description.message}</p>}
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
