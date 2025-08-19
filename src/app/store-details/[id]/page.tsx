@@ -199,13 +199,10 @@ export default function StoreDetailsPage() {
                   </Button>
                 </div>
               </div>
-              <ProductGrid products={productsThisStore} error={productError} loading={productLoading} fetchAll={false}/>
+              <ProductGrid products={productsThisStore} error={productError} loading={productLoading}/>
             </div>
           </TabsContent>
         </Tabs>
-
-
-
 
       </div>
     </div>

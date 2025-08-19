@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import axios, { AxiosError } from 'axios';
 import { useProductStore } from '../../store/productStore';
 import { useWarehouseStore } from '@/store/warehouseStore';
-import { file, z } from 'zod';
+import {  z } from 'zod';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -18,7 +18,6 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { CreateProductDTO } from '@/types/product';
 import { useImageStore } from '@/store/imageStore';
-import { Toaster, ToastT, toast } from 'sonner';
 
 const productSchema = z.object({
   name: z.string().min(1, 'Name cannot be blank'),
@@ -347,7 +346,7 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Creating new product..." : "Create Product"}
+              {isSubmitting && isUploading ? "Creating new product..." : "Create Product"}
             </Button>
           </div>
         </form>

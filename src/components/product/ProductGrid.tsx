@@ -6,79 +6,46 @@ import { useLocationStore } from '../../store/locationStore';
 import ProductCard from './ProductCard';
 import LocationPrompt from '../location/LocationPrompt';
 import { Product } from '@/types/product';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationPrevious,
+  PaginationNext,
+} from "@/components/ui/pagination";
 
 interface ProductGridProps {
   products: Product[];
   loading: boolean;
   error?: string | null;
-  fetchAll: boolean
+  pagination?: {
+    currentPage: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrevious: boolean;
+  };
+  onPageChange?: (newPage: number) => void;
+  onSearch?: (searchTerm: string, category: string) => void;
+  categories?: { id: string; name: string }[];
 }
 
-const ProductGrid:FC<ProductGridProps> = ({ products, loading, error, fetchAll }) => {
+const ProductGrid: FC<ProductGridProps> = ({
+  products,
+  loading,
+  error,
+  pagination,
+  onPageChange,
+  onSearch,
+  categories = [],
+}) => {
 
-  const [mounted, setMounted] = useState(false);
-
-  const { categories, pagination, fetchProducts, fetchCategories } = useProductStore();
-  const { status, coords } = useLocationStore();
-
-  const [currentPage, setCurrentPage] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!mounted) return;
-
-    // Fetch categories when component mounts
-    fetchCategories();
-  }, [mounted, fetchCategories]);
-
-  useEffect(() => {
-    if (!mounted) return;
-
-    if (
-      fetchAll &&
-      status === 'granted' &&
-      coords?.userLatitude &&
-      coords?.userLongitude
-    ) {
-      fetchProducts(
-        currentPage,
-        12,
-        searchTerm,
-        selectedCategory,
-        '',
-        coords.userLatitude,
-        coords.userLongitude,
-        1000
-      );
-    }
-  }, [
-    mounted,
-    status,
-    coords?.userLatitude,
-    coords?.userLongitude,
-    currentPage,
-    searchTerm,
-    selectedCategory,
-    fetchProducts,
-    fetchAll
-  ]);
-
-  if (status !== 'granted') {
-    return <LocationPrompt />;
-  }
-
-  const handlePageChange = (newPage: number) => {
-    setCurrentPage(newPage);
-  };
-
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    setCurrentPage(0);
+    if (onSearch) onSearch(searchTerm, selectedCategory);
   };
 
   if (loading && products.length === 0) {
@@ -97,23 +64,6 @@ const ProductGrid:FC<ProductGridProps> = ({ products, loading, error, fetchAll }
             Error loading products
           </div>
           <div className="text-gray-600 mb-4">{error}</div>
-          <button
-            onClick={() =>
-              fetchProducts(
-                currentPage,
-                10,
-                searchTerm,
-                selectedCategory,
-                '',
-                coords?.userLatitude,
-                coords?.userLongitude,
-                1000
-              )
-            }
-            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
-          >
-            Try Again
-          </button>
         </div>
       </div>
     );
@@ -177,48 +127,35 @@ const ProductGrid:FC<ProductGridProps> = ({ products, loading, error, fetchAll }
       )}
 
       {/* Pagination */}
-      {pagination && pagination.totalPages > 1 && (
-        <div className="flex justify-center items-center space-x-2 mt-8">
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={!pagination.hasPrevious}
-            className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
-          >
-            Previous
-          </button>
+      {pagination && pagination.totalPages > 1 && onPageChange && (
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => onPageChange(pagination.currentPage - 1)}
+                className={!pagination.hasPrevious ? "pointer-events-none opacity-50" : ""}
+              />
+            </PaginationItem>
 
-          <div className="flex items-center space-x-1">
             {Array.from({ length: pagination.totalPages }, (_, i) => (
-              <button
-                key={i}
-                onClick={() => handlePageChange(i)}
-                className={`px-3 py-2 rounded-lg transition-colors ${currentPage === i
-                    ? 'bg-green-600 text-white'
-                    : 'border border-gray-300 hover:bg-gray-50'
-                  }`}
-              >
-                {i + 1}
-              </button>
+              <PaginationItem key={i}>
+                <PaginationLink
+                  onClick={() => onPageChange(i)}
+                  isActive={pagination.currentPage === i}
+                >
+                  {i + 1}
+                </PaginationLink>
+              </PaginationItem>
             ))}
-          </div>
 
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={!pagination.hasNext}
-            className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
-          >
-            Next
-          </button>
-        </div>
-      )}
-
-      {/* Results Info */}
-      {pagination && (
-        <div className="text-center text-gray-600 text-sm">
-          Showing {pagination.page * pagination.size + 1} to{' '}
-          {Math.min((pagination.page + 1) * pagination.size, pagination.totalElements)} of{' '}
-          {pagination.totalElements} products
-        </div>
+            <PaginationItem>
+              <PaginationNext
+                onClick={() => onPageChange(pagination.currentPage + 1)}
+                className={!pagination.hasNext ? "pointer-events-none opacity-50" : ""}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
       )}
     </div>
   );
