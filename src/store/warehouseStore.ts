@@ -1,38 +1,49 @@
 import { create } from "zustand";
 import axios from "axios";
 import { Warehouse, WarehouseApiResponse } from "../types/warehouse";
-
-interface WarehouseState {
-  warehouses: Warehouse[];
-  loading: boolean;
-  error: string | null;
-  fetchWarehouses: (storeId: string) => Promise<void>;
-}
+import { API_CONFIG, buildApiUrl } from "@/config/api";
+import { WarehouseState } from "../types/warehouse";
 
 export const useWarehouseStore = create<WarehouseState>((set) => ({
   warehouses: [],
   loading: false,
   error: null,
+  pagination: null,
 
-  fetchWarehouses: async (storeId: string) => {
+  fetchWarehouses: async (storeId: string, page = 0, size = 12) => {
     set({ loading: true, error: null });
     try {
       const response = await axios.get<WarehouseApiResponse>(
-        `http://localhost:8080/api/v1/warehouse/${storeId}`
+        buildApiUrl(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.WAREHOUSE}/${storeId}`, {
+          page,
+          size
+        })
       );
 
       if (response.data.success) {
-        set({ warehouses: response.data.data, loading: false });
+        set({
+          warehouses: response.data.data.content,
+          pagination: {
+            page: response.data.data.page,
+            size: response.data.data.size,
+            totalElements: response.data.data.totalElements,
+            totalPages: response.data.data.totalPages,
+            hasNext: response.data.data.hasNext,
+            hasPrevious: response.data.data.hasPrevious,
+          },
+          loading: false,
+        });
       } else {
         set({
-          error: response.data.message || "Failed to fetch warehouses",
+          error: response.data.message || "Failed to fetch products",
           loading: false,
         });
       }
     } catch (error) {
       console.error("Error fetching warehouses:", error);
       set({
-        error: error instanceof Error ? error.message : "Failed to fetch warehouses",
+        error:
+          error instanceof Error ? error.message : "Failed to fetch warehouses",
         loading: false,
       });
     }

@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import axios, { AxiosError } from 'axios';
-import { API_CONFIG } from '../../config/api';
 import { useProductStore } from '../../store/productStore';
 import { useWarehouseStore } from '@/store/warehouseStore';
-import { z } from 'zod';
+import { file, z } from 'zod';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -18,6 +17,8 @@ import { Label } from "@/components/ui/label";
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { CreateProductDTO } from '@/types/product';
+import { useImageStore } from '@/store/imageStore';
+import { Toaster, ToastT, toast } from 'sonner';
 
 const productSchema = z.object({
   name: z.string().min(1, 'Name cannot be blank'),
@@ -47,10 +48,11 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
   const { categories, fetchCategories, createProduct } = useProductStore();
   const { warehouses } = useWarehouseStore();
   const [open, setOpen] = useState(false);
-  const [files, setFiles] = useState<FileList | null>(null);
-  const [thumbnail, setThumbnail] = useState<FileList | null>(null);
+  const [files, setFiles] = useState<File[] | null>(null);
+  const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
   const [mediaPreviews, setMediaPreviews] = useState<string[]>();
+  const { uploadMultiImage, uploadSingleImage, isUploading } = useImageStore();
 
 
   const {
@@ -90,22 +92,19 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
 
   const handleMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = e.target.files;
-
     if (selectedFiles) {
-      setFiles(selectedFiles);
+      const fileArray = Array.from(selectedFiles);
+      setFiles(fileArray);
 
-      const mediaUrls = Array.from(selectedFiles).map((file) =>
-        URL.createObjectURL(file)
-      );
+      const mediaUrls = fileArray.map((file) => URL.createObjectURL(file));
       setMediaPreviews(mediaUrls);
     }
   }
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = e.target.files;
-
-    if (selectedFiles) {
-      setThumbnail(selectedFiles);
+    if (selectedFiles && selectedFiles.length > 0) {
+      setThumbnail(selectedFiles[0]);
       setThumbnailPreview(URL.createObjectURL(selectedFiles[0]));
     }
   }
@@ -130,14 +129,19 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
         inventories: inventories
       };
 
-      console.log(newProduct);
-      
-
       const productID = await createProduct(newProduct);
 
-      console.log(productID);
+
+      if (thumbnail) {
+        uploadSingleImage(thumbnail, String(productID), true);
+      }
+
+      if (files) {
+        uploadMultiImage(files, String(productID), false);
+      }
 
       reset();
+      setOpen(false);
 
     } catch (error: unknown) {
       let message = 'Failed to create product';
@@ -158,6 +162,10 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
         setOpen(isOpen);
         if (!isOpen) {
           reset();
+          setThumbnail(null);
+          setThumbnailPreview("");
+          setFiles([]);
+          setMediaPreviews([]);
         }
       }}>
       <DialogTrigger asChild>

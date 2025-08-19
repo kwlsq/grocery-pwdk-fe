@@ -47,7 +47,7 @@ const ProductGrid:FC<ProductGridProps> = ({ products, loading, error, fetchAll }
     ) {
       fetchProducts(
         currentPage,
-        10,
+        12,
         searchTerm,
         selectedCategory,
         '',

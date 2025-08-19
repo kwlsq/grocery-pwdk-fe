@@ -22,6 +22,7 @@ export interface Product {
   description: string;
   productVersionResponse: ProductVersion;
   productImages: ProductImage[];
+  inventories: Inventory[]
 }
 
 export interface ProductCategory {
@@ -79,9 +80,9 @@ export interface ProductState {
     search?: string,
     category?: string,
     sort?: string
-  ) => Promise<Product[]>;
+  ) => Promise<void>;
   fetchCategories: () => Promise<void>;
-  createProduct: (data: CreateProductDTO) => Promise<Product>;
+  createProduct: (data: CreateProductDTO) => Promise<void>;
 } 
 
 export interface CreateProductDTO {
