@@ -14,7 +14,6 @@ import CreateProduct from '@/components/product/CreateProductDialog';
 
 export default function StoreDetailsPage() {
   const params = useParams();
-  const router = useRouter();
   const storeId = params.id as string;
 
   const [mounted, setMounted] = useState(false);
@@ -143,7 +142,7 @@ export default function StoreDetailsPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Products</p>
-                <p className="text-2xl font-semibold text-gray-900">-</p>
+                <p className="text-2xl font-semibold text-gray-900">{productsThisStore.length}</p>
               </div>
             </div>
           </div>
@@ -152,7 +151,9 @@ export default function StoreDetailsPage() {
         <Tabs defaultValue='warehouses'>
           <TabsList>
             <TabsTrigger value='warehouses'>Warehouse</TabsTrigger>
-            <TabsTrigger value='products'>Products</TabsTrigger>
+            <TabsTrigger value='products'>Product</TabsTrigger>
+            <TabsTrigger value='categories'>Category</TabsTrigger>
+            <TabsTrigger value='discounts'>Discount</TabsTrigger>
           </TabsList>
           <TabsContent value='warehouses'>
             {/* Warehouses Section */}
@@ -199,7 +200,7 @@ export default function StoreDetailsPage() {
                   </Button>
                 </div>
               </div>
-              <ProductGrid products={productsThisStore} error={productError} loading={productLoading}/>
+              <ProductGrid products={productsThisStore} error={productError} loading={productLoading} showSearchAndFilter={false}/>
             </div>
           </TabsContent>
         </Tabs>

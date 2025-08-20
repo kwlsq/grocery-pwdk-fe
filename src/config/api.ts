@@ -8,7 +8,8 @@ export const API_CONFIG = {
     PRODUCTS_CREATE: '/products/create',
     CART: '/cart-items',
     WAREHOUSE: '/warehouse',
-    IMAGE: '/images'
+    IMAGE: '/images',
+    USERS: '/users'
   },
   DEFAULT_PAGE_SIZE: 10,
 };

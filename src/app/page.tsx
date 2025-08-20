@@ -97,6 +97,7 @@ export default function Home() {
             setCurrentPage(0);
           }}
           categories={categories}
+          showSearchAndFilter={true}
         />
       </main>
       <Footer />

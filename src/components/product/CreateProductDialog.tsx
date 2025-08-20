@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import axios, { AxiosError } from 'axios';
 import { useProductStore } from '../../store/productStore';
 import { useWarehouseStore } from '@/store/warehouseStore';
-import {  z } from 'zod';
+import { z } from 'zod';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -168,7 +168,12 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
         }
       }}>
       <DialogTrigger asChild>
-        <Button>Create Product</Button>
+        <Button>
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          Create Product
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto">
         <DialogHeader>

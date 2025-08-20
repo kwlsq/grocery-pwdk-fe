@@ -3,10 +3,17 @@
 import { useEffect, useState } from 'react';
 import { useStoreStore } from '../../store/storeStore';
 import StoreGrid from '../../components/store/StoreGrid';
+import { Tabs, TabsList, TabsContent, TabsTrigger } from '@/components/ui/tabs';
+import { useUsersStore } from '../../store/userStore';
+import UserGrid from '@/components/user/UserGrid';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
+import RegisterStoreAdmin from '../../components/store/RegisterStoreAdminDialog';
+import { Button } from '@/components/ui/button';
 
 export default function AdminDashboardPage() {
   const [mounted, setMounted] = useState(false);
   const { stores, loading, error, fetchStores } = useStoreStore();
+  const { users, loading: usersLoading, error: usersError, fetchUsers, selectedRole, setSelectedRole } = useUsersStore();
 
   useEffect(() => {
     setMounted(true);
@@ -16,6 +23,11 @@ export default function AdminDashboardPage() {
     if (!mounted) return;
     fetchStores();
   }, [mounted, fetchStores]);
+
+  useEffect(() => {
+    if (!mounted) return;
+    fetchUsers({ page: 0, size: 12, role: selectedRole });
+  }, [mounted, fetchUsers, selectedRole]);
 
   if (!mounted) {
     return null;
@@ -81,37 +93,97 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        {/* Actions Bar */}
-        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-8">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900">Stores</h2>
-              <p className="text-sm text-gray-600">
-                Manage your store network and monitor performance
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                Add Store
-              </button>
-              <button 
-                onClick={fetchStores}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                Refresh
-              </button>
-            </div>
-          </div>
-        </div>
 
-        {/* Stores Grid */}
-        <StoreGrid stores={stores} loading={loading} error={error} />
+        <Tabs defaultValue='stores'>
+          <TabsList>
+            <TabsTrigger value='stores'>
+              Store
+            </TabsTrigger>
+            <TabsTrigger value='users'>
+              User
+            </TabsTrigger>
+            <TabsTrigger value='chart'>
+              Chart
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value='stores'>
+            {/* Actions Bar */}
+            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-8">
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">Stores</h2>
+                  <p className="text-sm text-gray-600">
+                    Manage your store network and monitor performance
+                  </p>
+                </div>
+                <div className="flex gap-3">
+                  <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    Add Store
+                  </button>
+                  <Button
+                    onClick={fetchStores}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Refresh
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Stores Grid */}
+            <StoreGrid stores={stores} loading={loading} error={error} />
+          </TabsContent>
+
+          <TabsContent value='users'>
+            {/* Actions Bar */}
+            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-8">
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">Users</h2>
+                  <p className="text-sm text-gray-600">
+                    Manage your store network and monitor performance
+                  </p>
+                </div>
+                <div className="flex gap-3 items-center w-full sm:w-auto">
+                  <div className="w-full sm:w-60">
+                    <Select value={selectedRole} onValueChange={(v) => setSelectedRole(v as any)}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Filter by role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectLabel>Role</SelectLabel>
+                          <SelectItem value="all">All</SelectItem>
+                          <SelectItem value="MANAGER">Manager</SelectItem>
+                          <SelectItem value="CUSTOMER">Customer</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <RegisterStoreAdmin/>
+                  <Button
+                    onClick={() => fetchUsers({ page: 0, size: 12, role: selectedRole })}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Refresh
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Users Grid */}
+            <UserGrid users={users} loading={usersLoading} error={usersError} />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
