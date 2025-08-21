@@ -7,6 +7,13 @@ export const API_CONFIG = {
     CATEGORY: '/products/public/categories',
     PRODUCTS_CREATE: '/products/create',
     CART: '/cart-items',
+    WAREHOUSE: '/warehouse',
+    IMAGE: '/images',
+    USERS: '/users',
+    STORE_ADMIN : {
+      DELETE: '/users/store-admin',
+      REGISTER: '/auth/store-admin'
+    }
   },
   DEFAULT_PAGE_SIZE: 10,
 };

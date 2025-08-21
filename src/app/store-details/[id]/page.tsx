@@ -10,10 +10,10 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsContent, TabsTrigger } from '@/components/ui/tabs';
 import { useProductStore } from '@/store/productStore';
 import ProductGrid from '@/components/product/ProductGrid';
+import CreateProduct from '@/components/product/CreateProductDialog';
 
 export default function StoreDetailsPage() {
   const params = useParams();
-  const router = useRouter();
   const storeId = params.id as string;
 
   const [mounted, setMounted] = useState(false);
@@ -42,10 +42,6 @@ export default function StoreDetailsPage() {
       fetchProductByStoreID(storeId);
     }
   }, [mounted, storeId, stores.length, fetchStores, fetchWarehouses, fetchProductByStoreID]);
-
-  const handleCreateProduct = () => {
-    router.push('/create-product');
-  };
 
   if (!mounted) {
     return null;
@@ -94,15 +90,7 @@ export default function StoreDetailsPage() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3">
-              <button
-                onClick={handleCreateProduct}
-                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                Create Product
-              </button>
+              <CreateProduct storeID={storeId}/>
               <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -154,7 +142,7 @@ export default function StoreDetailsPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Products</p>
-                <p className="text-2xl font-semibold text-gray-900">-</p>
+                <p className="text-2xl font-semibold text-gray-900">{productsThisStore.length}</p>
               </div>
             </div>
           </div>
@@ -163,7 +151,9 @@ export default function StoreDetailsPage() {
         <Tabs defaultValue='warehouses'>
           <TabsList>
             <TabsTrigger value='warehouses'>Warehouse</TabsTrigger>
-            <TabsTrigger value='products'>Products</TabsTrigger>
+            <TabsTrigger value='products'>Product</TabsTrigger>
+            <TabsTrigger value='categories'>Category</TabsTrigger>
+            <TabsTrigger value='discounts'>Discount</TabsTrigger>
           </TabsList>
           <TabsContent value='warehouses'>
             {/* Warehouses Section */}
@@ -203,20 +193,17 @@ export default function StoreDetailsPage() {
                   </p>
                 </div>
                 <div className="flex gap-3">
-                  <Button onClick={() => fetchWarehouses(storeId)} variant={"secondary"}>
+                  <Button onClick={() => fetchProductByStoreID(storeId)} variant={"secondary"}>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
                   </Button>
                 </div>
               </div>
-              <ProductGrid products={productsThisStore} error={productError} loading={productLoading} fetchAll={false}/>
+              <ProductGrid products={productsThisStore} error={productError} loading={productLoading} showSearchAndFilter={false}/>
             </div>
           </TabsContent>
         </Tabs>
-
-
-
 
       </div>
     </div>

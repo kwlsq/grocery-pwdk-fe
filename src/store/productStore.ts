@@ -13,7 +13,7 @@ export const useProductStore = create<ProductState>((set) => ({
 
   fetchProducts: async (
     page = 0,
-    size = 10,
+    size = 12,
     search = "",
     category = "",
     sort = "",
@@ -96,11 +96,11 @@ export const useProductStore = create<ProductState>((set) => ({
   fetchProductByStoreID: async (
     id: string,
     page = 0,
-    size = 10,
+    size = 12,
     search = "",
     category = "",
     sort = ""
-  ): Promise<Product[]> => {
+  ) => {
     set({ loading: true, error: null });
     try {
       const response = await axios.get<ApiResponse>(
@@ -114,11 +114,23 @@ export const useProductStore = create<ProductState>((set) => ({
       );
 
       if (response.data.success) {
-        const product = response.data.data.content;
-        set({ productsThisStore: product, loading: false });
-        return product;
+        set({
+          productsThisStore: response.data.data.content,
+          pagination: {
+            page: response.data.data.page,
+            size: response.data.data.size,
+            totalElements: response.data.data.totalElements,
+            totalPages: response.data.data.totalPages,
+            hasNext: response.data.data.hasNext,
+            hasPrevious: response.data.data.hasPrevious,
+          },
+          loading: false,
+        });
       } else {
-        throw new Error(response.data.message || "Failed to fetch product");
+        set({
+          error: response.data.message || "Failed to fetch products",
+          loading: false,
+        });
       }
     } catch (error) {
       console.error("Error fetching product by ID:", error);
@@ -127,7 +139,6 @@ export const useProductStore = create<ProductState>((set) => ({
           error instanceof Error ? error.message : "Failed to fetch product",
         loading: false,
       });
-      return [];
     }
   },
 
@@ -168,4 +179,22 @@ export const useProductStore = create<ProductState>((set) => ({
       });
     }
   },
+
+  createProduct: async (data) => {
+    set({ loading: true, error: null });
+    try {
+      const response = await axios.post(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS_CREATE}`, data, {
+        headers: { "Content-Type": "application/json" }
+      });
+
+      set((state) => ({
+        products: [response.data, ...state.products],
+        loading: false
+      }));
+
+      return response.data.data.id;
+    } catch (e) {
+      console.error(e)
+    }
+  }
 }));
