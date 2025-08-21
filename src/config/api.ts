@@ -9,7 +9,11 @@ export const API_CONFIG = {
     CART: '/cart-items',
     WAREHOUSE: '/warehouse',
     IMAGE: '/images',
-    USERS: '/users'
+    USERS: '/users',
+    STORE_ADMIN : {
+      DELETE: '/users/store-admin',
+      REGISTER: '/auth/store-admin'
+    }
   },
   DEFAULT_PAGE_SIZE: 10,
 };

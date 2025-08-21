@@ -1,7 +1,7 @@
 export interface User {
   id: string;
   email: string;
-  fullName: string | null;
+  fullName: string;
   role: 'CUSTOMER' | 'MANAGER' | 'ADMIN';
   photoUrl: string | null;
   verified: boolean;
@@ -31,6 +31,11 @@ export interface UsersPaginationInfo {
   hasPrevious: boolean;
 }
 
+export interface RegisterUserDTO {
+  email: string,
+  fullName: string
+}
+
 export interface UsersState {
   users: User[];
   loading: boolean;
@@ -39,6 +44,8 @@ export interface UsersState {
   selectedRole: '' | 'CUSTOMER' | 'MANAGER' | 'ADMIN';
   setSelectedRole: (role: '' | 'CUSTOMER' | 'MANAGER' | 'ADMIN') => void;
   fetchUsers: (params?: { page?: number; size?: number; role?: '' | 'CUSTOMER' | 'MANAGER' | 'ADMIN' }) => Promise<void>;
+  deleteUser: (params: { userID: string }) => Promise<void>;
+  registerStoreAdmin: (data: RegisterUserDTO) => Promise<void>;
 }
 
 

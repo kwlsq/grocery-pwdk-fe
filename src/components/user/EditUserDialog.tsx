@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { FC, useState } from 'react';
 import axios, { AxiosError } from 'axios';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -12,23 +12,25 @@ import { Label } from "@/components/ui/label";
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useImageStore } from '@/store/imageStore';
-import { useUsersStore } from '@/store/userStore';
-import { RegisterUserDTO } from '@/types/user';
+import { User } from '@/types/user';
 
-const storeAdmin = z.object({
+const productSchema = z.object({
   email: z.string().min(1, 'email cannot be blank'),
   phoneNumber: z.string().min(1, 'phone number cannot be blank'),
   fullName: z.string().min(1, 'full name cannot be blank'),
 });
 
-type StoreAdminValues = z.infer<typeof storeAdmin>;
+type ProductFormValues = z.infer<typeof productSchema>;
 
-export default function RegisterStoreAdmin() {
+interface UserProps {
+  user: User
+}
+
+const EditUserDialog: FC<UserProps> = ({ user }) => {
   const [open, setOpen] = useState(false);
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
   const { isUploading } = useImageStore();
-  const { registerStoreAdmin } = useUsersStore();
 
 
   const {
@@ -36,12 +38,11 @@ export default function RegisterStoreAdmin() {
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<StoreAdminValues>({
-    resolver: zodResolver(storeAdmin),
+  } = useForm<ProductFormValues>({
+    resolver: zodResolver(productSchema),
     defaultValues: {
-      email: '',
-      phoneNumber: '',
-      fullName: ''
+      email: user.email,
+      fullName: user.fullName,
     },
     mode: 'onBlur',
   });
@@ -54,20 +55,13 @@ export default function RegisterStoreAdmin() {
     }
   }
 
-  const onSubmit = async (data: StoreAdminValues) => {
+  const onSubmit = async (data: ProductFormValues) => {
     try {
-
-      const newStoreAdmin: RegisterUserDTO = {
-        email: data.email,
-        fullName: data.fullName
-      }
-
-      await registerStoreAdmin(newStoreAdmin)
       reset();
       setOpen(false);
 
     } catch (error: unknown) {
-      let message = 'Failed to register new store admin';
+      let message = 'Failed to create product';
       if (axios.isAxiosError(error)) {
         const axiosErr = error as AxiosError<{ message?: string }>;
         message = axiosErr.response?.data?.message || axiosErr.message || message;
@@ -89,16 +83,14 @@ export default function RegisterStoreAdmin() {
         }
       }}>
       <DialogTrigger asChild>
-        <Button>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        <div className='text-gray-300'>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-edit"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" /><path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" /><path d="M16 5l3 3" />
           </svg>
-          Register store admin
-        </Button>
+        </div>
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Register new store admin</DialogTitle>
+          <DialogTitle>Edit store admin</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-4">
@@ -106,7 +98,7 @@ export default function RegisterStoreAdmin() {
           <div className="flex flex-col">
             <div className="flex flex-col gap-2">
               <Label className="block text-sm font-medium text-gray-700">Email</Label>
-              <Input type="text" {...register('email')} placeholder='Input your product name' />
+              <Input type="text" {...register('email')} placeholder='Input your product name' disabled/>
             </div>
             {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>}
           </div>
@@ -171,3 +163,5 @@ export default function RegisterStoreAdmin() {
     </Dialog>
   );
 }
+
+export default EditUserDialog;
