@@ -9,11 +9,15 @@ import UserGrid from '@/components/user/UserGrid';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import RegisterStoreAdmin from '../../components/store/RegisterStoreAdminDialog';
 import { Button } from '@/components/ui/button';
+import { useDiscountStore } from '@/store/discountStore';
+import DiscountGrid from '@/components/discount/DiscountGrid';
+import CreateDiscountDialog from '@/components/discount/CreateDiscountDialog';
 
 export default function AdminDashboardPage() {
   const [mounted, setMounted] = useState(false);
   const { stores, loading, error, fetchStores } = useStoreStore();
   const { users, loading: usersLoading, error: usersError, fetchUsers, selectedRole, setSelectedRole } = useUsersStore();
+  const { discounts, loading: discountsLoading, error: discountsError, pagination, fetchDiscount } = useDiscountStore();
 
   useEffect(() => {
     setMounted(true);
@@ -28,6 +32,11 @@ export default function AdminDashboardPage() {
     if (!mounted) return;
     fetchUsers({ page: 0, size: 12, role: selectedRole });
   }, [mounted, fetchUsers, selectedRole]);
+
+  useEffect(() => {
+    if (!mounted) return;
+    fetchDiscount();
+  }, [mounted, fetchDiscount]);
 
   if (!mounted) {
     return null;
@@ -103,8 +112,11 @@ export default function AdminDashboardPage() {
             <TabsTrigger value='users'>
               User
             </TabsTrigger>
+            <TabsTrigger value='discounts'>
+              Discount
+            </TabsTrigger>
             <TabsTrigger value='chart'>
-              Chart
+              Report
             </TabsTrigger>
           </TabsList>
           <TabsContent value='stores'>
@@ -153,7 +165,7 @@ export default function AdminDashboardPage() {
                 </div>
                 <div className="flex gap-3 items-center w-full sm:w-auto">
                   <div className="w-full sm:w-60">
-                    <Select value={selectedRole} onValueChange={(v) => setSelectedRole(v as any)}>
+                    <Select value={selectedRole} onValueChange={(v) => setSelectedRole(v as '' | 'CUSTOMER' | 'MANAGER' | 'ADMIN')}>
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Filter by role" />
                       </SelectTrigger>
@@ -183,6 +195,49 @@ export default function AdminDashboardPage() {
 
             {/* Users Grid */}
             <UserGrid users={users} loading={usersLoading} error={usersError} />
+          </TabsContent>
+
+          <TabsContent value='discounts'>
+            {/* Actions Bar */}
+            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-8">
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">Discount</h2>
+                  <p className="text-sm text-gray-600">
+                    Manage promotional discounts
+                  </p>
+                </div>
+                <div className="flex gap-3 items-center w-full sm:w-auto">
+                  <CreateDiscountDialog/>
+                  <Button
+                    onClick={() => fetchDiscount()}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Refresh
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Discounts Grid */}
+            <DiscountGrid
+              discounts={discounts}
+              loading={discountsLoading}
+              error={discountsError || undefined}
+              pagination={pagination ? {
+                currentPage: pagination.page,
+                totalPages: pagination.totalPages,
+                hasNext: pagination.hasNext,
+                hasPrevious: pagination.hasPrevious,
+              } : undefined}
+              onPageChange={(_newPage) => {
+                // If backend supports pagination params later, wire here
+                fetchDiscount();
+              }}
+            />
           </TabsContent>
         </Tabs>
       </div>

@@ -1,3 +1,5 @@
+import { PaginationInfo } from "./common";
+
 export interface ProductImage {
   id: string;
   url: string;
@@ -31,15 +33,6 @@ export interface ProductCategory {
   name: string;
 }
 
-export interface PaginationInfo {
-  page: number;
-  size: number;
-  totalElements: number;
-  totalPages: number;
-  hasNext: boolean;
-  hasPrevious: boolean;
-}
-
 export interface ApiResponse {
   success: boolean;
   statusCode: number;
@@ -53,6 +46,28 @@ export interface ApiResponse {
     hasPrevious: boolean;
     content: Product[];
   };
+}
+
+export interface CreateProductDTO {
+  name: string;
+  description: string;
+  price: number;
+  weight: number;
+  categoryID: string;
+  storeID: string;
+  inventories: {
+    warehouseID: string;
+    stock: number;
+  }[];
+}
+
+export interface UpdateProductDTO {
+  name: string;
+  description: string;
+  price: number;
+  weight: number;
+  categoryID: string;
+  changeReason: string;
 }
 
 export interface ProductState {
@@ -83,17 +98,6 @@ export interface ProductState {
   ) => Promise<void>;
   fetchCategories: () => Promise<void>;
   createProduct: (data: CreateProductDTO) => Promise<void>;
+  updateProduct: (id: string, data: UpdateProductDTO) => Promise<void>;
+  deleteProduct: (id: string) => Promise<void>;
 } 
-
-export interface CreateProductDTO {
-  name: string;
-  description: string;
-  price: number;
-  weight: number;
-  categoryID: string;
-  storeID: string;
-  inventories: {
-    warehouseID: string;
-    stock: number;
-  }[];
-}
