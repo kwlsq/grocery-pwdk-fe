@@ -58,7 +58,7 @@ const LoginForm = ({ setView }: { setView: (view: 'login' | 'register') => void 
         onSubmit={async (values, { setSubmitting }) => {
           setServerError('');
           try {
-            await apiClient.post('/api/auth/login', values);
+            await apiClient.post('/api/v1/auth/login', values);
             await checkAuthStatus();
             router.push('/');
           } catch (err: any) {
@@ -179,7 +179,7 @@ const RegisterForm = ({ setView }: { setView: (view: 'login' | 'register') => vo
               setServerError('');
               setSuccess('');
               try {
-                const response = await apiClient.post('/api/auth/register', values);
+                const response = await apiClient.post('/api/v1/auth/register', values);
                 setSuccess(response.data);
                 resetForm();
               } catch (err: any) {

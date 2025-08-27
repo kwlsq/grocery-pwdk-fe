@@ -76,7 +76,7 @@ export default function VerifyPage() {
                 setSuccess('');
                 setIsExpired(false);
                 try {
-                  const response = await apiClient.post('/api/auth/verify', {
+                  const response = await apiClient.post('/api/v1/auth/verify', {
                     token,
                     password: values.password,
                   });

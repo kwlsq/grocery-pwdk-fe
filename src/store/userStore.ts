@@ -61,12 +61,9 @@ export const useUsersStore = create<UsersState>((set, get) => ({
   deleteUser: async ({ userID }) => {
     set({ loading: true, error: null });
     try {
-      axios.post(
+      axios.delete(
         buildApiUrl(
-          API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.STORE_ADMIN.DELETE,
-          {
-            userID,
-          }
+          API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.STORE_ADMIN.DELETE + "/" + userID
         )
       );
 

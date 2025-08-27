@@ -3,11 +3,9 @@
 import { useEffect, useState } from 'react';
 import axios, { AxiosError } from 'axios';
 import { useProductStore } from '../../store/productStore';
-import { useWarehouseStore } from '@/store/warehouseStore';
 import { z } from 'zod';
-import { Controller, useFieldArray, useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectTrigger, SelectContent, SelectGroup, SelectLabel, SelectItem, SelectValue } from '../ui/select';
@@ -16,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import { CreateProductDTO, Product, UpdateProductDTO } from '@/types/product';
+import { Product, UpdateProductDTO } from '@/types/product';
 import { useImageStore } from '@/store/imageStore';
 
 const productSchema = z.object({
@@ -40,7 +38,7 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
   const [mediaPreviews, setMediaPreviews] = useState<string[]>();
-  const { uploadMultiImage, uploadSingleImage, isUploading } = useImageStore();
+  const { isUploading } = useImageStore();
 
 
   const {
@@ -130,14 +128,14 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
       <DialogTrigger asChild>
         <Button>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5h2m-1 0v14m-6 0h12a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v10a2 2 0 002 2z" />
           </svg>
-          Create Product
+          Edit Product
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Update Product</DialogTitle>
+          <DialogTitle>Edit Product</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-4">
@@ -271,7 +269,7 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && isUploading ? "Creating new product..." : "Create Product"}
+              {isSubmitting && isUploading ? "Updating product..." : "Update Product"}
             </Button>
           </div>
         </form>

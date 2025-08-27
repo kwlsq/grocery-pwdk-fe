@@ -3,12 +3,15 @@
 import { Product } from '../../types/product';
 import Image from 'next/image';
 import Link from 'next/link';
+import EditProduct from './EditProductDialog';
+import { useAuthStore } from '@/store/authStore';
 
 interface ProductCardProps {
   product: Product;
 }
 
 const ProductCard = ({ product }: ProductCardProps) => {
+  const { user } = useAuthStore();
 
   // Get the primary image or first image available
   const primaryImage = product.productImages.find(img => img.primary) || product.productImages[0];
@@ -70,7 +73,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-2">
               <span className="text-lg font-bold text-green-600">
-                ${price.toFixed(2)}
+                Rp. {price.toFixed(2)}
               </span>
               <span className="text-xs text-gray-500">/kg</span>
             </div>
@@ -83,12 +86,16 @@ const ProductCard = ({ product }: ProductCardProps) => {
       </Link>
 
       <div className="px-4 pb-4">
-        <button
-          disabled={totalStock === 0}
-          className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
-        >
-          {totalStock === 0 ? 'Out of Stock' : 'Add to Cart'}
-        </button>
+        {user?.role === 'ADMIN' ? (
+          <EditProduct id={product.id} product={product} />
+        ) : (
+          <button
+            disabled={totalStock === 0}
+            className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+          >
+            {totalStock === 0 ? 'Out of Stock' : 'Add to Cart'}
+          </button>
+        )}
       </div>
     </div>
   );

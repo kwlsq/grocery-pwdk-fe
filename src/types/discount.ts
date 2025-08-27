@@ -18,7 +18,8 @@ export interface Discount {
   minPurchase: number,
   startAt: string,
   endAt: string,
-  type: string
+  type: string,
+  unit: string
 }
 
 export interface DiscountsApiResponse {

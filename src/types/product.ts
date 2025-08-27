@@ -1,4 +1,5 @@
 import { PaginationInfo } from "./common";
+import { Discount } from "./discount";
 
 export interface ProductImage {
   id: string;
@@ -24,7 +25,8 @@ export interface Product {
   description: string;
   productVersionResponse: ProductVersion;
   productImages: ProductImage[];
-  inventories: Inventory[]
+  inventories: Inventory[];
+  promotions: Discount[]
 }
 
 export interface ProductCategory {
