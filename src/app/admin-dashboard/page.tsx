@@ -12,6 +12,8 @@ import RegisterStoreAdmin from '../../components/store/RegisterStoreAdminDialog'
 import { Button } from '@/components/ui/button';
 import { useDiscountStore } from '@/store/discountStore';
 import DiscountGrid from '@/components/discount/DiscountGrid';
+import dynamic from 'next/dynamic';
+const StockReportTableDyn = dynamic(() => import('@/components/report/StockReportTable'), { ssr: false });
 import CreateDiscountDialog from '@/components/discount/CreateDiscountDialog';
 import { useAuthStore } from '@/store/authStore';
 
@@ -272,6 +274,19 @@ export default function AdminDashboardPage() {
                 fetchDiscount();
               }}
             />
+          </TabsContent>
+
+          <TabsContent value='chart'>
+            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-8">
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">Stock Reports</h2>
+                  <p className="text-sm text-gray-600">Monthly stock summary across stores and warehouses</p>
+                </div>
+              </div>
+            </div>
+            {/** Lazy load to avoid SSR issues with client store hooks */}
+            <StockReportTableDyn />
           </TabsContent>
         </Tabs>
       </div>

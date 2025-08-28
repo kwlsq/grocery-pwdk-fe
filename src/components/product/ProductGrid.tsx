@@ -15,6 +15,7 @@ import {
   PaginationPrevious,
   PaginationNext,
 } from "@/components/ui/pagination";
+import { cn } from '@/lib/utils';
 
 interface ProductGridProps {
   products: Product[];
@@ -98,7 +99,7 @@ const ProductGrid: FC<ProductGridProps> = ({
             <PaginationItem>
               <PaginationPrevious
                 onClick={() => onPageChange(pagination.currentPage - 1)}
-                className={!pagination.hasPrevious ? "pointer-events-none opacity-50" : ""}
+                className={cn(!pagination.hasPrevious && "pointer-events-none opacity-50")}
               />
             </PaginationItem>
 
@@ -116,7 +117,7 @@ const ProductGrid: FC<ProductGridProps> = ({
             <PaginationItem>
               <PaginationNext
                 onClick={() => onPageChange(pagination.currentPage + 1)}
-                className={!pagination.hasNext ? "pointer-events-none opacity-50" : ""}
+                className={cn(!pagination.hasNext && "pointer-events-none opacity-50")}
               />
             </PaginationItem>
           </PaginationContent>

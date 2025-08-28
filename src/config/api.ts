@@ -14,7 +14,8 @@ export const API_CONFIG = {
       DELETE: '/users/store-admin',
       REGISTER: '/auth/store-admin'
     },
-    DISCOUNT: '/promotions'
+    DISCOUNT: '/promotions',
+    STOCK_REPORTS: '/stock-reports'
   },
   DEFAULT_PAGE_SIZE: 10,
 };

@@ -11,6 +11,7 @@ import {
   PaginationPrevious,
   PaginationNext,
 } from "@/components/ui/pagination";
+import { cn } from '@/lib/utils';
 
 interface DiscountGridProps {
   discounts: Discount[];
@@ -84,7 +85,7 @@ const DiscountGrid: FC<DiscountGridProps> = ({
             <PaginationItem>
               <PaginationPrevious
                 onClick={() => onPageChange(pagination.currentPage - 1)}
-                className={!pagination.hasPrevious ? "pointer-events-none opacity-50" : ""}
+                className={cn(!pagination.hasPrevious && "pointer-events-none opacity-50")}
               />
             </PaginationItem>
 
@@ -102,7 +103,7 @@ const DiscountGrid: FC<DiscountGridProps> = ({
             <PaginationItem>
               <PaginationNext
                 onClick={() => onPageChange(pagination.currentPage + 1)}
-                className={!pagination.hasNext ? "pointer-events-none opacity-50" : ""}
+                className={cn(!pagination.hasNext && "pointer-events-none opacity-50")}
               />
             </PaginationItem>
           </PaginationContent>

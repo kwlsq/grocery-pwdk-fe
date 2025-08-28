@@ -16,6 +16,7 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Product, UpdateProductDTO } from '@/types/product';
 import { useImageStore } from '@/store/imageStore';
+import { useDiscountStore } from '@/store/discountStore';
 
 const productSchema = z.object({
   name: z.string().min(1, 'Name cannot be blank'),
@@ -39,6 +40,7 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
   const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
   const [mediaPreviews, setMediaPreviews] = useState<string[]>();
   const { isUploading } = useImageStore();
+  const { discounts } = useDiscountStore();
 
 
   const {
@@ -262,6 +264,40 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
                 </div>
               </div>
             </div>
+          </div>
+
+          <div className="flex flex-col">
+            <div className='flex flex-col gap-2'>
+              <Label>Promotion</Label>
+              {discounts.map((discount) => (
+                <div key={discount.id}>
+                  <div className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs text-gray-700 bg-gray-100 px-2 py-1 rounded-full capitalize">
+                        {discount.type.toLowerCase()}
+                      </span>
+                    </div>
+
+                    <h3 className="font-semibold text-gray-800 mb-1 line-clamp-2">
+                      {discount.name}
+                    </h3>
+                    <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                      {discount.description}
+                    </p>
+
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-bold text-green-600">
+                          {discount.unit === 'percentage' ? `${discount.value}%` : (discount.unit === 'currency' ? `Rp ${discount.value.toLocaleString()}` : `B1G1`)}
+                        </span>
+                        <span className="text-xs text-gray-500">min Rp {discount.minPurchase.toLocaleString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {errors.categoryID && <p className="mt-1 text-xs text-red-600">{errors.categoryID.message}</p>}
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
