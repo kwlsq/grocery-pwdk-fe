@@ -31,7 +31,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
         <div className="relative h-48 w-full">
           {primaryImage ? (
             <Image
-              src={primaryImage.url}
+              src={primaryImage.url ?? "/Product Image Placeholder.webp"}
               alt={product.name}
               fill
               className="object-cover"

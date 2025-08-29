@@ -40,7 +40,8 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
   const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
   const [mediaPreviews, setMediaPreviews] = useState<string[]>();
   const { isUploading } = useImageStore();
-  const { discounts } = useDiscountStore();
+  const { discounts, fetchDiscount } = useDiscountStore();
+  const [selectedPromotions, setSelectedPromotions] = useState<string[]>(() => (product.promotions || []).map(p => p.id));
 
 
   const {
@@ -64,6 +65,7 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
 
   useEffect(() => {
     fetchCategories();
+    fetchDiscount();
   }, [fetchCategories]);
 
   const handleMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -94,7 +96,8 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
         price: Number(data.price),
         weight: Number(data.weight),
         categoryID: data.categoryID,
-        changeReason: ""
+        changeReason: "",
+        promotions: selectedPromotions.map((id) => ({ promotionID: id }))
       };
 
       await updateProduct(id, product);
@@ -127,10 +130,10 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
           setMediaPreviews([]);
         }
       }}>
-      <DialogTrigger asChild>
+      <DialogTrigger asChild className='w-full'>
         <Button>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5h2m-1 0v14m-6 0h12a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-edit">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" /><path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" /><path d="M16 5l3 3" />
           </svg>
           Edit Product
         </Button>
@@ -218,14 +221,18 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
               <div className="flex flex-col gap-4 p-6 border border-neutral-300 rounded-xl">
                 <div className="flex flex-col gap-2">
                   <Label>Thumbnail</Label>
-                  <div className={cn("relative w-32 aspect-square border-[1px] border-gray-100 rounded-2xl", !thumbnail && "hidden")}>
-                    <Image
-                      src={thumbnailPreview}
-                      fill
-                      alt="image of event"
-                      className="object-contain"
-                    />
-                  </div>
+                  {thumbnailPreview.length > 0
+                    &&
+                    <div className={cn("relative w-32 aspect-square border-[1px] border-gray-100 rounded-2xl", !thumbnail && "hidden")}>
+                      <Image
+                        src={thumbnailPreview}
+                        fill
+                        alt="image of event"
+                        className="object-contain"
+                      />
+                    </div>
+                  }
+
                   <div>
                     <input
                       type="file"
@@ -267,35 +274,50 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
           </div>
 
           <div className="flex flex-col">
-            <div className='flex flex-col gap-2'>
-              <Label>Promotion</Label>
-              {discounts.map((discount) => (
-                <div key={discount.id}>
-                  <div className="p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs text-gray-700 bg-gray-100 px-2 py-1 rounded-full capitalize">
-                        {discount.type.toLowerCase()}
-                      </span>
-                    </div>
-
-                    <h3 className="font-semibold text-gray-800 mb-1 line-clamp-2">
-                      {discount.name}
-                    </h3>
-                    <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                      {discount.description}
-                    </p>
-
+            <Label>Promotions</Label>
+            {selectedPromotions.length > 0 && (
+              <div className='flex flex-wrap gap-2 mb-2'>
+                {discounts
+                  .filter((d) => selectedPromotions.includes(d.id))
+                  .map((d) => (
+                    <span key={d.id} className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
+                      {d.name}
+                    </span>
+                  ))}
+              </div>
+            )}
+            <div className='grid grid-cols-3 gap-2'>
+              {discounts.map((discount) => {
+                const isSelected = selectedPromotions.includes(discount.id);
+                return (
+                  <button
+                    type="button"
+                    key={discount.id}
+                    onClick={() => {
+                      setSelectedPromotions((prev) =>
+                        prev.includes(discount.id)
+                          ? prev.filter((id) => id !== discount.id)
+                          : [...prev, discount.id]
+                      );
+                    }}
+                    className={cn(
+                      "text-left p-2 border rounded-xl transition-colors w-full",
+                      isSelected ? "border-green-500 bg-green-50" : "border-gray-200 hover:border-gray-300"
+                    )}
+                  >
+                    <h3 className="font-semibold text-gray-800 mb-1 line-clamp-1 text-sm">{discount.name}</h3>
+                    <p className="text-gray-600 text-xs mb-3 line-clamp-1">{discount.description}</p>
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-lg font-bold text-green-600">
+                        <span className="text-base font-bold text-green-600">
                           {discount.unit === 'percentage' ? `${discount.value}%` : (discount.unit === 'currency' ? `Rp ${discount.value.toLocaleString()}` : `B1G1`)}
                         </span>
                         <span className="text-xs text-gray-500">min Rp {discount.minPurchase.toLocaleString()}</span>
                       </div>
                     </div>
-                  </div>
-                </div>
-              ))}
+                  </button>
+                );
+              })}
             </div>
             {errors.categoryID && <p className="mt-1 text-xs text-red-600">{errors.categoryID.message}</p>}
           </div>

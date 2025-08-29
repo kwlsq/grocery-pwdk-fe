@@ -18,6 +18,7 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { CreateProductDTO } from '@/types/product';
 import { useImageStore } from '@/store/imageStore';
+import { useDiscountStore } from '@/store/discountStore';
 
 const productSchema = z.object({
   name: z.string().min(1, 'Name cannot be blank'),
@@ -46,7 +47,9 @@ type ProductFormValues = z.infer<typeof productSchema>;
 export default function CreateProduct({ storeID }: { storeID: string }) {
   const { categories, fetchCategories, createProduct } = useProductStore();
   const { warehouses } = useWarehouseStore();
+  const { discounts, fetchDiscount } = useDiscountStore();
   const [open, setOpen] = useState(false);
+  const [selectedPromotions, setSelectedPromotions] = useState<string[]>([]);
   const [files, setFiles] = useState<File[] | null>(null);
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
@@ -82,6 +85,7 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
 
   useEffect(() => {
     fetchCategories();
+    fetchDiscount();
   }, [fetchCategories]);
 
   const { fields } = useFieldArray({
@@ -118,6 +122,8 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
           stock: stock.selected ? Number(stock.quantity) : 0,
         }));
 
+      const selectedPromotionIds = selectedPromotions.map((id) => ({ promotionID: id }));
+
       const newProduct: CreateProductDTO = {
         name: data.name.trim(),
         description: data.description.trim(),
@@ -125,7 +131,8 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
         weight: Number(data.weight),
         categoryID: data.categoryID,
         storeID: storeID,
-        inventories: inventories
+        inventories: inventories,
+        ...(selectedPromotionIds.length > 0 ? { promotions: selectedPromotionIds } : {})
       };
 
       const productID = await createProduct(newProduct);
@@ -343,6 +350,44 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Promotions (optional, multi-select) */}
+          <div className="flex flex-col gap-2">
+            <Label className="block text-sm font-medium text-gray-700">Promotions</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {discounts.map((discount) => {
+                const isSelected = selectedPromotions.includes(discount.id);
+                return (
+                  <button
+                    type="button"
+                    key={discount.id}
+                    onClick={() => {
+                      setSelectedPromotions((prev) =>
+                        prev.includes(discount.id)
+                          ? prev.filter((id) => id !== discount.id)
+                          : [...prev, discount.id]
+                      );
+                    }}
+                    className={cn(
+                      "text-left p-4 border rounded-xl transition-colors",
+                      isSelected ? "border-green-500 bg-green-50" : "border-gray-200 hover:border-gray-300"
+                    )}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-medium">{discount.name}</span>
+                      <span className="text-xs text-gray-500">min Rp {discount.minPurchase.toLocaleString()}</span>
+                    </div>
+                    <p className="text-xs text-gray-600 mb-2 line-clamp-2">{discount.description}</p>
+                    <span className="text-sm font-semibold text-green-700">
+                      {discount.unit === 'percentage'
+                        ? `${discount.value}%`
+                        : (discount.unit === 'currency' ? `Rp ${discount.value.toLocaleString()}` : `B1G1`)}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 

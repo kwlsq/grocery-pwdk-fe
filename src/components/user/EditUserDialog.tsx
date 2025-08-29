@@ -13,10 +13,10 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useImageStore } from '@/store/imageStore';
 import { User } from '@/types/user';
+import { useUsersStore } from '@/store/userStore';
 
 const productSchema = z.object({
   email: z.string().min(1, 'email cannot be blank'),
-  phoneNumber: z.string().min(1, 'phone number cannot be blank'),
   fullName: z.string().min(1, 'full name cannot be blank'),
 });
 
@@ -31,6 +31,7 @@ const EditUserDialog: FC<UserProps> = ({ user }) => {
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
   const { isUploading } = useImageStore();
+  const { deleteUser } = useUsersStore();
 
 
   const {
@@ -42,7 +43,7 @@ const EditUserDialog: FC<UserProps> = ({ user }) => {
     resolver: zodResolver(productSchema),
     defaultValues: {
       email: user.email,
-      fullName: user.fullName,
+      fullName: user.fullName
     },
     mode: 'onBlur',
   });
@@ -71,6 +72,15 @@ const EditUserDialog: FC<UserProps> = ({ user }) => {
     }
   };
 
+  
+  const handleDeleteStoreAdmin = async (userID: string) => {
+    try {
+      await deleteUser({userID});
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
   return (
     <Dialog
       open={open}
@@ -83,8 +93,9 @@ const EditUserDialog: FC<UserProps> = ({ user }) => {
         }
       }}>
       <DialogTrigger asChild>
-        <div className='text-gray-300'>
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-edit"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" /><path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" /><path d="M16 5l3 3" />
+        <div className='text-gray-300 cursor-pointer hover:text-gray-400'>
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-edit">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" /><path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" /><path d="M16 5l3 3" />
           </svg>
         </div>
       </DialogTrigger>
@@ -98,7 +109,7 @@ const EditUserDialog: FC<UserProps> = ({ user }) => {
           <div className="flex flex-col">
             <div className="flex flex-col gap-2">
               <Label className="block text-sm font-medium text-gray-700">Email</Label>
-              <Input type="text" {...register('email')} placeholder='Input your product name' disabled/>
+              <Input type="text" {...register('email')} placeholder='Input your product name' disabled />
             </div>
             {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>}
           </div>
@@ -110,15 +121,6 @@ const EditUserDialog: FC<UserProps> = ({ user }) => {
               <Input type="text" {...register('fullName')} placeholder='Input your product name' />
             </div>
             {errors.fullName && <p className="mt-1 text-xs text-red-600">{errors.fullName.message}</p>}
-          </div>
-
-          {/* phone number */}
-          <div className="flex flex-col">
-            <div className="flex flex-col gap-2">
-              <Label className="block text-sm font-medium text-gray-700">Phone number</Label>
-              <Input type="text" {...register('fullName')} placeholder='Input your product name' />
-            </div>
-            {errors.phoneNumber && <p className="mt-1 text-xs text-red-600">{errors.phoneNumber.message}</p>}
           </div>
 
           {/* Upload Image */}
@@ -150,14 +152,23 @@ const EditUserDialog: FC<UserProps> = ({ user }) => {
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 pt-4">
-            <Button variant="outline" onClick={() => setOpen(false)} type="button">
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && isUploading ? "Creating new product..." : "Create Product"}
-            </Button>
+          <div className='flex justify-between'>
+            <Button
+            variant={"link"}
+            className='text-red-500'
+            onClick={() => handleDeleteStoreAdmin(user.id)}
+            >Delete</Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setOpen(false)} type="button">
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && isUploading ? "Creating new product..." : "Create Product"}
+              </Button>
+            </div>
           </div>
+
+
         </form>
       </DialogContent>
     </Dialog>

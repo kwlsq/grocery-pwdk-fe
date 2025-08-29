@@ -61,6 +61,9 @@ export interface CreateProductDTO {
     warehouseID: string;
     stock: number;
   }[];
+  promotions?: {
+    promotionID: string
+  }[];
 }
 
 export interface UpdateProductDTO {
@@ -70,6 +73,9 @@ export interface UpdateProductDTO {
   weight: number;
   categoryID: string;
   changeReason: string;
+  promotions?: {
+    promotionID: string
+  }[];
 }
 
 export interface ProductState {
