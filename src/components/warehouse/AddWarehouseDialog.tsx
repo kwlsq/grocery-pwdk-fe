@@ -11,15 +11,17 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useStoreStore } from "@/store/storeStore";
 import { useParams } from "next/navigation";
+import { useWarehouseStore } from "@/store/warehouseStore";
+import { CreateWarehouseDTO } from "@/types/warehouse";
 
-const formSchema = z.object({
+const warehouseSchema = z.object({
   name: z.string().min(1, "Name is required"),
   address: z.string().min(1, "Address is required"),
-  latitude: z.string().min(1, "Latitude is required"),
-  longitude: z.string().min(1, "Longitude is required"),
+  latitude: z.number(),
+  longitude: z.number()
 });
 
-type FormValues = z.infer<typeof formSchema>;
+type WarehouseFormValues = z.infer<typeof warehouseSchema>;
 
 export default function AddWarehouseDialog() {
   const [open, setOpen] = React.useState(false);
@@ -27,8 +29,10 @@ export default function AddWarehouseDialog() {
   const params = useParams();
   const storeId = params.id as string;
 
-  const {stores} = useStoreStore();
+  const { stores } = useStoreStore();
   const currentStore = stores.find(store => store.id === storeId);
+
+  const { createWarehouse } = useWarehouseStore();
 
 
   const {
@@ -36,34 +40,29 @@ export default function AddWarehouseDialog() {
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
-  } = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+  } = useForm<WarehouseFormValues>({
+    resolver: zodResolver(warehouseSchema),
     defaultValues: {
       name: "",
       address: "",
-      latitude: "",
-      longitude: "",
+      latitude: 0,
+      longitude: 0,
     },
     mode: "onBlur"
   });
 
-  const onSubmit = async (data: FormValues) => {
+  const onSubmit = async (data: WarehouseFormValues) => {
     try {
-      const res = await fetch("/api/warehouses", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...data,
-          latitude: parseFloat(data.latitude),
-          longitude: parseFloat(data.longitude),
-        }),
-      });
-
-      if (!res.ok) {
-        throw new Error("Failed to add warehouse");
+      const newWarehouse: CreateWarehouseDTO = {
+        name: data.name,
+        storeID: storeId,
+        address: data.address,
+        latitude: Number(data.latitude),
+        longitude: Number(data.longitude),
+        isActive: true
       }
+
+      await createWarehouse(newWarehouse);
 
       toast.success("Warehouse added successfully!");
       reset();
@@ -75,13 +74,13 @@ export default function AddWarehouseDialog() {
 
   return (
     <Dialog
-    open={open}
-    onOpenChange={(isOpen) => {
-      setOpen(isOpen);
-      if(!isOpen) {
-        reset();
-      }
-    }}>
+      open={open}
+      onOpenChange={(isOpen) => {
+        setOpen(isOpen);
+        if (!isOpen) {
+          reset();
+        }
+      }}>
       <DialogTrigger asChild>
         <Button>Add Warehouse</Button>
       </DialogTrigger>
@@ -94,7 +93,7 @@ export default function AddWarehouseDialog() {
           {/* Store ID */}
           <div className="flex flex-col gap-2">
             <Label htmlFor="store_id">Store Name</Label>
-            <Input id="store_id" placeholder="Enter store ID" value={currentStore?.name} disabled/>
+            <Input id="store_id" placeholder="Enter store ID" value={currentStore?.name} disabled />
           </div>
 
           {/* Name */}
@@ -114,16 +113,27 @@ export default function AddWarehouseDialog() {
           {/* Latitude */}
           <div className="flex flex-col gap-2">
             <Label htmlFor="latitude">Latitude</Label>
-            <Input id="latitude" type="number" step="any" placeholder="e.g. -6.200000" {...register("latitude")} />
+            <Input
+              type="number"
+              step="any"
+              placeholder="e.g. -6.200000"
+              {...register("latitude", { valueAsNumber: true })}
+            />
             {errors.latitude && <p className="text-red-500 text-sm">{errors.latitude.message}</p>}
           </div>
 
           {/* Longitude */}
           <div className="flex flex-col gap-2">
             <Label htmlFor="longitude">Longitude</Label>
-            <Input id="longitude" type="number" step="any" placeholder="e.g. 106.816666" {...register("longitude")} />
+            <Input
+              type="number"
+              step="any"
+              placeholder="e.g. 106.816666"
+              {...register("longitude", { valueAsNumber: true })}
+            />
             {errors.longitude && <p className="text-red-500 text-sm">{errors.longitude.message}</p>}
           </div>
+
 
           <div className="flex justify-end gap-2 pt-4">
             <Button variant="outline" onClick={() => setOpen(false)} type="button">

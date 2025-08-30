@@ -1,0 +1,78 @@
+import { create } from "zustand";
+import {
+  CreateDiscountDTO,
+  DiscountState,
+  DiscountsApiResponse,
+} from "../types/discount";
+import axios from "axios";
+import { API_CONFIG } from "@/config/api";
+
+export const useDiscountStore = create<DiscountState>((set, get) => ({
+  discounts: [],
+  loading: false,
+  error: null,
+  pagination: null,
+
+  fetchDiscount: async () => {
+    set({ loading: true, error: null });
+    try {
+      const response = await axios.get<DiscountsApiResponse>(
+        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DISCOUNT}`
+      );
+
+      if (response.data.success) {
+        set({
+          discounts: response.data.data.content,
+          pagination: {
+            page: response.data.data.page,
+            size: response.data.data.size,
+            totalElements: response.data.data.totalElements,
+            totalPages: response.data.data.totalPages,
+            hasNext: response.data.data.hasNext,
+            hasPrevious: response.data.data.hasPrevious,
+          },
+          loading: false,
+        });
+      } else {
+        set({
+          error: response.data.message || "Failed to fetch users",
+          loading: false,
+        });
+      }
+    } catch (err) {
+      console.error("Error fetching users:", err);
+      set({
+        error: err instanceof Error ? err.message : "Failed to fetch users",
+        loading: false,
+      });
+    }
+  },
+
+  createDiscount: async (data: CreateDiscountDTO) => {
+    set({ loading: true, error: null });
+    try {
+      const response = await axios.post(
+        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DISCOUNT}`,
+        data
+      );
+
+      if (response.data.success) {
+        set((state) => ({
+          discounts: [...state.discounts, ...response.data.data],
+          loading: false,
+        }));
+      } else {
+        set({
+          error: response.data.message || "Failed to create discount",
+          loading: false,
+        });
+      }
+    } catch (err) {
+      console.error("Error fetching users:", err);
+      set({
+        error: err instanceof Error ? err.message : "Failed to fetch users",
+        loading: false,
+      });
+    }
+  },
+}));

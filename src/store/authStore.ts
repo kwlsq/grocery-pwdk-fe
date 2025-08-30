@@ -30,7 +30,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: false,
   checkAuthStatus: async () => {
     try {
-      const response = await apiClient.get('/api/users/me');
+      const response = await apiClient.get('/api/v1/users/me');
       set({ user: response.data, isAuthenticated: true });
     } catch (error) {
       set({ user: null, isAuthenticated: false });
@@ -40,7 +40,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   logout: async () => {
     try {
         // NOTE: Your /logout endpoint should clear the HttpOnly cookies
-        await apiClient.post('/api/auth/logout', {});
+        await apiClient.post('/api/v1/auth/logout', {});
     } finally {
         set({ user: null, isAuthenticated: false });
     }

@@ -61,13 +61,19 @@ export const useUsersStore = create<UsersState>((set, get) => ({
   deleteUser: async ({ userID }) => {
     set({ loading: true, error: null });
     try {
-      axios.post(
+      const token =
+        (typeof window !== "undefined" && localStorage.getItem("accessToken")) ||
+        (typeof window !== "undefined" && sessionStorage.getItem("accessToken")) ||
+        "";
+
+      await axios.delete(
         buildApiUrl(
-          API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.STORE_ADMIN.DELETE,
-          {
-            userID,
-          }
-        )
+          API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.STORE_ADMIN.DELETE + "/" + userID
+        ),
+        {
+          withCredentials: true,
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        }
       );
 
       set({ loading: false, error: null });
@@ -88,7 +94,7 @@ export const useUsersStore = create<UsersState>((set, get) => ({
         API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.STORE_ADMIN.REGISTER
       );
 
-      const response = await axios.post(url, data, {
+      await axios.post(url, data, {
         headers: {
           "Content-Type": "application/json",
         },

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import axios from "axios";
-import { Warehouse, WarehouseApiResponse } from "../types/warehouse";
+import { CreateWarehouseDTO, Warehouse, WarehouseApiResponse } from "../types/warehouse";
 import { API_CONFIG, buildApiUrl } from "@/config/api";
 import { WarehouseState } from "../types/warehouse";
 
@@ -48,4 +48,28 @@ export const useWarehouseStore = create<WarehouseState>((set) => ({
       });
     }
   },
+
+  createWarehouse: async (data: CreateWarehouseDTO) => {
+    set({ loading: true, error: null });
+    try {
+      const url = buildApiUrl(
+        API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.WAREHOUSE
+      );
+
+      const response = await axios.post(url, data, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      set({ loading: false, error: null });
+    } catch (error) {
+      console.error("Error while creating warehouse:", error);
+      set({
+        error:
+          error instanceof Error ? error.message : "Failed to create warehouse",
+        loading: false,
+      });
+    }
+  }
 }));

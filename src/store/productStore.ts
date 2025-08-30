@@ -183,7 +183,7 @@ export const useProductStore = create<ProductState>((set) => ({
   createProduct: async (data) => {
     set({ loading: true, error: null });
     try {
-      const response = await axios.post(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS_CREATE}`, data, {
+      const response = await axios.post(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS_CRUD}`, data, {
         headers: { "Content-Type": "application/json" }
       });
 
@@ -195,6 +195,28 @@ export const useProductStore = create<ProductState>((set) => ({
       return response.data.data.id;
     } catch (e) {
       console.error(e)
+    }
+  },
+
+  updateProduct: async (id, data) => {
+    set({ loading: true, error: null });
+    try {
+      const response = await axios.patch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS_CRUD}/${id}`, data, {
+        headers: {"Content-Type" : "application/json"}
+      });
+
+      return response.data.data;
+    } catch (e) {
+      console.error(e);
+    }
+  },
+
+  deleteProduct: async (id) => {
+    set({ loading: true, error: null });
+    try {
+      await axios.delete(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS_CRUD}/${id}`);
+    } catch (e) {
+      console.error(e);
     }
   }
 }));

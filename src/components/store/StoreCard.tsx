@@ -10,7 +10,7 @@ interface StoreCardProps {
 const StoreCard = ({ store }: StoreCardProps) => {
   return (
     <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden border border-gray-100">
-      <Link href={`/store-details/${store.id}`} className="block" aria-label={`View details for ${store.name}`}>
+              <Link href={`/admin-dashboard/store-details/${store.id}`} className="block" aria-label={`View details for ${store.name}`}>
         <div className="relative h-48 w-full bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center">
           <div className="text-center">
             <svg className="w-16 h-16 text-green-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
