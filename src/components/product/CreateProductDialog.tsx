@@ -46,7 +46,7 @@ type ProductFormValues = z.infer<typeof productSchema>;
 
 export default function CreateProduct({ storeID }: { storeID: string }) {
   const { categories, fetchCategories, createProduct } = useProductStore();
-  const { warehouses } = useWarehouseStore();
+  const { warehouses, fetchWarehouses } = useWarehouseStore();
   const { discounts, fetchDiscount } = useDiscountStore();
   const [open, setOpen] = useState(false);
   const [selectedPromotions, setSelectedPromotions] = useState<string[]>([]);
@@ -86,6 +86,7 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
   useEffect(() => {
     fetchCategories();
     fetchDiscount();
+    fetchWarehouses(storeID)
   }, [fetchCategories]);
 
   const { fields } = useFieldArray({
@@ -136,7 +137,6 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
       };
 
       const productID = await createProduct(newProduct);
-
 
       if (thumbnail) {
         uploadSingleImage(thumbnail, String(productID), true);

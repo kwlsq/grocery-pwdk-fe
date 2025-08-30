@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import EditProduct from './EditProductDialog';
 import { useAuthStore } from '@/store/authStore';
+import ProductStock from './ProductStockDialog';
 
 interface ProductCardProps {
   product: Product;
@@ -12,18 +13,16 @@ interface ProductCardProps {
 
 const ProductCard = ({ product }: ProductCardProps) => {
   const { user } = useAuthStore();
+  const { price, weight } = product.productVersionResponse;
 
   // Get the primary image or first image available
   const primaryImage = product.productImages.find(img => img.primary) || product.productImages[0];
-  
+
   // Get total stock from all inventories
   const totalStock = product.productVersionResponse.inventories.reduce(
-    (sum, inventory) => sum + inventory.stock, 
+    (sum, inventory) => sum + inventory.stock,
     0
   );
-
-  // Get price and weight from product version
-  const { price, weight } = product.productVersionResponse;
 
   return (
     <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden border border-gray-100">
@@ -85,9 +84,16 @@ const ProductCard = ({ product }: ProductCardProps) => {
         </div>
       </Link>
 
-      <div className="px-4 pb-4">
+      <div className="px-4 pb-4 w-full">
         {user?.role === 'ADMIN' ? (
-          <EditProduct id={product.id} product={product} />
+          <div className='w-full flex gap-2'>
+            <div className='w-full'>
+              <EditProduct id={product.id} product={product} />
+            </div>
+            <div className='w-fit'>
+              <ProductStock id={product.id} product={product} />
+            </div>
+          </div>
         ) : (
           <button
             disabled={totalStock === 0}
@@ -99,6 +105,6 @@ const ProductCard = ({ product }: ProductCardProps) => {
       </div>
     </div>
   );
-} 
+}
 
 export default ProductCard;

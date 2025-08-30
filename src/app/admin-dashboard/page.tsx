@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useStoreStore } from '../../store/storeStore';
 import StoreGrid from '../../components/store/StoreGrid';
 import { Tabs, TabsList, TabsContent, TabsTrigger } from '@/components/ui/tabs';
@@ -15,13 +14,9 @@ import DiscountGrid from '@/components/discount/DiscountGrid';
 import dynamic from 'next/dynamic';
 const StockReportTableDyn = dynamic(() => import('@/components/report/StockReportTable'), { ssr: false });
 import CreateDiscountDialog from '@/components/discount/CreateDiscountDialog';
-import { useAuthStore } from '@/store/authStore';
 
 export default function AdminDashboardPage() {
   const [mounted, setMounted] = useState(false);
-  const [checkingAuth, setCheckingAuth] = useState(true);
-  const router = useRouter();
-  const { user, isAuthenticated, checkAuthStatus } = useAuthStore();
   const { stores, loading, error, fetchStores } = useStoreStore();
   const { users, loading: usersLoading, error: usersError, fetchUsers, selectedRole, setSelectedRole } = useUsersStore();
   const { discounts, loading: discountsLoading, error: discountsError, pagination, fetchDiscount } = useDiscountStore();
@@ -31,52 +26,19 @@ export default function AdminDashboardPage() {
   }, []);
 
   useEffect(() => {
-    const doCheck = async () => {
-      try {
-        await checkAuthStatus();
-      } finally {
-        setCheckingAuth(false);
-      }
-    };
-    doCheck();
-  }, [checkAuthStatus]);
-
-  useEffect(() => {
-    if (checkingAuth) return;
-    const role = user?.role;
-    const allowed = role === 'ADMIN' || role === 'MANAGER';
-    if (!isAuthenticated || !allowed) {
-      router.replace('/fallback');
-    }
-  }, [checkingAuth, user, isAuthenticated, router]);
-
-  useEffect(() => {
-    const role = user?.role;
-    const allowed = role === 'ADMIN' || role === 'MANAGER';
-    if (!mounted || checkingAuth || !isAuthenticated || !allowed) return;
+    if (!mounted) return;
     fetchStores();
-  }, [mounted, checkingAuth, isAuthenticated, user, fetchStores]);
+  }, [mounted, fetchStores]);
 
   useEffect(() => {
-    const role = user?.role;
-    const allowed = role === 'ADMIN' || role === 'MANAGER';
-    if (!mounted || checkingAuth || !isAuthenticated || !allowed) return;
+    if (!mounted) return;
     fetchUsers({ page: 0, size: 12, role: selectedRole });
-  }, [mounted, checkingAuth, isAuthenticated, user, fetchUsers, selectedRole]);
+  }, [mounted, fetchUsers, selectedRole]);
 
   useEffect(() => {
-    const role = user?.role;
-    const allowed = role === 'ADMIN' || role === 'MANAGER';
-    if (!mounted || checkingAuth || !isAuthenticated || !allowed) return;
+    if (!mounted) return;
     fetchDiscount();
-  }, [mounted, checkingAuth, isAuthenticated, user, fetchDiscount]);
-
-  const role = user?.role;
-  const allowed = role === 'ADMIN' || role === 'MANAGER';
-
-  if (!mounted || checkingAuth || !isAuthenticated || !allowed) {
-    return null;
-  }
+  }, [mounted, fetchDiscount]);
 
 
   return (

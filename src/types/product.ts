@@ -78,6 +78,13 @@ export interface UpdateProductDTO {
   }[];
 }
 
+export interface UpdateProductStock {
+  inventories: {
+    warehouseID: string;
+    stock: number;
+  }[];
+}
+
 export interface ProductState {
   categories: ProductCategory[];
   products: Product[];
