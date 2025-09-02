@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import axios from "axios";
-import { ProductState, ApiResponse, ProductCategory, Product } from "../types/product";
+import { ProductState, ApiResponse, ProductCategory } from "../types/product";
 import { buildApiUrl, API_CONFIG } from "../config/api";
 
 export const useProductStore = create<ProductState>((set) => ({
@@ -215,6 +215,26 @@ export const useProductStore = create<ProductState>((set) => ({
     set({ loading: true, error: null });
     try {
       await axios.delete(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS_CRUD}/${id}`);
+    } catch (e) {
+      console.error(e);
+    }
+  },
+
+  updateProductStock: async (id, data) => {
+    set({ loading: true, error: null });
+    try {
+      const token =
+        (typeof window !== "undefined" && localStorage.getItem("accessToken")) ||
+        (typeof window !== "undefined" && sessionStorage.getItem("accessToken")) ||
+        "";
+
+      await axios.patch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS_CRUD}/stocks/${id}`, data,
+        {
+          withCredentials: true,
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        }
+      );
+
     } catch (e) {
       console.error(e);
     }

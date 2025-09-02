@@ -23,10 +23,11 @@ export interface Product {
   id: string;
   name: string;
   description: string;
+  categoryID: string;
   productVersionResponse: ProductVersion;
   productImages: ProductImage[];
   inventories: Inventory[];
-  promotions: Discount[]
+  promotions: Discount[];
 }
 
 export interface ProductCategory {
@@ -62,7 +63,7 @@ export interface CreateProductDTO {
     stock: number;
   }[];
   promotions?: {
-    promotionID: string
+    promotionID: string;
   }[];
 }
 
@@ -74,21 +75,19 @@ export interface UpdateProductDTO {
   categoryID: string;
   changeReason: string;
   promotions?: {
-    promotionID: string
+    promotionID: string;
   }[];
 }
 
 export interface UpdateProductStock {
-  inventories: {
-    warehouseID: string;
-    stock: number;
-  }[];
+  warehouseID: string;
+  stock: number;
 }
 
 export interface ProductState {
   categories: ProductCategory[];
   products: Product[];
-  productsThisStore: Product[],
+  productsThisStore: Product[];
   loading: boolean;
   error: string | null;
   pagination: PaginationInfo | null;
@@ -104,7 +103,7 @@ export interface ProductState {
   ) => Promise<void>;
   fetchProductById: (id: string) => Promise<Product>;
   fetchProductByStoreID: (
-    id: string, 
+    id: string,
     page?: number,
     size?: number,
     search?: string,
@@ -115,4 +114,5 @@ export interface ProductState {
   createProduct: (data: CreateProductDTO) => Promise<void>;
   updateProduct: (id: string, data: UpdateProductDTO) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
-} 
+  updateProductStock: (id: string, data: UpdateProductStock[]) => Promise<void>;
+}
