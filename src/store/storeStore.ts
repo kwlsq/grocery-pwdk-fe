@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import axios from "axios";
 import { Store, StoreApiResponse } from "../types/store";
+import { API_CONFIG, buildApiUrl } from "../config/api";
 
 interface StoreState {
   stores: Store[];
@@ -17,9 +18,20 @@ export const useStoreStore = create<StoreState>((set) => ({
   fetchStores: async () => {
     set({ loading: true, error: null });
     try {
-      const response = await axios.get<StoreApiResponse>(
-        'http://localhost:8080/api/v1/store'
+      const token =
+        (typeof window !== "undefined" && localStorage.getItem("accessToken")) ||
+        (typeof window !== "undefined" && sessionStorage.getItem("accessToken")) ||
+        "";
+        
+      const url = buildApiUrl(
+        API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.STORE,
+        {}
       );
+
+      const response = await axios.get<StoreApiResponse>(url, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        withCredentials: true,
+      });
 
       if (response.data.success) {
         set({ stores: response.data.data, loading: false });

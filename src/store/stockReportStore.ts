@@ -23,6 +23,12 @@ export const useStockReportStore = create<StockReportState>((set, get) => ({
 
     set({ loading: true, error: null, page, size, filters });
     try {
+
+      const token =
+        (typeof window !== "undefined" && localStorage.getItem("accessToken")) ||
+        (typeof window !== "undefined" && sessionStorage.getItem("accessToken")) ||
+        "";
+
       const url = buildApiUrl(
         `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.STOCK_REPORTS}/summary`,
         {
@@ -35,7 +41,10 @@ export const useStockReportStore = create<StockReportState>((set, get) => ({
         }
       );
 
-      const response = await axios.get<StockReportApiResponse>(url);
+      const response = await axios.get<StockReportApiResponse>(url, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        withCredentials: true,
+      });
       if (response.data.success) {
         const data = response.data.data;
         set({

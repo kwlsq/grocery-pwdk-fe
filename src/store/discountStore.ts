@@ -5,7 +5,7 @@ import {
   DiscountsApiResponse,
 } from "../types/discount";
 import axios from "axios";
-import { API_CONFIG } from "@/config/api";
+import { API_CONFIG, buildApiUrl } from "@/config/api";
 
 export const useDiscountStore = create<DiscountState>((set, get) => ({
   discounts: [],
@@ -16,9 +16,21 @@ export const useDiscountStore = create<DiscountState>((set, get) => ({
   fetchDiscount: async () => {
     set({ loading: true, error: null });
     try {
-      const response = await axios.get<DiscountsApiResponse>(
-        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DISCOUNT}`
+      const token =
+        (typeof window !== "undefined" &&
+          localStorage.getItem("accessToken")) ||
+        (typeof window !== "undefined" &&
+          sessionStorage.getItem("accessToken")) ||
+        "";
+
+      const url = buildApiUrl(
+        API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.DISCOUNT
       );
+
+      const response = await axios.get<DiscountsApiResponse>(url, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        withCredentials: true,
+      });
 
       if (response.data.success) {
         set({
@@ -51,9 +63,22 @@ export const useDiscountStore = create<DiscountState>((set, get) => ({
   createDiscount: async (data: CreateDiscountDTO) => {
     set({ loading: true, error: null });
     try {
+      const token =
+        (typeof window !== "undefined" &&
+          localStorage.getItem("accessToken")) ||
+        (typeof window !== "undefined" &&
+          sessionStorage.getItem("accessToken")) ||
+        "";
+
       const response = await axios.post(
         `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DISCOUNT}`,
-        data
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       if (response.data.success) {

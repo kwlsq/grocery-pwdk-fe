@@ -15,7 +15,8 @@ export const API_CONFIG = {
       REGISTER: '/auth/store-admin'
     },
     DISCOUNT: '/promotions',
-    STOCK_REPORTS: '/stock-reports'
+    STOCK_REPORTS: '/stock-reports',
+    STORE: '/store'
   },
   DEFAULT_PAGE_SIZE: 10,
 };
