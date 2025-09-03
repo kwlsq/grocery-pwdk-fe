@@ -58,7 +58,7 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
       description: product.description,
       price: String(product.productVersionResponse.price),
       weight: String(product.productVersionResponse.weight),
-      categoryID: ''
+      categoryID: categories.find(c => c.id === product.categoryID)?.id || ''
     },
     mode: 'onBlur',
   });

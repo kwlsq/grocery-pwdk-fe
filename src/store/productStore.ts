@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import axios from "axios";
-import { ProductState, ApiResponse, ProductCategory, Product } from "../types/product";
+import { ProductState, ApiResponse, ProductCategory } from "../types/product";
 import { buildApiUrl, API_CONFIG } from "../config/api";
 
 export const useProductStore = create<ProductState>((set) => ({
@@ -103,15 +103,27 @@ export const useProductStore = create<ProductState>((set) => ({
   ) => {
     set({ loading: true, error: null });
     try {
-      const response = await axios.get<ApiResponse>(
-        buildApiUrl(API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.PRODUCTS_ADMIN + "/" + id, {
+
+      const token =
+        (typeof window !== "undefined" && localStorage.getItem("accessToken")) ||
+        (typeof window !== "undefined" && sessionStorage.getItem("accessToken")) ||
+        "";
+
+      const url = buildApiUrl(
+        API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.PRODUCTS_ADMIN + "/" + id,
+        {
           page,
           size,
           search,
           category,
-          sort
-        })
+          sort,
+        }
       );
+
+      const response = await axios.get<ApiResponse>(url, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        withCredentials: true,
+      });
 
       if (response.data.success) {
         set({
@@ -183,27 +195,53 @@ export const useProductStore = create<ProductState>((set) => ({
   createProduct: async (data) => {
     set({ loading: true, error: null });
     try {
-      const response = await axios.post(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS_CRUD}`, data, {
-        headers: { "Content-Type": "application/json" }
-      });
+
+      const token =
+      (typeof window !== "undefined" && localStorage.getItem("accessToken")) ||
+      (typeof window !== "undefined" && sessionStorage.getItem("accessToken")) ||
+      "";
+
+      const response = await axios.post(
+        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS_CRUD}`,
+        data,
+        {
+          headers: { "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+           },
+        }
+      );
 
       set((state) => ({
         products: [response.data, ...state.products],
-        loading: false
+        loading: false,
       }));
 
       return response.data.data.id;
     } catch (e) {
-      console.error(e)
+      console.error(e);
     }
   },
 
   updateProduct: async (id, data) => {
     set({ loading: true, error: null });
     try {
-      const response = await axios.patch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS_CRUD}/${id}`, data, {
-        headers: {"Content-Type" : "application/json"}
-      });
+      const token =
+        (typeof window !== "undefined" &&
+          localStorage.getItem("accessToken")) ||
+        (typeof window !== "undefined" &&
+          sessionStorage.getItem("accessToken")) ||
+        "";
+
+      const response = await axios.patch(
+        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS_CRUD}/${id}`,
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       return response.data.data;
     } catch (e) {
@@ -214,9 +252,43 @@ export const useProductStore = create<ProductState>((set) => ({
   deleteProduct: async (id) => {
     set({ loading: true, error: null });
     try {
-      await axios.delete(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS_CRUD}/${id}`);
+      const token =
+        (typeof window !== "undefined" && localStorage.getItem("accessToken")) ||
+        (typeof window !== "undefined" && sessionStorage.getItem("accessToken")) ||
+        "";
+
+      await axios.delete(
+        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS_CRUD}/${id}`,
+        {
+          withCredentials: true,
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        }
+      );
     } catch (e) {
       console.error(e);
     }
-  }
+  },
+
+  updateProductStock: async (id, data) => {
+    set({ loading: true, error: null });
+    try {
+      const token =
+        (typeof window !== "undefined" &&
+          localStorage.getItem("accessToken")) ||
+        (typeof window !== "undefined" &&
+          sessionStorage.getItem("accessToken")) ||
+        "";
+
+      await axios.patch(
+        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS_CRUD}/stocks/${id}`,
+        data,
+        {
+          withCredentials: true,
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        }
+      );
+    } catch (e) {
+      console.error(e);
+    }
+  },
 }));

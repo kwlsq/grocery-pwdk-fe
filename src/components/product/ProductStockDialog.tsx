@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Product, UpdateProductDTO, UpdateProductStock } from '@/types/product';
+import { Product } from '@/types/product';
 import { useWarehouseStore } from '@/store/warehouseStore';
 
 const stockSchema = z.object({
@@ -37,6 +37,7 @@ export default function ProductStock({ id, product }: { id: string, product: Pro
   const [open, setOpen] = useState(false);
   const { warehouses } = useWarehouseStore();
   const [stockData, setStockData] = useState<StockData[]>([]);
+  const { updateProductStock } = useProductStore();
 
   const {
     register,
@@ -97,10 +98,8 @@ export default function ProductStock({ id, product }: { id: string, product: Pro
         warehouseID: stock.warehouseId,
         stock: Number(stock.quantity),
       }));
-
-      const updateData: UpdateProductStock = {
-        inventories: inventories,
-      };
+      
+      await updateProductStock(id, inventories);
 
       reset();
       setOpen(false);

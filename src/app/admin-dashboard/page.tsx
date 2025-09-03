@@ -14,12 +14,22 @@ import DiscountGrid from '@/components/discount/DiscountGrid';
 import dynamic from 'next/dynamic';
 const StockReportTableDyn = dynamic(() => import('@/components/report/StockReportTable'), { ssr: false });
 import CreateDiscountDialog from '@/components/discount/CreateDiscountDialog';
+import { cn } from '@/lib/utils';
 
 export default function AdminDashboardPage() {
   const [mounted, setMounted] = useState(false);
+  const [activeTab, setActiveTab] = useState('stores');
   const { stores, loading, error, fetchStores } = useStoreStore();
   const { users, loading: usersLoading, error: usersError, fetchUsers, selectedRole, setSelectedRole } = useUsersStore();
   const { discounts, loading: discountsLoading, error: discountsError, pagination, fetchDiscount } = useDiscountStore();
+
+  // Tab configuration data
+  const tabsData = [
+    { value: 'stores', label: 'Store' },
+    { value: 'users', label: 'User' },
+    { value: 'discounts', label: 'Discount' },
+    { value: 'chart', label: 'Report' }
+  ];
 
   useEffect(() => {
     setMounted(true);
@@ -102,20 +112,22 @@ export default function AdminDashboardPage() {
         </div>
 
 
-        <Tabs defaultValue='stores'>
+        <Tabs defaultValue='stores' onValueChange={setActiveTab}>
           <TabsList>
-            <TabsTrigger value='stores'>
-              Store
-            </TabsTrigger>
-            <TabsTrigger value='users'>
-              User
-            </TabsTrigger>
-            <TabsTrigger value='discounts'>
-              Discount
-            </TabsTrigger>
-            <TabsTrigger value='chart'>
-              Report
-            </TabsTrigger>
+            {tabsData.map((tab) => (
+              <TabsTrigger 
+                key={tab.value}
+                value={tab.value} 
+                className={cn(
+                  "rounded-none h-full border-b-2 data-[state=active]:shadow-none",
+                  activeTab === tab.value 
+                    ? "border-green-600 text-green-600" 
+                    : "border-transparent"
+                )}
+              >
+                {tab.label}
+              </TabsTrigger>
+            ))}
           </TabsList>
           <TabsContent value='stores'>
             {/* Actions Bar */}
