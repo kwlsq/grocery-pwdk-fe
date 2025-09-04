@@ -56,24 +56,25 @@ const MAX_MEDIA_FILES = 5;
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 export default function EditProduct({ id, product }: { id: string, product: Product }) {
-  const { categories, fetchCategories, updateProduct } = useProductStore();
+  const { categories, fetchCategories, updateProduct, deleteProduct } = useProductStore();
   const { isUploading, uploadMultiImage, uploadSingleImage, deleteImage } = useImageStore();
   const { discounts, fetchDiscount } = useDiscountStore();
-  
+
   const [open, setOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [mediaState, setMediaState] = useState<MediaState>(initialMediaState);
   const [selectedPromotions, setSelectedPromotions] = useState<string[]>([]);
   const [updateError, setUpdateError] = useState<string>('');
 
   // Memoized current thumbnail
-  const currentThumbnail = useMemo(() => 
+  const currentThumbnail = useMemo(() =>
     product.productImages?.find(img => img.primary),
     [product.productImages]
   );
 
   // Memoized current media (non-thumbnail images)
-  const currentMedia = useMemo(() => 
-    product.productImages?.filter((img: ProductImage) => 
+  const currentMedia = useMemo(() =>
+    product.productImages?.filter((img: ProductImage) =>
       !img.primary && !mediaState.deletedMedia.includes(img.id)
     ) || [],
     [product.productImages, mediaState.deletedMedia]
@@ -125,7 +126,7 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
     if (!selectedFiles) return;
 
     const fileArray = Array.from(selectedFiles);
-    
+
     // Validate files
     for (const file of fileArray) {
       const error = validateFile(file);
@@ -144,7 +145,7 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
 
     setUpdateError('');
     const mediaUrls = fileArray.map((file) => URL.createObjectURL(file));
-    
+
     setMediaState(prev => ({
       ...prev,
       files: [...prev.files, ...fileArray],
@@ -186,12 +187,12 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
     setMediaState(prev => {
       const newMediaPreviews = prev.mediaPreviews.filter((_, i) => i !== index);
       const newFiles = prev.files.filter((_, i) => i !== index);
-      
+
       // Clean up URL
       if (prev.mediaPreviews[index]) {
         URL.revokeObjectURL(prev.mediaPreviews[index]);
       }
-      
+
       return {
         ...prev,
         mediaPreviews: newMediaPreviews,
@@ -212,7 +213,7 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
     setMediaState(initialMediaState);
     setSelectedPromotions((product.promotions || []).map(p => p.id));
     setUpdateError('');
-    
+
     // Clean up object URLs
     mediaState.mediaPreviews.forEach(url => URL.revokeObjectURL(url));
     if (mediaState.thumbnailPreview) {
@@ -247,7 +248,7 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
   const onSubmit = async (data: ProductFormValues) => {
     try {
       setUpdateError('');
-      
+
       // Build minimal payload: include only fields that changed
       const payload: UpdateProductDTO = {};
 
@@ -287,7 +288,7 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
       if (changedKeys.length > 0) {
         await updateProduct(id, payload);
       }
-      
+
       // Handle image operations
       await handleImageOperations();
 
@@ -307,6 +308,17 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
     }
   };
 
+  const handleConfirmDelete = async () => {
+    try {
+      await deleteProduct(id);
+      setConfirmOpen(false);
+      setOpen(false);
+    } catch {
+      // Optionally surface error
+      setUpdateError('Failed to delete product');
+    }
+  };
+
   const handlePromotionToggle = useCallback((promotionId: string) => {
     setSelectedPromotions((prev) =>
       prev.includes(promotionId)
@@ -315,7 +327,7 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
     );
   }, []);
 
-  const shouldShowThumbnailUpload = !mediaState.thumbnailPreview && 
+  const shouldShowThumbnailUpload = !mediaState.thumbnailPreview &&
     (!currentThumbnail || mediaState.deletedThumbnail);
 
   const canAddMoreMedia = (currentMedia.length + mediaState.mediaPreviews.length) < MAX_MEDIA_FILES;
@@ -356,9 +368,9 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
           <div className="flex flex-col">
             <div className="flex flex-col gap-2">
               <Label className="block text-sm font-medium text-gray-700">Name</Label>
-              <Input 
-                type="text" 
-                {...register('name')} 
+              <Input
+                type="text"
+                {...register('name')}
                 placeholder='Input your product name'
                 className={errors.name ? 'border-red-300' : ''}
               />
@@ -384,10 +396,10 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
             <div className="flex flex-col">
               <div className='flex flex-col gap-2'>
                 <Label className="block text-sm font-medium text-gray-700">Price</Label>
-                <Input 
-                  type="number" 
-                  step="0.01" 
-                  {...register('price')} 
+                <Input
+                  type="number"
+                  step="0.01"
+                  {...register('price')}
                   placeholder="Product prices"
                   className={errors.price ? 'border-red-300' : ''}
                 />
@@ -398,9 +410,9 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
             <div className="flex flex-col">
               <div className='flex flex-col gap-2'>
                 <Label className="block text-sm font-medium text-gray-700">Weight (kg)</Label>
-                <Input 
-                  type="number" 
-                  step="0.01" 
+                <Input
+                  type="number"
+                  step="0.01"
                   {...register('weight')}
                   className={errors.weight ? 'border-red-300' : ''}
                 />
@@ -502,7 +514,7 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
                 {/* Media Carousel Section */}
                 <div className="flex flex-col gap-2">
                   <Label>Product Gallery ({currentMedia.length + mediaState.mediaPreviews.length}/{MAX_MEDIA_FILES})</Label>
-                  
+
                   <div className="flex gap-2 w-full flex-wrap">
                     {/* Current media */}
                     {currentMedia.map((media: ProductImage) => (
@@ -592,9 +604,9 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
                         <span className="text-base font-bold text-green-600">
-                          {discount.unit === 'percentage' ? `${discount.value}%` : 
-                           discount.unit === 'currency' ? `Rp ${discount.value.toLocaleString()}` : 
-                           'B1G1'}
+                          {discount.unit === 'percentage' ? `${discount.value}%` :
+                            discount.unit === 'currency' ? `Rp ${discount.value.toLocaleString()}` :
+                              'B1G1'}
                         </span>
                         <span className="text-xs text-gray-500">min Rp {discount.minPurchase.toLocaleString()}</span>
                       </div>
@@ -606,13 +618,37 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-end gap-2 pt-4">
-            <Button variant="outline" onClick={() => setOpen(false)} type="button">
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting || isUploading}>
-              {isSubmitting || isUploading ? "Updating product..." : "Update Product"}
-            </Button>
+          <div className='flex justify-between items-center'>
+            <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  type="button"
+                  variant={"link"}
+                  className='text-red-500 h-full'
+                >Delete</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <div className='space-y-4'>
+                  <div>Are you sure you want to delete product <span className='font-bold'>{product.name}</span>?</div>
+                  <div className='flex justify-end gap-2'>
+                    <Button type='button' variant={"secondary"} onClick={() => setConfirmOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type='button' variant={"destructive"} onClick={handleConfirmDelete}>
+                      Delete Product
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setOpen(false)} type="button">
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting || isUploading}>
+                {isSubmitting || isUploading ? "Updating product..." : "Update Product"}
+              </Button>
+            </div>
           </div>
         </form>
       </DialogContent>

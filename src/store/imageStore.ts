@@ -22,7 +22,6 @@ export const useImageStore = create<ImageState>((set) => ({
   uploadSingleImage: async (file, productID, isPrimary) => {
     set({ isUploading: true, error: null });
     try {
-
       const token = getAuthToken();
 
       const formData = new FormData();
@@ -33,10 +32,11 @@ export const useImageStore = create<ImageState>((set) => ({
         formData,
         {
           params: { productID, isPrimary },
-          headers: { "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`
-           },
-           withCredentials: true
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
+          withCredentials: true,
         }
       );
 
@@ -63,14 +63,16 @@ export const useImageStore = create<ImageState>((set) => ({
         formData,
         {
           params: { productID, isPrimary },
-          headers: { "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`
-           },
-           withCredentials: true
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
+          withCredentials: true,
         }
       );
 
-      const uploadedImages: ProductImage[] = (response.data?.data || []) as ProductImage[];
+      const uploadedImages: ProductImage[] = (response.data?.data ||
+        []) as ProductImage[];
       set((state) => ({
         images: [...state.images, ...uploadedImages],
         isUploading: false,
@@ -83,16 +85,15 @@ export const useImageStore = create<ImageState>((set) => ({
   deleteImage: async (imageId) => {
     set({ isUploading: true, error: null });
     try {
-
       const token = getAuthToken();
 
       await axios.delete(
         `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.IMAGE}/${imageId}`,
         {
           headers: {
-            Authorization: `Bearer ${token}`
+            Authorization: `Bearer ${token}`,
           },
-          withCredentials: true
+          withCredentials: true,
         }
       );
 

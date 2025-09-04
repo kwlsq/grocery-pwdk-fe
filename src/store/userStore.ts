@@ -67,7 +67,7 @@ export const useUsersStore = create<UsersState>((set, get) => ({
     }
   },
 
-  deleteUser: async ({ userID }) => {
+  deleteUser: async (userID) => {
     set({ loading: true, error: null });
     try {
       const token =

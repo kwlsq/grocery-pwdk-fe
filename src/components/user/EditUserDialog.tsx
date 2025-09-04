@@ -32,6 +32,7 @@ const EditUserDialog: FC<UserProps> = ({ user }) => {
   const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
   const { isUploading } = useImageStore();
   const { deleteUser } = useUsersStore();
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
 
   const {
@@ -72,10 +73,10 @@ const EditUserDialog: FC<UserProps> = ({ user }) => {
     }
   };
 
-  
+
   const handleDeleteStoreAdmin = async (userID: string) => {
     try {
-      await deleteUser({userID});
+      await deleteUser(userID );
     } catch (e) {
       console.error(e);
     }
@@ -153,11 +154,28 @@ const EditUserDialog: FC<UserProps> = ({ user }) => {
           </div>
 
           <div className='flex justify-between'>
-            <Button
-            variant={"link"}
-            className='text-red-500'
-            onClick={() => handleDeleteStoreAdmin(user.id)}
-            >Delete</Button>
+            <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  type="button"
+                  variant={"link"}
+                  className='text-red-500 h-full'
+                >Delete</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <div className='space-y-4'>
+                  <div>Are you sure you want to delete product <span className='font-bold'>{user.fullName}</span>?</div>
+                  <div className='flex justify-end gap-2'>
+                    <Button type='button' variant={"secondary"} onClick={() => setConfirmOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type='button' variant={"destructive"} onClick={() => handleDeleteStoreAdmin(user.id)}>
+                      Delete Product
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => setOpen(false)} type="button">
                 Cancel
