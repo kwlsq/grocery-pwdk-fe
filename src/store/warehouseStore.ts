@@ -1,6 +1,10 @@
 import { create } from "zustand";
 import axios from "axios";
-import { CreateWarehouseDTO, Warehouse, WarehouseApiResponse } from "../types/warehouse";
+import {
+  CreateWarehouseDTO,
+  Warehouse,
+  WarehouseApiResponse,
+} from "../types/warehouse";
 import { API_CONFIG, buildApiUrl } from "@/config/api";
 import { WarehouseState } from "../types/warehouse";
 
@@ -13,12 +17,21 @@ export const useWarehouseStore = create<WarehouseState>((set) => ({
   fetchWarehouses: async (storeId: string, page = 0, size = 12) => {
     set({ loading: true, error: null });
     try {
-      const response = await axios.get<WarehouseApiResponse>(
-        buildApiUrl(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.WAREHOUSE}/${storeId}`, {
-          page,
-          size
-        })
+      const token =
+        (typeof window !== "undefined" &&
+          localStorage.getItem("accessToken")) ||
+        (typeof window !== "undefined" &&
+          sessionStorage.getItem("accessToken")) ||
+        "";
+
+      const url = buildApiUrl(
+        API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.WAREHOUSE + "/" + storeId
       );
+
+      const response = await axios.get<WarehouseApiResponse>(url, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        withCredentials: true,
+      });
 
       if (response.data.success) {
         set({
@@ -71,5 +84,5 @@ export const useWarehouseStore = create<WarehouseState>((set) => ({
         loading: false,
       });
     }
-  }
+  },
 }));

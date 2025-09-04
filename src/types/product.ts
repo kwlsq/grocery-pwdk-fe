@@ -68,12 +68,12 @@ export interface CreateProductDTO {
 }
 
 export interface UpdateProductDTO {
-  name: string;
-  description: string;
-  price: number;
-  weight: number;
-  categoryID: string;
-  changeReason: string;
+  name?: string;
+  description?: string;
+  price?: number;
+  weight?: number;
+  categoryID?: string;
+  changeReason?: string;
   promotions?: {
     promotionID: string;
   }[];

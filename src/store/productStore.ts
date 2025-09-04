@@ -3,6 +3,15 @@ import axios from "axios";
 import { ProductState, ApiResponse, ProductCategory } from "../types/product";
 import { buildApiUrl, API_CONFIG } from "../config/api";
 
+const getAuthToken = (): string => {
+  const token =
+    (typeof window !== "undefined" && localStorage.getItem("accessToken")) ||
+    (typeof window !== "undefined" && sessionStorage.getItem("accessToken")) ||
+    "";
+
+  return token;
+};
+
 export const useProductStore = create<ProductState>((set) => ({
   products: [],
   productsThisStore: [],
@@ -103,10 +112,11 @@ export const useProductStore = create<ProductState>((set) => ({
   ) => {
     set({ loading: true, error: null });
     try {
-
       const token =
-        (typeof window !== "undefined" && localStorage.getItem("accessToken")) ||
-        (typeof window !== "undefined" && sessionStorage.getItem("accessToken")) ||
+        (typeof window !== "undefined" &&
+          localStorage.getItem("accessToken")) ||
+        (typeof window !== "undefined" &&
+          sessionStorage.getItem("accessToken")) ||
         "";
 
       const url = buildApiUrl(
@@ -195,19 +205,21 @@ export const useProductStore = create<ProductState>((set) => ({
   createProduct: async (data) => {
     set({ loading: true, error: null });
     try {
-
       const token =
-      (typeof window !== "undefined" && localStorage.getItem("accessToken")) ||
-      (typeof window !== "undefined" && sessionStorage.getItem("accessToken")) ||
-      "";
+        (typeof window !== "undefined" &&
+          localStorage.getItem("accessToken")) ||
+        (typeof window !== "undefined" &&
+          sessionStorage.getItem("accessToken")) ||
+        "";
 
       const response = await axios.post(
         `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS_CRUD}`,
         data,
         {
-          headers: { "Content-Type": "application/json",
+          headers: {
+            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
-           },
+          },
         }
       );
 
@@ -223,29 +235,53 @@ export const useProductStore = create<ProductState>((set) => ({
   },
 
   updateProduct: async (id, data) => {
+    if (!id?.trim()) {
+      throw new Error("Product ID is required");
+    }
+
     set({ loading: true, error: null });
+
     try {
-      const token =
-        (typeof window !== "undefined" &&
-          localStorage.getItem("accessToken")) ||
-        (typeof window !== "undefined" &&
-          sessionStorage.getItem("accessToken")) ||
-        "";
+      const token = getAuthToken();
 
-      const response = await axios.patch(
-        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS_CRUD}/${id}`,
-        data,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const url = `${API_CONFIG.BASE_URL}${
+        API_CONFIG.ENDPOINTS.PRODUCTS_CRUD
+      }/${id.trim()}`;
 
-      return response.data.data;
-    } catch (e) {
-      console.error(e);
+      const response = await axios.patch(url, data, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        withCredentials: true,
+      });
+
+      if (response.data.success) {
+        const updatedProduct = response.data.data;
+
+        // Update the product in both arrays
+        set((state) => ({
+          products: state.products.map((product) =>
+            product.id === id ? updatedProduct : product
+          ),
+          productsThisStore: state.productsThisStore.map((product) =>
+            product.id === id ? updatedProduct : product
+          ),
+          loading: false,
+        }));
+
+        return updatedProduct;
+      } else {
+        throw new Error(response.data.message || "Failed to update product");
+      }
+    } catch (error) {
+      const errorMessage = "Error : " + error;
+      console.error("Error updating product:", errorMessage);
+      set({
+        error: errorMessage,
+        loading: false,
+      });
+      throw error; // Re-throw for component error handling
     }
   },
 
@@ -253,8 +289,10 @@ export const useProductStore = create<ProductState>((set) => ({
     set({ loading: true, error: null });
     try {
       const token =
-        (typeof window !== "undefined" && localStorage.getItem("accessToken")) ||
-        (typeof window !== "undefined" && sessionStorage.getItem("accessToken")) ||
+        (typeof window !== "undefined" &&
+          localStorage.getItem("accessToken")) ||
+        (typeof window !== "undefined" &&
+          sessionStorage.getItem("accessToken")) ||
         "";
 
       await axios.delete(
@@ -284,7 +322,7 @@ export const useProductStore = create<ProductState>((set) => ({
         data,
         {
           withCredentials: true,
-          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
     } catch (e) {

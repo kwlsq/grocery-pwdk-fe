@@ -11,6 +11,7 @@ import { Tabs, TabsList, TabsContent, TabsTrigger } from '@/components/ui/tabs';
 import { useProductStore } from '@/store/productStore';
 import ProductGrid from '@/components/product/ProductGrid';
 import CreateProduct from '@/components/product/CreateProductDialog';
+import { cn } from '@/lib/utils';
 
 export default function StoreDetailsPage() {
   const params = useParams();
@@ -20,9 +21,17 @@ export default function StoreDetailsPage() {
   const { stores, fetchStores } = useStoreStore();
   const { warehouses, loading: warehouseLoading, error: warehouseError, fetchWarehouses } = useWarehouseStore();
   const { productsThisStore, error: productError, loading: productLoading, fetchProductByStoreID } = useProductStore();
+  const [activeTab, setActiveTab] = useState('warehouses');
 
   // Find the current store
   const currentStore = stores.find(store => store.id === storeId);
+
+    // Tab configuration data
+    const tabsData = [
+      { value: 'warehouses', label: 'Warehouses' },
+      { value: 'products', label: 'Products' },
+      { value: 'admin', label: 'Admin' }
+    ];
 
   useEffect(() => {
     setMounted(true);
@@ -101,11 +110,22 @@ export default function StoreDetailsPage() {
           </div>
         </div>
 
-        <Tabs defaultValue='warehouses'>
-          <TabsList>
-            <TabsTrigger value='warehouses'>Warehouse</TabsTrigger>
-            <TabsTrigger value='products'>Product</TabsTrigger>
-            <TabsTrigger value='admin'>Admin</TabsTrigger>
+        <Tabs defaultValue='warehouses' onValueChange={setActiveTab}>
+        <TabsList>
+            {tabsData.map((tab) => (
+              <TabsTrigger 
+                key={tab.value}
+                value={tab.value} 
+                className={cn(
+                  "rounded-none h-full border-b-2 data-[state=active]:shadow-none",
+                  activeTab === tab.value 
+                    ? "border-green-600 text-green-600" 
+                    : "border-transparent"
+                )}
+              >
+                {tab.label}
+              </TabsTrigger>
+            ))}
           </TabsList>
           <TabsContent value='warehouses'>
             {/* Store Statistics */}
