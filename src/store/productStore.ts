@@ -112,12 +112,7 @@ export const useProductStore = create<ProductState>((set) => ({
   ) => {
     set({ loading: true, error: null });
     try {
-      const token =
-        (typeof window !== "undefined" &&
-          localStorage.getItem("accessToken")) ||
-        (typeof window !== "undefined" &&
-          sessionStorage.getItem("accessToken")) ||
-        "";
+      const token = getAuthToken();
 
       const url = buildApiUrl(
         API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.PRODUCTS_ADMIN + "/" + id,
@@ -131,7 +126,9 @@ export const useProductStore = create<ProductState>((set) => ({
       );
 
       const response = await axios.get<ApiResponse>(url, {
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         withCredentials: true,
       });
 
@@ -205,12 +202,7 @@ export const useProductStore = create<ProductState>((set) => ({
   createProduct: async (data) => {
     set({ loading: true, error: null });
     try {
-      const token =
-        (typeof window !== "undefined" &&
-          localStorage.getItem("accessToken")) ||
-        (typeof window !== "undefined" &&
-          sessionStorage.getItem("accessToken")) ||
-        "";
+      const token = getAuthToken();
 
       const response = await axios.post(
         `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS_CRUD}`,
@@ -220,6 +212,7 @@ export const useProductStore = create<ProductState>((set) => ({
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
+          withCredentials: true,
         }
       );
 
@@ -288,18 +281,15 @@ export const useProductStore = create<ProductState>((set) => ({
   deleteProduct: async (id) => {
     set({ loading: true, error: null });
     try {
-      const token =
-        (typeof window !== "undefined" &&
-          localStorage.getItem("accessToken")) ||
-        (typeof window !== "undefined" &&
-          sessionStorage.getItem("accessToken")) ||
-        "";
+      const token = getAuthToken();
 
       await axios.delete(
         `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS_CRUD}/${id}`,
         {
           withCredentials: true,
-          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
     } catch (e) {
@@ -310,19 +300,16 @@ export const useProductStore = create<ProductState>((set) => ({
   updateProductStock: async (id, data) => {
     set({ loading: true, error: null });
     try {
-      const token =
-        (typeof window !== "undefined" &&
-          localStorage.getItem("accessToken")) ||
-        (typeof window !== "undefined" &&
-          sessionStorage.getItem("accessToken")) ||
-        "";
+      const token = getAuthToken();
 
       await axios.patch(
         `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS_CRUD}/stocks/${id}`,
         data,
         {
           withCredentials: true,
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
     } catch (e) {

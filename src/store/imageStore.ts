@@ -23,10 +23,7 @@ export const useImageStore = create<ImageState>((set) => ({
     set({ isUploading: true, error: null });
     try {
 
-      const token =
-        (typeof window !== "undefined" && localStorage.getItem("accessToken")) ||
-        (typeof window !== "undefined" && sessionStorage.getItem("accessToken")) ||
-        "";
+      const token = getAuthToken();
 
       const formData = new FormData();
       formData.append("file", file);
@@ -59,10 +56,7 @@ export const useImageStore = create<ImageState>((set) => ({
       const formData = new FormData();
       files.forEach((file) => formData.append("file", file));
 
-      const token =
-        (typeof window !== "undefined" && localStorage.getItem("accessToken")) ||
-        (typeof window !== "undefined" && sessionStorage.getItem("accessToken")) ||
-        "";
+      const token = getAuthToken();
 
       const response = await axios.post(
         `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.IMAGE}/upload-multi`,
@@ -86,45 +80,11 @@ export const useImageStore = create<ImageState>((set) => ({
     }
   },
 
-  updatePrimary: async (imageId, isPrimary) => {
-    set({ isUploading: true, error: null });
-    try {
-
-      const token =
-        (typeof window !== "undefined" && localStorage.getItem("accessToken")) ||
-        (typeof window !== "undefined" && sessionStorage.getItem("accessToken")) ||
-        "";
-
-      const response = await axios.patch(
-        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.IMAGE}/${imageId}/primary`,
-        null,
-        {
-          params: { isPrimary },
-          headers: {
-            Authorization: `Bearer ${token}`
-          },
-          withCredentials: true
-        }
-      );
-
-      const updated = response.data?.data;
-      set((state) => ({
-        images: state.images.map((img) => (img.id === updated.id ? updated : img)),
-        isUploading: false,
-      }));
-    } catch (err: unknown) {
-      console.log("Error: ", err);
-    }
-  },
-
   deleteImage: async (imageId) => {
     set({ isUploading: true, error: null });
     try {
 
-      const token =
-        (typeof window !== "undefined" && localStorage.getItem("accessToken")) ||
-        (typeof window !== "undefined" && sessionStorage.getItem("accessToken")) ||
-        "";
+      const token = getAuthToken();
 
       await axios.delete(
         `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.IMAGE}/${imageId}`,

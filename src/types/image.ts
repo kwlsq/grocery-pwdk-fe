@@ -6,6 +6,5 @@ export interface ImageState {
   error: string | null;
   uploadSingleImage: (file: File, productID: string, isPrimary: boolean) => Promise<void>;
   uploadMultiImage: (files: File[], productID: string, isPrimary: boolean) => Promise<void>;
-  updatePrimary: (imageId: string, isPrimary: boolean) => Promise<void>;
   deleteImage: (imageId: string) => Promise<void>;
 }

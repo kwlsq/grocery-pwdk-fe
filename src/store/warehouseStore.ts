@@ -1,12 +1,17 @@
 import { create } from "zustand";
 import axios from "axios";
-import {
-  CreateWarehouseDTO,
-  Warehouse,
-  WarehouseApiResponse,
-} from "../types/warehouse";
+import { CreateWarehouseDTO, WarehouseApiResponse } from "../types/warehouse";
 import { API_CONFIG, buildApiUrl } from "@/config/api";
 import { WarehouseState } from "../types/warehouse";
+
+const getAuthToken = (): string => {
+  const token =
+    (typeof window !== "undefined" && localStorage.getItem("accessToken")) ||
+    (typeof window !== "undefined" && sessionStorage.getItem("accessToken")) ||
+    "";
+
+  return token;
+};
 
 export const useWarehouseStore = create<WarehouseState>((set) => ({
   warehouses: [],
@@ -17,19 +22,16 @@ export const useWarehouseStore = create<WarehouseState>((set) => ({
   fetchWarehouses: async (storeId: string, page = 0, size = 12) => {
     set({ loading: true, error: null });
     try {
-      const token =
-        (typeof window !== "undefined" &&
-          localStorage.getItem("accessToken")) ||
-        (typeof window !== "undefined" &&
-          sessionStorage.getItem("accessToken")) ||
-        "";
+      const token = getAuthToken();
 
       const url = buildApiUrl(
         API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.WAREHOUSE + "/" + storeId
       );
 
       const response = await axios.get<WarehouseApiResponse>(url, {
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         withCredentials: true,
       });
 
@@ -69,10 +71,14 @@ export const useWarehouseStore = create<WarehouseState>((set) => ({
         API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.WAREHOUSE
       );
 
-      const response = await axios.post(url, data, {
+      const token = getAuthToken();
+
+      await axios.post(url, data, {
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
+        withCredentials: true,
       });
 
       set({ loading: false, error: null });

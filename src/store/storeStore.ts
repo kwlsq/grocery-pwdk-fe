@@ -10,6 +10,15 @@ interface StoreState {
   fetchStores: () => Promise<void>;
 }
 
+const getAuthToken = (): string => {
+  const token =
+    (typeof window !== "undefined" && localStorage.getItem("accessToken")) ||
+    (typeof window !== "undefined" && sessionStorage.getItem("accessToken")) ||
+    "";
+
+  return token;
+};
+
 export const useStoreStore = create<StoreState>((set) => ({
   stores: [],
   loading: false,
@@ -18,18 +27,17 @@ export const useStoreStore = create<StoreState>((set) => ({
   fetchStores: async () => {
     set({ loading: true, error: null });
     try {
-      const token =
-        (typeof window !== "undefined" && localStorage.getItem("accessToken")) ||
-        (typeof window !== "undefined" && sessionStorage.getItem("accessToken")) ||
-        "";
-        
+      const token = getAuthToken();
+
       const url = buildApiUrl(
         API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.STORE,
         {}
       );
 
       const response = await axios.get<StoreApiResponse>(url, {
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         withCredentials: true,
       });
 
@@ -44,7 +52,8 @@ export const useStoreStore = create<StoreState>((set) => ({
     } catch (error) {
       console.error("Error fetching stores:", error);
       set({
-        error: error instanceof Error ? error.message : "Failed to fetch stores",
+        error:
+          error instanceof Error ? error.message : "Failed to fetch stores",
         loading: false,
       });
     }

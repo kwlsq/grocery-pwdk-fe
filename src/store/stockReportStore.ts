@@ -7,6 +7,15 @@ import {
   StockReportFilters,
 } from "@/types/stockReport";
 
+const getAuthToken = (): string => {
+  const token =
+    (typeof window !== "undefined" && localStorage.getItem("accessToken")) ||
+    (typeof window !== "undefined" && sessionStorage.getItem("accessToken")) ||
+    "";
+
+  return token;
+};
+
 export const useStockReportStore = create<StockReportState>((set, get) => ({
   reports: [],
   loading: false,
@@ -19,15 +28,14 @@ export const useStockReportStore = create<StockReportState>((set, get) => ({
   fetchReports: async (opts) => {
     const page = opts?.page ?? get().page;
     const size = opts?.size ?? get().size;
-    const filters: StockReportFilters = { ...get().filters, ...(opts?.filters || {}) };
+    const filters: StockReportFilters = {
+      ...get().filters,
+      ...(opts?.filters || {}),
+    };
 
     set({ loading: true, error: null, page, size, filters });
     try {
-
-      const token =
-        (typeof window !== "undefined" && localStorage.getItem("accessToken")) ||
-        (typeof window !== "undefined" && sessionStorage.getItem("accessToken")) ||
-        "";
+      const token = getAuthToken();
 
       const url = buildApiUrl(
         `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.STOCK_REPORTS}/summary`,
@@ -42,7 +50,9 @@ export const useStockReportStore = create<StockReportState>((set, get) => ({
       );
 
       const response = await axios.get<StockReportApiResponse>(url, {
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         withCredentials: true,
       });
       if (response.data.success) {
@@ -60,15 +70,20 @@ export const useStockReportStore = create<StockReportState>((set, get) => ({
           loading: false,
         });
       } else {
-        set({ error: response.data.message || "Failed to fetch stock reports", loading: false });
+        set({
+          error: response.data.message || "Failed to fetch stock reports",
+          loading: false,
+        });
       }
     } catch (err) {
-      set({ error: err instanceof Error ? err.message : "Failed to fetch stock reports", loading: false });
+      set({
+        error:
+          err instanceof Error ? err.message : "Failed to fetch stock reports",
+        loading: false,
+      });
     }
   },
 
   setPage: (page) => set({ page }),
   setFilters: (filters) => set({ filters }),
 }));
-
-
