@@ -15,7 +15,7 @@ export default function Home() {
   const { products, error, loading } = useProductStore();
   const [mounted, setMounted] = useState(false);
 
-  const { categories, pagination, fetchProducts, fetchCategories } = useProductStore();
+  const { pagination, fetchProducts, fetchCategories } = useProductStore();
   const { status, coords } = useLocationStore();
 
   const [currentPage, setCurrentPage] = useState(0);
@@ -92,7 +92,6 @@ export default function Home() {
             setSelectedCategory(category);
             setCurrentPage(0);
           }}
-          categories={categories}
           showSearchAndFilter={true}
         />
       </main>

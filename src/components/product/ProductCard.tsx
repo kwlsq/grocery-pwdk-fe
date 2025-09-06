@@ -53,9 +53,6 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
         <div className="p-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-              Version {product.productVersionResponse.versionNumber}
-            </span>
             <span className="text-xs text-gray-500">
               {weight}kg
             </span>
