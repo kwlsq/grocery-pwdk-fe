@@ -14,8 +14,7 @@ const LocationPrompt = () => {
   if (!ready) {
     return (
       <div
-        className="bg-yellow-50 border border-yellow-200 px-4 py-3"
-        style={{ visibility: "hidden" }}
+        className="bg-yellow-50 border border-yellow-200 px-4 py-3 hidden"
       >
         placeholder
       </div>

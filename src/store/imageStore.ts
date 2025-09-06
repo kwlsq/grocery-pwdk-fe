@@ -3,7 +3,6 @@ import axios from "axios";
 import { ImageState } from "../types/image";
 import { API_CONFIG, buildApiUrl } from "@/config/api";
 import type { ProductImage } from "@/types/product";
-import { StoreApiResponse } from "@/types/store";
 
 const getAuthToken = (): string => {
   const token =
@@ -27,18 +26,17 @@ export const useImageStore = create<ImageState>((set) => ({
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await axios.post(
-        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.IMAGE}/upload-single`,
-        formData,
-        {
-          params: { productID, isPrimary },
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`,
-          },
-          withCredentials: true,
+      const url = buildApiUrl(
+        API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.IMAGE + "/upload-single", {
+          productID,
+          isPrimary
         }
       );
+
+      const response = await axios.post(url, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        withCredentials: true,
+      });
 
       const uploaded: ProductImage = response.data?.data as ProductImage;
       set((state) => ({

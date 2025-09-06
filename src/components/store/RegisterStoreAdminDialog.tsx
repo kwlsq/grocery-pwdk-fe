@@ -9,8 +9,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import Image from 'next/image';
-import { cn } from '@/lib/utils';
 import { useImageStore } from '@/store/imageStore';
 import { useUsersStore } from '@/store/userStore';
 import { RegisterUserDTO } from '@/types/user';
@@ -25,8 +23,6 @@ type StoreAdminValues = z.infer<typeof storeAdmin>;
 
 export default function RegisterStoreAdmin() {
   const [open, setOpen] = useState(false);
-  const [thumbnail, setThumbnail] = useState<File | null>(null);
-  const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
   const { isUploading } = useImageStore();
   const { registerStoreAdmin } = useUsersStore();
 
@@ -46,14 +42,6 @@ export default function RegisterStoreAdmin() {
     mode: 'onBlur',
   });
 
-  const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = e.target.files;
-    if (selectedFiles && selectedFiles.length > 0) {
-      setThumbnail(selectedFiles[0]);
-      setThumbnailPreview(URL.createObjectURL(selectedFiles[0]));
-    }
-  }
-
   const onSubmit = async (data: StoreAdminValues) => {
     try {
 
@@ -67,13 +55,17 @@ export default function RegisterStoreAdmin() {
       setOpen(false);
 
     } catch (error: unknown) {
+
       let message = 'Failed to register new store admin';
+      
       if (axios.isAxiosError(error)) {
         const axiosErr = error as AxiosError<{ message?: string }>;
         message = axiosErr.response?.data?.message || axiosErr.message || message;
       } else if (error instanceof Error) {
         message = error.message;
       }
+      
+      console.error(message);
     }
   };
 
@@ -84,8 +76,6 @@ export default function RegisterStoreAdmin() {
         setOpen(isOpen);
         if (!isOpen) {
           reset();
-          setThumbnail(null);
-          setThumbnailPreview("");
         }
       }}>
       <DialogTrigger asChild>
@@ -106,7 +96,7 @@ export default function RegisterStoreAdmin() {
           <div className="flex flex-col">
             <div className="flex flex-col gap-2">
               <Label className="block text-sm font-medium text-gray-700">Email</Label>
-              <Input type="text" {...register('email')} placeholder='Input your product name' />
+              <Input type="text" {...register('email')} placeholder='Email to receive account info' />
             </div>
             {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>}
           </div>
@@ -115,47 +105,9 @@ export default function RegisterStoreAdmin() {
           <div className="flex flex-col">
             <div className="flex flex-col gap-2">
               <Label className="block text-sm font-medium text-gray-700">Full name</Label>
-              <Input type="text" {...register('fullName')} placeholder='Input your product name' />
+              <Input type="text" {...register('fullName')} placeholder="Input user's full name" />
             </div>
             {errors.fullName && <p className="mt-1 text-xs text-red-600">{errors.fullName.message}</p>}
-          </div>
-
-          {/* phone number */}
-          <div className="flex flex-col">
-            <div className="flex flex-col gap-2">
-              <Label className="block text-sm font-medium text-gray-700">Phone number</Label>
-              <Input type="text" {...register('fullName')} placeholder='Input your product name' />
-            </div>
-            {errors.phoneNumber && <p className="mt-1 text-xs text-red-600">{errors.phoneNumber.message}</p>}
-          </div>
-
-          {/* Upload Image */}
-          <div className="flex flex-col">
-            <div className="flex flex-col gap-2">
-              <Label className="block text-sm font-medium text-gray-700">Profile photo</Label>
-
-              {/* Upload event image */}
-              <div className="flex flex-col gap-4 p-6 border border-neutral-300 rounded-xl">
-                <div className={cn("relative w-32 aspect-square border-[1px] border-gray-100 rounded-2xl", !thumbnail && "hidden")}>
-                  <Image
-                    src={thumbnailPreview}
-                    fill
-                    alt="image of event"
-                    className="object-contain"
-                  />
-                </div>
-                <div>
-                  <input
-                    type="file"
-                    name="multipartFiles"
-                    accept="image/*"
-                    multiple
-                    onChange={handleProfileChange}
-                    className={cn("p-4 border-neutral-200 border-dashed border-[1px] rounded-md w-full hover:bg-neutral-100", thumbnail && "hidden")}
-                  />
-                </div>
-              </div>
-            </div>
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
@@ -163,7 +115,7 @@ export default function RegisterStoreAdmin() {
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && isUploading ? "Creating new product..." : "Create Product"}
+              {isSubmitting && isUploading ? "Creating new product..." : "Register"}
             </Button>
           </div>
         </form>

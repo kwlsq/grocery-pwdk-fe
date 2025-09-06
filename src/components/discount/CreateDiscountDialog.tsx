@@ -79,7 +79,7 @@ export default function CreateDiscountDialog() {
       reset();
       setOpen(false);
     } catch (error) {
-      toast.error('Failed to create discount');
+      toast.error('Failed to create discount: ' + error);
     }
   };
 

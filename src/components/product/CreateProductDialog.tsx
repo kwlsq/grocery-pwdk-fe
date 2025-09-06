@@ -55,6 +55,7 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
   const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
   const [mediaPreviews, setMediaPreviews] = useState<string[]>();
   const { uploadMultiImage, uploadSingleImage, isUploading } = useImageStore();
+  const [isMounted, setMounted] = useState(false);
 
 
   const {
@@ -84,10 +85,16 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
   });
 
   useEffect(() => {
+    setMounted(true)
+  },[])
+
+  useEffect(() => {
+    if(!isMounted) return;
+
     fetchCategories();
     fetchDiscount();
     fetchWarehouses(storeID)
-  }, [fetchCategories]);
+  }, [fetchCategories, fetchWarehouses]);
 
   const { fields } = useFieldArray({
     control,

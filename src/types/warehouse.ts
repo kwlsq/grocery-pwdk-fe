@@ -3,9 +3,19 @@ import { PaginationInfo } from "./common";
 export interface Warehouse {
   id: string;
   name: string;
+  address: string;
   latitude: number;
   longitude: number;
   active: boolean;
+  warehouseAdmin: WarehouseAdmin
+}
+
+export interface WarehouseAdmin {
+  userID: string,
+  userName: string,
+  userRole: string,
+  photo: string,
+  phoneNumber: string
 }
 
 export interface WarehouseApiResponse {
@@ -30,14 +40,27 @@ export interface CreateWarehouseDTO {
   latitude: number,
   longitude: number,
   isActive: boolean
+  storeAdminID?: string | null
+}
+
+export interface UpdateWarehouseDTO {
+  storeID: string,
+  name?: string,
+  address?: string,
+  latitude?: number,
+  longitude?: number,
+  isActive?: boolean
+  storeAdminID?: string
 }
 
 
 export interface WarehouseState {
   pagination: PaginationInfo | null;
   warehouses: Warehouse[];
+  warehouse: Warehouse | null
   loading: boolean;
   error: string | null;
   fetchWarehouses: (storeId: string) => Promise<void>;
   createWarehouse: (data: CreateWarehouseDTO) => Promise<void>;
+  fetchWarehouseByID: (id: string) => Promise<void>;
 }

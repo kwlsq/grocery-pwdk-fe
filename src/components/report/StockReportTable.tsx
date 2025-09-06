@@ -35,7 +35,7 @@ export default function StockReportTable() {
 
   useEffect(() => {
     if (filters.storeId) {
-      fetchWarehouses(filters.storeId, 0, 100);
+      fetchWarehouses(filters.storeId);
       // reset warehouse when store changes
       setFilters({ ...filters, warehouseId: "" });
     }
@@ -145,8 +145,8 @@ export default function StockReportTable() {
                   <TableCell>{r.storeName}</TableCell>
                   <TableCell>{r.warehouseName}</TableCell>
                   <TableCell>{r.month}</TableCell>
-                  <TableCell className="text-right">{r.totalAddition}</TableCell>
-                  <TableCell className="text-right">{r.totalReduction}</TableCell>
+                  <TableCell className="text-right text-green-600">{r.totalAddition}</TableCell>
+                  <TableCell className="text-right text-red-500">{r.totalReduction}</TableCell>
                   <TableCell className="text-right">{r.finalStock}</TableCell>
                   <TableCell className="text-right">{r.averagePrice.toLocaleString(undefined, { style: 'currency', currency: 'IDR' })}</TableCell>
                 </TableRow>

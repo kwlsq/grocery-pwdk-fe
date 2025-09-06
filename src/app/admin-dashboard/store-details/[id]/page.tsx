@@ -50,6 +50,7 @@ export default function StoreDetailsPage() {
       fetchWarehouses(storeId);
       fetchProductByStoreID(storeId);
     }
+    
   }, [mounted, storeId, stores.length, fetchStores, fetchWarehouses, fetchProductByStoreID]);
 
   if (!mounted) {

@@ -62,7 +62,7 @@ export default function ProductStock({ id, product }: { id: string, product: Pro
         );
 
         const currentStock = matchingInventory ? matchingInventory.stock : 0;
-        
+
         return {
           warehouseId: warehouse.id,
           warehouseName: warehouse.name,
@@ -70,9 +70,9 @@ export default function ProductStock({ id, product }: { id: string, product: Pro
           newStock: currentStock.toString(),
         };
       });
-      
+
       setStockData(initialStockData);
-      
+
       // Set form default values
       setValue('stocks', initialStockData.map(data => ({
         warehouseId: data.warehouseId,
@@ -91,14 +91,28 @@ export default function ProductStock({ id, product }: { id: string, product: Pro
     );
   };
 
+
   const onSubmit = async (data: StockFormValues) => {
     try {
-      // Prepare inventories data for update
-      const inventories = data.stocks.map(stock => ({
-        warehouseID: stock.warehouseId,
-        stock: Number(stock.quantity),
-      }));
-      
+      // Only prepare inventories data for items that have changed
+      const inventories = data.stocks
+        .filter((stock, index) => {
+          const originalStock = stockData[index].currentStock;
+          const newStock = Number(stock.quantity);
+          return newStock !== originalStock; // Only include changed values
+        })
+        .map(stock => ({
+          warehouseID: stock.warehouseId,
+          stock: Number(stock.quantity),
+        }));
+
+      // Only proceed if there are actually changes to submit
+      if (inventories.length === 0) {
+        console.log('No changes detected, skipping update');
+        setOpen(false);
+        return;
+      }
+
       await updateProductStock(id, inventories);
 
       reset();

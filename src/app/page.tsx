@@ -47,7 +47,7 @@ export default function Home() {
         '',
         coords.userLatitude,
         coords.userLongitude,
-        1000
+        1000000
       );
     }
   }, [
@@ -60,10 +60,6 @@ export default function Home() {
     selectedCategory,
     fetchProducts
   ]);
-
-  if (status !== 'granted') {
-    return <LocationPrompt />;
-  }
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">

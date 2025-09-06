@@ -61,15 +61,19 @@ const EditUserDialog: FC<UserProps> = ({ user }) => {
     try {
       reset();
       setOpen(false);
-
     } catch (error: unknown) {
+
       let message = 'Failed to create product';
+
       if (axios.isAxiosError(error)) {
         const axiosErr = error as AxiosError<{ message?: string }>;
         message = axiosErr.response?.data?.message || axiosErr.message || message;
       } else if (error instanceof Error) {
         message = error.message;
       }
+
+      console.error(message);
+      
     }
   };
 
