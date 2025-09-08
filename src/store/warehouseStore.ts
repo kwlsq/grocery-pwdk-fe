@@ -130,4 +130,41 @@ export const useWarehouseStore = create<WarehouseState>((set, get) => ({
       });
     }
   },
+
+  fetchWarehouseByUser: async () => {
+    set({ loading: true, error: null });
+    try {
+      const url = buildApiUrl(
+        API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.WAREHOUSE + "/store-admin"
+      );
+
+      const token = getAuthToken();
+
+      const response = await axios.get(url, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        withCredentials: true,
+      });
+
+      if (response.data.success) {
+        set({ warehouse: response.data.data, loading: false });
+      } else {
+        set({
+          error: "Failed to fetch warehouse by ID",
+          loading: false,
+        });
+      }
+
+      set({ loading: false, error: null });
+    } catch (error) {
+      console.error("Error while creating warehouse:", error);
+      set({
+        error:
+          error instanceof Error ? error.message : "Failed to create warehouse",
+        loading: false,
+      });
+    }
+  },
 }));

@@ -1,6 +1,7 @@
 import { PaginationInfo } from "./common";
 
 export interface Warehouse {
+  storeID: string;
   id: string;
   name: string;
   address: string;
@@ -63,4 +64,5 @@ export interface WarehouseState {
   fetchWarehouses: (storeId: string) => Promise<void>;
   createWarehouse: (data: CreateWarehouseDTO) => Promise<void>;
   fetchWarehouseByID: (id: string) => Promise<void>;
+  fetchWarehouseByUser: () => Promise<void>;
 }

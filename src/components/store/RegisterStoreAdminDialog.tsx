@@ -15,7 +15,6 @@ import { RegisterUserDTO } from '@/types/user';
 
 const storeAdmin = z.object({
   email: z.string().min(1, 'email cannot be blank'),
-  phoneNumber: z.string().min(1, 'phone number cannot be blank'),
   fullName: z.string().min(1, 'full name cannot be blank'),
 });
 
@@ -36,7 +35,6 @@ export default function RegisterStoreAdmin() {
     resolver: zodResolver(storeAdmin),
     defaultValues: {
       email: '',
-      phoneNumber: '',
       fullName: ''
     },
     mode: 'onBlur',
@@ -49,6 +47,9 @@ export default function RegisterStoreAdmin() {
         email: data.email,
         fullName: data.fullName
       }
+
+      console.log(newStoreAdmin);
+      
 
       await registerStoreAdmin(newStoreAdmin)
       reset();
@@ -115,7 +116,7 @@ export default function RegisterStoreAdmin() {
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && isUploading ? "Creating new product..." : "Register"}
+              {isSubmitting && isUploading ? "Registering new user..." : "Register"}
             </Button>
           </div>
         </form>

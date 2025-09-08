@@ -114,6 +114,7 @@ export const useUsersStore = create<UsersState>((set, get) => ({
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
+        withCredentials: true
       });
 
       set({ loading: false, error: null });

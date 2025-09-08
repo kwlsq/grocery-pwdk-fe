@@ -12,6 +12,7 @@ import { useProductStore } from '@/store/productStore';
 import ProductGrid from '@/components/product/ProductGrid';
 import CreateProduct from '@/components/product/CreateProductDialog';
 import { cn } from '@/lib/utils';
+import Navbar from '../../../../components/Navbar/Index';
 
 export default function StoreDetailsPage() {
   const params = useParams();
@@ -55,7 +56,7 @@ export default function StoreDetailsPage() {
   const handleSearch = (searchTerm: string, category: string) => {
     setSearchTerm(searchTerm);
     setSelectedCategory(category);
-    setCurrentPage(0); // Reset to first page when searching
+    setCurrentPage(0);
     fetchProductByStoreID(storeId, 0, pagination?.size || 12, searchTerm, category);
   };
 
@@ -63,6 +64,18 @@ export default function StoreDetailsPage() {
   const refreshProducts = () => {
     fetchProductByStoreID(storeId, currentPage, pagination?.size || 12, searchTerm, selectedCategory);
   };
+
+  // Count out of stock products
+  const outOfStockProducts = productsThisStore.filter(product => {
+    const inventories = product.productVersionResponse?.inventories;
+  
+    if (!Array.isArray(inventories) || inventories.length === 0) {
+      return true;
+    }
+  
+    const totalStock = inventories.reduce((sum, inv) => sum + (inv?.stock || 0), 0);
+    return totalStock === 0;
+  });
 
   useEffect(() => {
     setMounted(true);
@@ -111,8 +124,9 @@ export default function StoreDetailsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50">
+      <Navbar/>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
         {/* Store Header */}
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8">
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
@@ -267,8 +281,10 @@ export default function StoreDetailsPage() {
                     </svg>
                   </div>
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Current Page Items</p>
-                    <p className="text-2xl font-semibold text-gray-900">{productsThisStore.length}</p>
+                    <p className="text-sm font-medium text-gray-600">Out of Stock Products</p>
+                    <p className="text-2xl font-semibold text-gray-900">
+                      {outOfStockProducts.length}
+                    </p>
                   </div>
                 </div>
               </div>

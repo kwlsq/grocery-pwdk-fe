@@ -15,6 +15,10 @@ import dynamic from 'next/dynamic';
 const StockReportTableDyn = dynamic(() => import('@/components/report/StockReportTable'), { ssr: false });
 import CreateDiscountDialog from '@/components/discount/CreateDiscountDialog';
 import { cn } from '@/lib/utils';
+import { useAuthStore } from '@/store/authStore';
+import { useWarehouseStore } from '@/store/warehouseStore';
+import WarehouseGrid from '@/components/warehouse/WarehouseGrid';
+import Navbar from '../../components/Navbar/Index';
 
 export default function AdminDashboardPage() {
   const [mounted, setMounted] = useState(false);
@@ -22,14 +26,31 @@ export default function AdminDashboardPage() {
   const { stores, loading, error, fetchStores } = useStoreStore();
   const { users, loading: usersLoading, error: usersError, fetchUsers, selectedRole, setSelectedRole } = useUsersStore();
   const { discounts, loading: discountsLoading, error: discountsError, pagination, fetchDiscount } = useDiscountStore();
+  const { user } = useAuthStore();
+  const { warehouse, fetchWarehouseByUser } = useWarehouseStore();
 
   // Tab configuration data
-  const tabsData = [
-    { value: 'stores', label: 'Store' },
-    { value: 'users', label: 'User' },
-    { value: 'discounts', label: 'Discount' },
-    { value: 'chart', label: 'Report' }
-  ];
+  const tabsData =
+    user?.role === 'ADMIN'
+      ? [
+        { value: 'stores', label: 'Store' },
+        { value: 'users', label: 'User' },
+        { value: 'discounts', label: 'Discount' },
+        { value: 'chart', label: 'Report' }
+      ]
+      : user?.role === 'MANAGER'
+        ? [
+          { value: 'warehouse', label: 'Warehouse' },
+          { value: 'discounts', label: 'Discount' },
+          { value: 'chart', label: 'Report' }
+        ]
+        : [
+          { value: 'stores', label: 'Store' },
+          { value: 'users', label: 'User' },
+          { value: 'discounts', label: 'Discount' },
+          { value: 'chart', label: 'Report' }
+        ];
+
 
   useEffect(() => {
     setMounted(true);
@@ -50,10 +71,24 @@ export default function AdminDashboardPage() {
     fetchDiscount();
   }, [mounted, fetchDiscount]);
 
+  useEffect(() => {
+    if (!mounted) return;
+    if (user?.role !== 'MANAGER') return;
+    console.log(user?.role);
+    
+    fetchWarehouseByUser();
+  }, [mounted, fetchWarehouseByUser, user])
+
+
+  useEffect(() => {
+    setActiveTab(tabsData[0].value);
+  }, [])
+
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50">
+      <Navbar/>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
@@ -112,16 +147,16 @@ export default function AdminDashboardPage() {
         </div>
 
 
-        <Tabs defaultValue='stores' onValueChange={setActiveTab}>
+        <Tabs defaultValue={tabsData[0]?.value} onValueChange={setActiveTab}>
           <TabsList>
             {tabsData.map((tab) => (
-              <TabsTrigger 
+              <TabsTrigger
                 key={tab.value}
-                value={tab.value} 
+                value={tab.value}
                 className={cn(
                   "rounded-none h-full border-b-2 data-[state=active]:shadow-none",
-                  activeTab === tab.value 
-                    ? "border-green-600 text-green-600" 
+                  activeTab === tab.value
+                    ? "border-green-600 text-green-600"
                     : "border-transparent"
                 )}
               >
@@ -129,6 +164,24 @@ export default function AdminDashboardPage() {
               </TabsTrigger>
             ))}
           </TabsList>
+
+          <TabsContent value='warehouse'>
+            {/* Actions Bar */}
+            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-8">
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">Stores</h2>
+                  <p className="text-sm text-gray-600">
+                    Manage your store network and monitor performance
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Warehouse Grid */}
+            <WarehouseGrid warehouses={warehouse ? [warehouse] : []} />
+          </TabsContent>
+
           <TabsContent value='stores'>
             {/* Actions Bar */}
             <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-8">
@@ -189,7 +242,7 @@ export default function AdminDashboardPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <RegisterStoreAdmin/>
+                  <RegisterStoreAdmin />
                   <Button
                     onClick={() => fetchUsers({ page: 0, size: 12, role: selectedRole })}
                     className="bg-blue-600 hover:bg-blue-700"
@@ -218,7 +271,7 @@ export default function AdminDashboardPage() {
                   </p>
                 </div>
                 <div className="flex gap-3 items-center w-full sm:w-auto">
-                  <CreateDiscountDialog/>
+                  <CreateDiscountDialog />
                   <Button
                     onClick={() => fetchDiscount()}
                     className="bg-blue-600 hover:bg-blue-700"

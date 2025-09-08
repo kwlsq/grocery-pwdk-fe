@@ -9,6 +9,7 @@ import { useStockReportStore } from "@/store/stockReportStore";
 import { useStoreStore } from "@/store/storeStore";
 import { useWarehouseStore } from "@/store/warehouseStore";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuthStore } from "@/store/authStore";
 
 export default function StockReportTable() {
   const {
@@ -25,8 +26,52 @@ export default function StockReportTable() {
   } = useStockReportStore();
 
   const { stores, fetchStores } = useStoreStore();
-  const { warehouses, fetchWarehouses } = useWarehouseStore();
+  const { warehouse, warehouses, fetchWarehouses, fetchWarehouseByUser } = useWarehouseStore();
+  const { user } = useAuthStore();
 
+  const isManager = user?.role === 'MANAGER';
+
+  useEffect(() => {
+    fetchStores();
+    
+    // If manager, fetch their warehouse first
+    if (isManager) {
+      fetchWarehouseByUser();
+    } else {
+      // For non-managers, fetch reports immediately
+      fetchReports({ page: 0, size });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Effect to handle manager's warehouse data and auto-filter
+  useEffect(() => {
+    if (isManager && warehouse) {
+      // Set filters with manager's store and warehouse
+      const managerFilters = {
+        storeId: warehouse.storeID,
+        warehouseId: warehouse.id,
+      };
+      setFilters(managerFilters);
+      
+      // Fetch reports with manager's filters
+      fetchReports({ 
+        page: 0, 
+        size,
+        filters: managerFilters
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [warehouse, isManager]);
+
+  useEffect(() => {
+    if (!isManager && filters.storeId) {
+      fetchWarehouses(filters.storeId);
+      // reset warehouse when store changes
+      setFilters({ ...filters, warehouseId: "" });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.storeId, isManager]);
   useEffect(() => {
     fetchStores();
     fetchReports({ page: 0, size });
@@ -71,7 +116,7 @@ export default function StockReportTable() {
             value={filters.storeId || ""}
             onValueChange={(v) => setFilters({ ...filters, storeId: v })}
           >
-            <SelectTrigger>
+            <SelectTrigger disabled={user?.role !== 'ADMIN'}>
               <SelectValue placeholder="Select Store" />
             </SelectTrigger>
             <SelectContent>
@@ -88,7 +133,7 @@ export default function StockReportTable() {
             onValueChange={(v) => setFilters({ ...filters, warehouseId: v })}
             disabled={!filters.storeId}
           >
-            <SelectTrigger>
+            <SelectTrigger disabled={user?.role !== 'ADMIN'}>
               <SelectValue placeholder="Select Warehouse" />
             </SelectTrigger>
             <SelectContent>

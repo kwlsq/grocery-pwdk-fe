@@ -40,7 +40,7 @@ export default function Navbar() {
                         <button className="p-2 rounded-full hover:bg-gray-100">
                             <ShoppingCartIcon className="h-6 w-6 text-gray-600" />
                         </button>
-                        {user?.role === 'ADMIN' && (
+                        {(user?.role === 'ADMIN' || user?.role === 'MANAGER') && (
                             <Link href="/admin-dashboard" className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700">
                                 Admin Dashboard
                             </Link>
