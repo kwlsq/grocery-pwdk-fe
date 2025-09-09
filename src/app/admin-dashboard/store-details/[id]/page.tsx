@@ -34,8 +34,7 @@ export default function StoreDetailsPage() {
   // Tab configuration data
   const tabsData = [
     { value: 'warehouses', label: 'Warehouses' },
-    { value: 'products', label: 'Products' },
-    { value: 'admin', label: 'Admin' }
+    { value: 'products', label: 'Products' }
   ];
 
   // Transform pagination data for ProductGrid component

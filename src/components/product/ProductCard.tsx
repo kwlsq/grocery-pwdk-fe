@@ -44,7 +44,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
             </div>
           )}
 
-          {totalStock < 10 && totalStock > 0 && (
+          {totalStock < 10 && totalStock > 0 && user?.role === 'ADMIN' && (
             <div className="absolute top-2 right-2 bg-orange-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
               Low Stock
             </div>

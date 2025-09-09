@@ -19,6 +19,9 @@ import { useAuthStore } from '@/store/authStore';
 import { useWarehouseStore } from '@/store/warehouseStore';
 import WarehouseGrid from '@/components/warehouse/WarehouseGrid';
 import Navbar from '../../components/Navbar/Index';
+import { useProductStore } from '@/store/productStore';
+import CreateCategoryDialog from '@/components/category/CreateCategoryDialog';
+import CategoryGrid from '@/components/category/CategoryGrid';
 
 export default function AdminDashboardPage() {
   const [mounted, setMounted] = useState(false);
@@ -28,6 +31,9 @@ export default function AdminDashboardPage() {
   const { discounts, loading: discountsLoading, error: discountsError, pagination, fetchDiscount } = useDiscountStore();
   const { user } = useAuthStore();
   const { warehouse, fetchWarehouseByUser } = useWarehouseStore();
+  const { categories, fetchCategories, deleteCategory } = useProductStore();
+
+
 
   // Tab configuration data
   const tabsData =
@@ -36,19 +42,23 @@ export default function AdminDashboardPage() {
         { value: 'stores', label: 'Store' },
         { value: 'users', label: 'User' },
         { value: 'discounts', label: 'Discount' },
-        { value: 'chart', label: 'Report' }
+        { value: 'chart', label: 'Report' },
+        { value: 'categories', label: 'Category' }
       ]
       : user?.role === 'MANAGER'
         ? [
           { value: 'warehouse', label: 'Warehouse' },
           { value: 'discounts', label: 'Discount' },
-          { value: 'chart', label: 'Report' }
+          { value: 'chart', label: 'Report' },
+          { value: 'categories', label: 'Category' }
+
         ]
         : [
           { value: 'stores', label: 'Store' },
           { value: 'users', label: 'User' },
           { value: 'discounts', label: 'Discount' },
-          { value: 'chart', label: 'Report' }
+          { value: 'chart', label: 'Report' },
+          { value: 'categories', label: 'Category' }
         ];
 
 
@@ -75,9 +85,17 @@ export default function AdminDashboardPage() {
     if (!mounted) return;
     if (user?.role !== 'MANAGER') return;
     console.log(user?.role);
-    
+
     fetchWarehouseByUser();
   }, [mounted, fetchWarehouseByUser, user])
+
+  useEffect(() => {
+    if (!mounted) return;
+    // Only load when visiting Categories tab to avoid unnecessary calls
+    if (activeTab === 'categories') {
+      fetchCategories();
+    }
+  }, [mounted, activeTab, fetchCategories]);
 
 
   useEffect(() => {
@@ -87,8 +105,8 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar/>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+      <Navbar />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
@@ -314,6 +332,48 @@ export default function AdminDashboardPage() {
             </div>
             {/** Lazy load to avoid SSR issues with client store hooks */}
             <StockReportTableDyn />
+          </TabsContent>
+          <TabsContent value='categories'>
+            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-8">
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">Categories</h2>
+                  <p className="text-sm text-gray-600">Manage your categories</p>
+                </div>
+                <div className="flex gap-3 items-center w-full sm:w-auto">
+                  <div className={cn(user?.role === 'MANAGER' && "hidden")}>
+                    <CreateCategoryDialog />
+                  </div>
+                  <Button
+                    onClick={() => {
+                      if (typeof window !== 'undefined') {
+                        localStorage.removeItem('categories');
+                      }
+                      fetchCategories();
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Refresh
+                  </Button>
+                </div>
+              </div>
+            </div>
+            <CategoryGrid
+              categories={categories}
+              onDelete={async (id: string) => {
+                try {
+                  await deleteCategory(id);
+                } finally {
+                  if (typeof window !== 'undefined') {
+                    localStorage.removeItem('categories');
+                  }
+                  await fetchCategories();
+                }
+              }}
+            />
           </TabsContent>
         </Tabs>
       </div>

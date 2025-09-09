@@ -57,6 +57,15 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
   const { uploadMultiImage, uploadSingleImage, isUploading } = useImageStore();
   const [isMounted, setMounted] = useState(false);
 
+  const now = new Date();
+
+  const filteredDiscount = discounts.filter((discount) => {
+    const start = new Date(discount.startAt);
+    const end = new Date(discount.endAt);
+
+    return start <= now && now <= end;
+  });
+
 
   const {
     register,
@@ -86,10 +95,10 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
 
   useEffect(() => {
     setMounted(true)
-  },[])
+  }, [])
 
   useEffect(() => {
-    if(!isMounted) return;
+    if (!isMounted) return;
 
     fetchCategories();
     fetchDiscount();
@@ -312,14 +321,16 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
               <div className="flex flex-col gap-4 p-6 border border-neutral-300 rounded-xl">
                 <div className="flex flex-col gap-2">
                   <Label>Thumbnail</Label>
-                  <div className={cn("relative w-32 aspect-square border-[1px] border-gray-100 rounded-2xl", !thumbnail && "hidden")}>
-                    <Image
-                      src={thumbnailPreview}
-                      fill
-                      alt="image of event"
-                      className="object-contain"
-                    />
-                  </div>
+                  {thumbnail && thumbnailPreview && (
+                    <div className={cn("relative w-32 aspect-square border-[1px] border-gray-100 rounded-2xl", !thumbnail && "hidden")}>
+                      <Image
+                        src={thumbnailPreview}
+                        fill
+                        alt="image of event"
+                        className="object-contain"
+                      />
+                    </div>
+                  )}
                   <div>
                     <input
                       type="file"
@@ -333,18 +344,20 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
                 </div>
                 <div className="flex flex-col gap-2">
                   <Label>Product carousel</Label>
-                  <div className="flex gap-2 w-full flex-wrap">
-                    {mediaPreviews?.map((media, index) => (
-                      <div key={index} className="relative w-32 aspect-square border-[1px] border-gray-100 rounded-2xl">
-                        <Image
-                          src={media}
-                          fill
-                          alt="image of event"
-                          className="object-contain"
-                        />
-                      </div>
-                    ))}
-                  </div>
+                  {mediaPreviews && mediaPreviews.length > 0 && (
+                    <div className="flex gap-2 w-full flex-wrap">
+                      {mediaPreviews?.map((media, index) => (
+                        <div key={index} className="relative w-32 aspect-square border-[1px] border-gray-100 rounded-2xl">
+                          <Image
+                            src={media}
+                            fill
+                            alt="image of event"
+                            className="object-contain"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   <div>
                     <input
                       type="file"
@@ -361,10 +374,10 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
           </div>
 
           {/* Promotions (optional, multi-select) */}
-          <div className="flex flex-col gap-2">
+          <div className={cn("flex flex-col gap-2", filteredDiscount.length <= 0 && "hidden")}>
             <Label className="block text-sm font-medium text-gray-700">Promotions</Label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {discounts.map((discount) => {
+              {filteredDiscount.map((discount) => {
                 const isSelected = selectedPromotions.includes(discount.id);
                 return (
                   <button

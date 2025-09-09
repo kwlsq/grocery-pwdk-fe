@@ -1,6 +1,11 @@
 import { create } from "zustand";
 import axios from "axios";
-import { ProductState, ApiResponse, ProductCategory } from "../types/product";
+import {
+  ProductState,
+  ApiResponse,
+  ProductCategory,
+  CreateCategoryRequest,
+} from "../types/product";
 import { buildApiUrl, API_CONFIG } from "../config/api";
 
 const getAuthToken = (): string => {
@@ -196,6 +201,50 @@ export const useProductStore = create<ProductState>((set) => ({
           error instanceof Error ? error.message : "Failed to fetch categories",
         loading: false,
       });
+    }
+  },
+
+  createCategory: async (data: CreateCategoryRequest) => {
+    set({ loading: true, error: null });
+    try {
+
+      const token = getAuthToken();
+
+      const response = await axios.post(
+        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CATEGORY_CRUD}`,
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          withCredentials: true,
+        }
+      );
+
+      set(() => ({ loading: false }));
+      return response.data;
+    } catch (e) {
+      console.error(e);
+    }
+  },
+
+  deleteCategory: async (id: string) => {
+    set({ loading: true, error: null });
+    try {
+      const token = getAuthToken();
+
+      await axios.delete(
+        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CATEGORY_CRUD}/${id}`,
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+    } catch (e) {
+      console.error(e);
     }
   },
 

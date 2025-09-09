@@ -84,6 +84,11 @@ export interface UpdateProductStock {
   stock: number;
 }
 
+export interface CreateCategoryRequest{
+  parentID?: string | undefined;
+  name: string;
+}
+
 export interface ProductState {
   categories: ProductCategory[];
   products: Product[];
@@ -111,6 +116,8 @@ export interface ProductState {
     sort?: string
   ) => Promise<void>;
   fetchCategories: () => Promise<void>;
+  createCategory: (data: CreateCategoryRequest) => Promise<void>;
+  deleteCategory: (id: string) => Promise<void>;
   createProduct: (data: CreateProductDTO) => Promise<void>;
   updateProduct: (id: string, data: UpdateProductDTO) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;

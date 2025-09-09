@@ -5,6 +5,7 @@ export const API_CONFIG = {
     PRODUCTS: '/products/public',
     PRODUCTS_ADMIN: '/products/store',
     CATEGORY: '/products/public/categories',
+    CATEGORY_CRUD: '/products/category',
     PRODUCTS_CRUD: '/products',
     CART: '/cart-items',
     WAREHOUSE: '/warehouse',
