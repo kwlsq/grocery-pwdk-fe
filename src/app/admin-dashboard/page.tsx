@@ -1,31 +1,33 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useStoreStore } from '../../store/storeStore';
-import StoreGrid from '../../components/store/StoreGrid';
 import { Tabs, TabsList, TabsContent, TabsTrigger } from '@/components/ui/tabs';
-import { useUsersStore } from '../../store/userStore';
-import UserGrid from '@/components/user/UserGrid';
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
-import RegisterStoreAdmin from '../../components/store/RegisterStoreAdminDialog';
-import { Button } from '@/components/ui/button';
+import { useAuthStore } from '@/store/authStore';
+import { useWarehouseStore } from '@/store/warehouseStore';
+import { useProductStore } from '@/store/productStore';
 import { useDiscountStore } from '@/store/discountStore';
+import { useUsersStore } from '../../store/userStore';
+import { useStoreStore } from '../../store/storeStore';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import UserGrid from '@/components/user/UserGrid';
+import RegisterStoreAdmin from '../../components/store/RegisterStoreAdminDialog';
 import DiscountGrid from '@/components/discount/DiscountGrid';
 import dynamic from 'next/dynamic';
 const StockReportTableDyn = dynamic(() => import('@/components/report/StockReportTable'), { ssr: false });
 import CreateDiscountDialog from '@/components/discount/CreateDiscountDialog';
-import { cn } from '@/lib/utils';
-import { useAuthStore } from '@/store/authStore';
-import { useWarehouseStore } from '@/store/warehouseStore';
+import StoreGrid from '../../components/store/StoreGrid';
 import WarehouseGrid from '@/components/warehouse/WarehouseGrid';
 import Navbar from '../../components/Navbar/Index';
-import { useProductStore } from '@/store/productStore';
 import CreateCategoryDialog from '@/components/category/CreateCategoryDialog';
 import CategoryGrid from '@/components/category/CategoryGrid';
+const ProductStockReportTableDyn = dynamic(() => import('@/components/report/ProductStockReportTable'), { ssr: false });
 
 export default function AdminDashboardPage() {
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState('stores');
+  const [reportTab, setReportTab] = useState('summary');
   const { stores, loading, error, fetchStores } = useStoreStore();
   const { users, loading: usersLoading, error: usersError, fetchUsers, selectedRole, setSelectedRole } = useUsersStore();
   const { discounts, loading: discountsLoading, error: discountsError, pagination, fetchDiscount } = useDiscountStore();
@@ -33,9 +35,7 @@ export default function AdminDashboardPage() {
   const { warehouse, fetchWarehouseByUser } = useWarehouseStore();
   const { categories, fetchCategories, deleteCategory } = useProductStore();
 
-
-
-  // Tab configuration data
+  // Main tabs
   const tabsData =
     user?.role === 'ADMIN'
       ? [
@@ -61,6 +61,11 @@ export default function AdminDashboardPage() {
           { value: 'categories', label: 'Category' }
         ];
 
+  // Report tabs
+  const reportTabsData = [
+    { value: 'summary', label: 'Summary' },
+    { value: 'product', label: 'Product' }
+  ];
 
   useEffect(() => {
     setMounted(true);
@@ -91,7 +96,6 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     if (!mounted) return;
-    // Only load when visiting Categories tab to avoid unnecessary calls
     if (activeTab === 'categories') {
       fetchCategories();
     }
@@ -331,7 +335,30 @@ export default function AdminDashboardPage() {
               </div>
             </div>
             {/** Lazy load to avoid SSR issues with client store hooks */}
-            <StockReportTableDyn />
+            <Tabs defaultValue={reportTabsData[0]?.value} onValueChange={setReportTab}>
+              <TabsList>
+                {reportTabsData.map((tab) => (
+                  <TabsTrigger
+                    key={tab.value}
+                    value={tab.value}
+                    className={cn(
+                      "rounded-none h-full border-b-2 data-[state=active]:shadow-none",
+                      reportTab === tab.value
+                        ? "border-green-600 text-green-600"
+                        : "border-transparent"
+                    )}
+                  >
+                    {tab.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+              <TabsContent value='summary'>
+                <StockReportTableDyn />
+              </TabsContent>
+              <TabsContent value='product'>
+                <ProductStockReportTableDyn />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
           <TabsContent value='categories'>
             <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-8">

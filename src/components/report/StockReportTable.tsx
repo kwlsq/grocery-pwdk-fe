@@ -33,7 +33,7 @@ export default function StockReportTable() {
 
   useEffect(() => {
     fetchStores();
-    
+
     // If manager, fetch their warehouse first
     if (isManager) {
       fetchWarehouseByUser();
@@ -53,10 +53,10 @@ export default function StockReportTable() {
         warehouseId: warehouse.id,
       };
       setFilters(managerFilters);
-      
+
       // Fetch reports with manager's filters
-      fetchReports({ 
-        page: 0, 
+      fetchReports({
+        page: 0,
         size,
         filters: managerFilters
       });
@@ -159,7 +159,6 @@ export default function StockReportTable() {
           <TableHeader>
             <TableRow>
               <TableHead>Product</TableHead>
-              <TableHead>Version</TableHead>
               <TableHead>Store</TableHead>
               <TableHead>Warehouse</TableHead>
               <TableHead>Month</TableHead>
@@ -185,8 +184,9 @@ export default function StockReportTable() {
             ) : (
               reports.map((r, idx) => (
                 <TableRow key={idx}>
-                  <TableCell>{r.productName}</TableCell>
-                  <TableCell>{r.productVersion}</TableCell>
+                  <TableCell>
+                    r.productName
+                  </TableCell>
                   <TableCell>{r.storeName}</TableCell>
                   <TableCell>{r.warehouseName}</TableCell>
                   <TableCell>{r.month}</TableCell>

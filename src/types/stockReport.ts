@@ -1,6 +1,7 @@
 import { PaginationInfo } from "./common"
 
 export type StockReportSummaryItem = {
+  productID: string
   productName: string
   productVersion: string
   storeName: string
@@ -18,6 +19,27 @@ export type StockReportApiResponse = {
   message: string
   data: PaginationInfo & {
     content: StockReportSummaryItem[]
+  }
+}
+
+export type ProductStockReportItem = {
+  productName: string
+  productVersion: string
+  storeName: string
+  warehouseName: string
+  stockChange: number
+  journal: string
+  timestamp: string
+  price: number
+  changeType: string
+}
+
+export type ProductStockReportApiResponse = {
+  success: boolean
+  statusCode: number
+  message: string
+  data: PaginationInfo & {
+    content: ProductStockReportItem[]
   }
 }
 
@@ -39,6 +61,15 @@ export type StockReportState = {
   fetchReports: (opts?: { page?: number; size?: number; filters?: StockReportFilters }) => Promise<void>
   setPage: (page: number) => void
   setFilters: (filters: StockReportFilters) => void
+  // Product-level report state
+  productReports: ProductStockReportItem[]
+  productPagination: PaginationInfo | null
+  productPage: number
+  productSize: number
+  productMonth?: string
+  fetchProductReports: (opts: { productId: string; page?: number; size?: number; month?: string }) => Promise<void>
+  setProductPage: (page: number) => void
+  setProductMonth: (month?: string) => void
 }
 
 
