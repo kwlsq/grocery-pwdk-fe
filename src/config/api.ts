@@ -4,7 +4,7 @@ export const API_CONFIG = {
     PRODUCTS: '/products/public',
     PRODUCTS_ADMIN: '/products/admin',
     CATEGORY: '/products/public/categories',
-    PRODUCTS_CREATE: '/products/create',
+    PRODUCTS_CRUD: '/products',
     CART: '/cart-items',
     WAREHOUSE: '/warehouse',
     IMAGE: '/images',
@@ -12,7 +12,10 @@ export const API_CONFIG = {
     STORE_ADMIN : {
       DELETE: '/users/store-admin',
       REGISTER: '/auth/store-admin'
-    }
+    },
+    DISCOUNT: '/promotions',
+    STOCK_REPORTS: '/stock-reports',
+    STORE: '/store'
   },
   DEFAULT_PAGE_SIZE: 10,
 };

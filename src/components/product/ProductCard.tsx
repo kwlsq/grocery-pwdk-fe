@@ -3,24 +3,26 @@
 import { Product } from '../../types/product';
 import Image from 'next/image';
 import Link from 'next/link';
+import EditProduct from './EditProductDialog';
+import { useAuthStore } from '@/store/authStore';
+import ProductStock from './ProductStockDialog';
 
 interface ProductCardProps {
   product: Product;
 }
 
 const ProductCard = ({ product }: ProductCardProps) => {
+  const { user } = useAuthStore();
+  const { price, weight } = product.productVersionResponse;
 
   // Get the primary image or first image available
   const primaryImage = product.productImages.find(img => img.primary) || product.productImages[0];
-  
+
   // Get total stock from all inventories
   const totalStock = product.productVersionResponse.inventories.reduce(
-    (sum, inventory) => sum + inventory.stock, 
+    (sum, inventory) => sum + inventory.stock,
     0
   );
-
-  // Get price and weight from product version
-  const { price, weight } = product.productVersionResponse;
 
   return (
     <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden border border-gray-100">
@@ -28,7 +30,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
         <div className="relative h-48 w-full">
           {primaryImage ? (
             <Image
-              src={primaryImage.url}
+              src={primaryImage.url ?? "/Product Image Placeholder.webp"}
               alt={product.name}
               fill
               className="object-cover"
@@ -70,7 +72,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-2">
               <span className="text-lg font-bold text-green-600">
-                ${price.toFixed(2)}
+                Rp. {price.toFixed(2)}
               </span>
               <span className="text-xs text-gray-500">/kg</span>
             </div>
@@ -82,16 +84,27 @@ const ProductCard = ({ product }: ProductCardProps) => {
         </div>
       </Link>
 
-      <div className="px-4 pb-4">
-        <button
-          disabled={totalStock === 0}
-          className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
-        >
-          {totalStock === 0 ? 'Out of Stock' : 'Add to Cart'}
-        </button>
+      <div className="px-4 pb-4 w-full">
+        {user?.role === 'ADMIN' ? (
+          <div className='w-full flex gap-2'>
+            <div className='w-full'>
+              <EditProduct id={product.id} product={product} />
+            </div>
+            <div className='w-fit'>
+              <ProductStock id={product.id} product={product} />
+            </div>
+          </div>
+        ) : (
+          <button
+            disabled={totalStock === 0}
+            className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+          >
+            {totalStock === 0 ? 'Out of Stock' : 'Add to Cart'}
+          </button>
+        )}
       </div>
     </div>
   );
-} 
+}
 
 export default ProductCard;

@@ -1,3 +1,5 @@
+import { PaginationInfo } from "./common";
+
 export interface User {
   id: string;
   email: string;
@@ -36,7 +38,7 @@ export interface UsersState {
   users: User[];
   loading: boolean;
   error: string | null;
-  pagination: UsersPaginationInfo | null;
+  pagination: PaginationInfo | null;
   selectedRole: '' | 'CUSTOMER' | 'MANAGER' | 'ADMIN';
   setSelectedRole: (role: '' | 'CUSTOMER' | 'MANAGER' | 'ADMIN') => void;
   fetchUsers: (params?: { page?: number; size?: number; role?: '' | 'CUSTOMER' | 'MANAGER' | 'ADMIN' }) => Promise<void>;

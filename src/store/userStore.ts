@@ -19,6 +19,12 @@ export const useUsersStore = create<UsersState>((set, get) => ({
 
     set({ loading: true, error: null });
     try {
+
+      const token =
+        (typeof window !== "undefined" && localStorage.getItem("accessToken")) ||
+        (typeof window !== "undefined" && sessionStorage.getItem("accessToken")) ||
+        "";
+
       const url = buildApiUrl(
         API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.USERS,
         {
@@ -28,7 +34,10 @@ export const useUsersStore = create<UsersState>((set, get) => ({
         }
       );
 
-      const response = await axios.get<UsersApiResponse>(url);
+      const response = await axios.get<UsersApiResponse>(url, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        withCredentials: true,
+      });
 
       if (response.data.success) {
         set({
@@ -61,13 +70,19 @@ export const useUsersStore = create<UsersState>((set, get) => ({
   deleteUser: async ({ userID }) => {
     set({ loading: true, error: null });
     try {
-      axios.post(
+      const token =
+        (typeof window !== "undefined" && localStorage.getItem("accessToken")) ||
+        (typeof window !== "undefined" && sessionStorage.getItem("accessToken")) ||
+        "";
+
+      await axios.delete(
         buildApiUrl(
-          API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.STORE_ADMIN.DELETE,
-          {
-            userID,
-          }
-        )
+          API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.STORE_ADMIN.DELETE + "/" + userID
+        ),
+        {
+          withCredentials: true,
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        }
       );
 
       set({ loading: false, error: null });
@@ -84,13 +99,20 @@ export const useUsersStore = create<UsersState>((set, get) => ({
   registerStoreAdmin: async (data: RegisterUserDTO) => {
     set({ loading: true, error: null });
     try {
+
+      const token =
+        (typeof window !== "undefined" && localStorage.getItem("accessToken")) ||
+        (typeof window !== "undefined" && sessionStorage.getItem("accessToken")) ||
+        "";
+
       const url = buildApiUrl(
         API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.STORE_ADMIN.REGISTER
       );
 
-      const response = await axios.post(url, data, {
+      await axios.post(url, data, {
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       });
 

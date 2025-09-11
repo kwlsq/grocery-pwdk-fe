@@ -1,12 +1,8 @@
 'use client';
 
-import { FC, useEffect, useState } from 'react';
-import { useProductStore } from '../../store/productStore';
-import { useLocationStore } from '../../store/locationStore';
-import ProductCard from './ProductCard';
-import LocationPrompt from '../location/LocationPrompt';
-import SearchAndFilter from './SearchAndFilter';
-import { Product } from '@/types/product';
+import { FC } from 'react';
+import DiscountCard from './DiscountCard';
+import { Discount } from '@/types/discount';
 import {
   Pagination,
   PaginationContent,
@@ -17,8 +13,8 @@ import {
 } from "@/components/ui/pagination";
 import { cn } from '@/lib/utils';
 
-interface ProductGridProps {
-  products: Product[];
+interface DiscountGridProps {
+  discounts: Discount[];
   loading: boolean;
   error?: string | null;
   pagination?: {
@@ -28,23 +24,17 @@ interface ProductGridProps {
     hasPrevious: boolean;
   };
   onPageChange?: (newPage: number) => void;
-  onSearch?: (searchTerm: string, category: string) => void;
-  categories?: { id: string; name: string }[];
-  showSearchAndFilter?: boolean;
 }
 
-const ProductGrid: FC<ProductGridProps> = ({
-  products,
+const DiscountGrid: FC<DiscountGridProps> = ({
+  discounts,
   loading,
   error,
   pagination,
   onPageChange,
-  onSearch,
-  categories = [],
-  showSearchAndFilter = false,
 }) => {
 
-  if (loading && products.length === 0) {
+  if (loading && discounts.length === 0) {
     return (
       <div className="flex justify-center items-center min-h-96">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
@@ -52,7 +42,7 @@ const ProductGrid: FC<ProductGridProps> = ({
     );
   }
 
-  if (error && products.length === 0) {
+  if (error && discounts.length === 0) {
     return (
       <div className="flex justify-center items-center min-h-96">
         <div className="text-center">
@@ -67,17 +57,13 @@ const ProductGrid: FC<ProductGridProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Search and Filter Section - Only show when showSearchAndFilter is true */}
-      {showSearchAndFilter && onSearch && (
-        <SearchAndFilter onSearch={onSearch} categories={categories} />
-      )}
 
-      {/* Products Grid */}
-      {products.length === 0 && !loading ? (
+      {/* Discounts Grid */}
+      {discounts.length === 0 && !loading ? (
         <div className="flex justify-center items-center min-h-96">
           <div className="text-center">
             <div className="text-gray-500 text-lg font-semibold">
-              No products found
+              No discounts found
             </div>
             <p className="text-gray-400 mt-2">
               Try adjusting your search criteria
@@ -86,8 +72,8 @@ const ProductGrid: FC<ProductGridProps> = ({
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
+          {discounts.map((discount) => (
+            <DiscountCard key={discount.id} discount={discount} />
           ))}
         </div>
       )}
@@ -127,4 +113,4 @@ const ProductGrid: FC<ProductGridProps> = ({
   );
 };
 
-export default ProductGrid;
+export default DiscountGrid;

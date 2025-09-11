@@ -1,3 +1,6 @@
+import { PaginationInfo } from "./common";
+import { Discount } from "./discount";
+
 export interface ProductImage {
   id: string;
   url: string;
@@ -20,24 +23,17 @@ export interface Product {
   id: string;
   name: string;
   description: string;
+  categoryID: string;
   productVersionResponse: ProductVersion;
   productImages: ProductImage[];
-  inventories: Inventory[]
+  inventories: Inventory[];
+  promotions: Discount[];
 }
 
 export interface ProductCategory {
   id: string;
   parentID: string;
   name: string;
-}
-
-export interface PaginationInfo {
-  page: number;
-  size: number;
-  totalElements: number;
-  totalPages: number;
-  hasNext: boolean;
-  hasPrevious: boolean;
 }
 
 export interface ApiResponse {
@@ -55,10 +51,43 @@ export interface ApiResponse {
   };
 }
 
+export interface CreateProductDTO {
+  name: string;
+  description: string;
+  price: number;
+  weight: number;
+  categoryID: string;
+  storeID: string;
+  inventories: {
+    warehouseID: string;
+    stock: number;
+  }[];
+  promotions?: {
+    promotionID: string;
+  }[];
+}
+
+export interface UpdateProductDTO {
+  name: string;
+  description: string;
+  price: number;
+  weight: number;
+  categoryID: string;
+  changeReason: string;
+  promotions?: {
+    promotionID: string;
+  }[];
+}
+
+export interface UpdateProductStock {
+  warehouseID: string;
+  stock: number;
+}
+
 export interface ProductState {
   categories: ProductCategory[];
   products: Product[];
-  productsThisStore: Product[],
+  productsThisStore: Product[];
   loading: boolean;
   error: string | null;
   pagination: PaginationInfo | null;
@@ -74,7 +103,7 @@ export interface ProductState {
   ) => Promise<void>;
   fetchProductById: (id: string) => Promise<Product>;
   fetchProductByStoreID: (
-    id: string, 
+    id: string,
     page?: number,
     size?: number,
     search?: string,
@@ -83,17 +112,7 @@ export interface ProductState {
   ) => Promise<void>;
   fetchCategories: () => Promise<void>;
   createProduct: (data: CreateProductDTO) => Promise<void>;
-} 
-
-export interface CreateProductDTO {
-  name: string;
-  description: string;
-  price: number;
-  weight: number;
-  categoryID: string;
-  storeID: string;
-  inventories: {
-    warehouseID: string;
-    stock: number;
-  }[];
+  updateProduct: (id: string, data: UpdateProductDTO) => Promise<void>;
+  deleteProduct: (id: string) => Promise<void>;
+  updateProductStock: (id: string, data: UpdateProductStock[]) => Promise<void>;
 }

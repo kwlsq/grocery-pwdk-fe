@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '../../store/authStore'; 
 import { LoginForm } from '@/components/form/login/LoginForm';
 import { RegisterForm } from '@/components/form/register/RegisterForm';
+
 export default function AuthPage() {
   const [view, setView] = useState<'login' | 'register'>('login');
   const { isAuthenticated, checkAuthStatus } = useAuthStore();

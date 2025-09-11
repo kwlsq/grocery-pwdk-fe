@@ -1,3 +1,5 @@
+import { PaginationInfo } from "./common";
+
 export interface Warehouse {
   id: string;
   name: string;
@@ -21,15 +23,15 @@ export interface WarehouseApiResponse {
   };
 }
 
-
-export interface PaginationInfo {
-  page: number;
-  size: number;
-  totalElements: number;
-  totalPages: number;
-  hasNext: boolean;
-  hasPrevious: boolean;
+export interface CreateWarehouseDTO {
+  storeID: string,
+  name: string,
+  address: string,
+  latitude: number,
+  longitude: number,
+  isActive: boolean
 }
+
 
 export interface WarehouseState {
   pagination: PaginationInfo | null;
@@ -37,4 +39,5 @@ export interface WarehouseState {
   loading: boolean;
   error: string | null;
   fetchWarehouses: (storeId: string) => Promise<void>;
+  createWarehouse: (data: CreateWarehouseDTO) => Promise<void>;
 }

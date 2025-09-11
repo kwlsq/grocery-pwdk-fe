@@ -25,6 +25,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   logout: async () => {
     try {
       await logoutUser();
+
     } finally {
       set({ user: null, isAuthenticated: false });
     }
