@@ -185,7 +185,7 @@ export default function StockReportTable() {
               reports.map((r, idx) => (
                 <TableRow key={idx}>
                   <TableCell>
-                    r.productName
+                    {r.productName}
                   </TableCell>
                   <TableCell>{r.storeName}</TableCell>
                   <TableCell>{r.warehouseName}</TableCell>

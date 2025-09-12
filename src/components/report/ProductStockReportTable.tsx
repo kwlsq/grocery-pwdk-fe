@@ -25,7 +25,7 @@ export default function ProductStockReportTable() {
 
   useEffect(() => {
     // Ensure summary reports loaded (uses existing defaults in store)
-    fetchReports({ page: 0 });
+    fetchReports({ page: 0, size: 100 });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

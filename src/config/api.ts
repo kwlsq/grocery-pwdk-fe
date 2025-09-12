@@ -17,6 +17,7 @@ export const API_CONFIG = {
     },
     DISCOUNT: '/promotions',
     STOCK_REPORTS: '/stock-reports',
+    SALES_REPORTS: '/sales-reports',
     STORE: '/store'
   },
   DEFAULT_PAGE_SIZE: 10,

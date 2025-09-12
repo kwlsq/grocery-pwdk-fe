@@ -23,6 +23,7 @@ import Navbar from '../../components/Navbar/Index';
 import CreateCategoryDialog from '@/components/category/CreateCategoryDialog';
 import CategoryGrid from '@/components/category/CategoryGrid';
 const ProductStockReportTableDyn = dynamic(() => import('@/components/report/ProductStockReportTable'), { ssr: false });
+const SalesReportTableDyn = dynamic(() => import('@/components/report/SalesReportTable'), { ssr: false });
 
 export default function AdminDashboardPage() {
   const [mounted, setMounted] = useState(false);
@@ -64,7 +65,8 @@ export default function AdminDashboardPage() {
   // Report tabs
   const reportTabsData = [
     { value: 'summary', label: 'Summary' },
-    { value: 'product', label: 'Product' }
+    { value: 'product', label: 'Product' },
+    { value: 'sales', label: 'Sales' }
   ];
 
   useEffect(() => {
@@ -357,6 +359,9 @@ export default function AdminDashboardPage() {
               </TabsContent>
               <TabsContent value='product'>
                 <ProductStockReportTableDyn />
+              </TabsContent>
+              <TabsContent value='sales'>
+                <SalesReportTableDyn />
               </TabsContent>
             </Tabs>
           </TabsContent>
