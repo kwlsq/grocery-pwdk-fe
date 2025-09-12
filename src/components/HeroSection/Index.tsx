@@ -10,17 +10,17 @@ export const HeroSection = () => {
     
     const slides = [
         {
-            image: "https://placehold.co/1200x500/10B981/FFFFFF?text=Fresh+Vegetables",
+            image: "/hero.jpg",
             title: "Crisp & Fresh Vegetables",
             subtitle: "Get up to 30% off on your first order of farm-fresh veggies.",
         },
         {
-            image: "https://placehold.co/1200x500/3B82F6/FFFFFF?text=Daily+Essentials",
+            image: "/hero 2.jpg",
             title: "Your Daily Essentials",
             subtitle: "Milk, bread, eggs, and more, delivered to your doorstep.",
         },
         {
-            image: "https://placehold.co/1200x500/F59E0B/FFFFFF?text=Organic+Fruits",
+            image: "/hero 3.jpg",
             title: "Juicy Organic Fruits",
             subtitle: "Taste the sweetness of nature with our organic fruit collection.",
         },
@@ -32,7 +32,7 @@ export const HeroSection = () => {
     const next = () => setCurrent((curr) => (curr === slides.length - 1 ? 0 : curr + 1));
 
     useEffect(() => {
-        const slideInterval = setInterval(next, 5000); 
+        const slideInterval = setInterval(next, 10000); 
         return () => clearInterval(slideInterval);
     }, []);
 
@@ -42,13 +42,7 @@ export const HeroSection = () => {
                 {slides.map((s, i) => (
                     <div key={i} className="w-full flex-shrink-0 relative">
                         <img src={s.image} alt={s.title} className="w-full h-64 md:h-96 object-cover" />
-                        <div className="absolute inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center text-center p-4">
-                            <h2 className="text-3xl md:text-5xl font-bold text-white">{s.title}</h2>
-                            <p className="mt-2 md:mt-4 text-lg md:text-xl text-gray-200 max-w-2xl">{s.subtitle}</p>
-                            <button className="mt-6 px-6 py-3 bg-emerald-600 text-white font-semibold rounded-lg hover:bg-emerald-700 transition-colors">
-                                Shop Now
-                            </button>
-                        </div>
+                       
                     </div>
                 ))}
             </div>
