@@ -1,7 +1,8 @@
-"use client"
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/store/authStore';
+import { useAuthStore } from '../../store/authStore';
 import { Address } from '@/types/address';
 import { getAddresses, deleteAddress } from '@/services/addressService';
 import { ProfileSidebar } from '@/components/profile/ProfileSidebar';
@@ -27,22 +28,23 @@ export default function UserAddressesPage() {
     };
 
     useEffect(() => {
-        const loadInitialData = async () => {
+        const loadPageData = async () => {
             await checkAuthStatus();
+            const isLoggedIn = useAuthStore.getState().isAuthenticated;
+
+            if (isLoggedIn) {
+                await fetchAndSetAddresses();
+            } else {
+                router.push('/auth');
+            }
+
             setIsLoading(false);
         };
-        loadInitialData();
-    }, [checkAuthStatus]);
-    
-    useEffect(() => {
-        if (!isLoading && !isAuthenticated) {
-            router.push('/auth');
-        } else if (isAuthenticated) {
-            fetchAndSetAddresses();
-        }
-    }, [isLoading, isAuthenticated, router]);
 
-    const handleSave = (savedAddress: Address) => {
+        loadPageData();
+    }, [checkAuthStatus, router]);
+
+    const handleSave = () => {
         fetchAndSetAddresses();
     };
 
@@ -62,7 +64,7 @@ export default function UserAddressesPage() {
     }
 
     if (!isAuthenticated) {
-        return null; 
+        return null;
     }
 
     return (
@@ -99,3 +101,4 @@ export default function UserAddressesPage() {
         </div>
     );
 }
+

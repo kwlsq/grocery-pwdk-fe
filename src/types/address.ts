@@ -7,7 +7,7 @@ export interface Address {
     city: string;
     province: string;
     postalCode: string;
-    isPrimary: boolean;
+    primary: boolean;
 }
 
 export interface AddressFormValues {
@@ -18,7 +18,7 @@ export interface AddressFormValues {
     provinceId: number;
     cityId: number;
     postalCode: string;
-    isPrimary: boolean;
+    primary: boolean;
 }
 export interface Province {
     id: number;

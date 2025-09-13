@@ -47,7 +47,7 @@ export default function Home() {
         '',
         coords.userLatitude,
         coords.userLongitude,
-        1000
+        10000000
       );
     }
   }, [

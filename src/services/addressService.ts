@@ -1,5 +1,5 @@
 import apiClient from './apiClient';
-import { AddressFormValues } from '@/types/address'; // We'll assume your types are here
+import { AddressFormValues } from '@/types/address'; 
 
 export const getAddresses = async () => {
   return apiClient.get('/users/addresses');

@@ -8,7 +8,6 @@ import { useAuthStore } from '../../../store/authStore';
 import { loginUser } from '../../../services/authService'; 
 import { GrocereachLogo } from '../../GrocereachLogo';
 
-// --- Yup Validation Schema ---
 const loginSchema = Yup.object().shape({
   email: Yup.string().email('Invalid email address').required('Email is required'),
   password: Yup.string().required('Password is required'),
@@ -33,9 +32,7 @@ export const LoginForm = ({ setView }: { setView: (view: 'login' | 'register') =
         onSubmit={async (values, { setSubmitting }) => {
           setServerError('');
           try {
-            // --- USE THE SERVICE FUNCTION ---
             await loginUser(values);
-            // -----------------------------
             await checkAuthStatus();
             router.push('/');
           } catch (err: any) {
