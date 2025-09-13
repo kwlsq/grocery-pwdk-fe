@@ -1,6 +1,6 @@
 import { PaginationInfo } from "./common";
 
-export type SalesReportItem = {
+export interface SalesReportItem {
   updatedAt: string;
   orderId: string;
   status: string;
@@ -18,7 +18,7 @@ export type SalesReportItem = {
   }>;
 };
 
-export type SalesReportApiResponse = {
+export interface SalesReportApiResponse {
   success: boolean;
   statusCode: number;
   message: string;
@@ -27,16 +27,22 @@ export type SalesReportApiResponse = {
   };
 };
 
-export type SalesReportFilters = {
+export interface SalesReportFilters {
   storeId?: string;
   categoryId?: string;
   productId?: string;
-  startMonth?: string; // YYYY-MM
-  endMonth?: string;   // YYYY-MM
+  startMonth?: string;
+  endMonth?: string;
 };
 
-export type SalesReportState = {
+export interface MonthlyCount {
+  month: string;
+  orderCount: number
+}
+
+export interface SalesReportState {
   sales: SalesReportItem[];
+  monthlySales: MonthlyCount[];
   loading: boolean;
   error: string | null;
   pagination: PaginationInfo | null;
@@ -46,6 +52,7 @@ export type SalesReportState = {
   lastFetched: number | null;
   isFetching: boolean;
   fetchSales: (opts?: { page?: number; size?: number; filters?: SalesReportFilters }) => Promise<void>;
+  fetchMonthlySales: () => Promise<void>;
   setPage: (page: number) => void;
   setFilters: (filters: SalesReportFilters) => void;
 };

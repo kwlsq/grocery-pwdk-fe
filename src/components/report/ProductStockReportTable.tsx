@@ -12,14 +12,12 @@ export default function ProductStockReportTable() {
   const [selectedProductId, setSelectedProductId] = useState<string>("");
   const [selectedProductName, setSelectedProductName] = useState<string>("");
   const {
-    reports,
     loading,
     error,
     productReports,
     productPagination,
     productPage,
     productSize,
-    fetchReports,
     fetchProductReports,
     setProductPage,
   } = useStockReportStore();

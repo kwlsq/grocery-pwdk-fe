@@ -22,6 +22,7 @@ import WarehouseGrid from '@/components/warehouse/WarehouseGrid';
 import Navbar from '../../components/Navbar/Index';
 import CreateCategoryDialog from '@/components/category/CreateCategoryDialog';
 import CategoryGrid from '@/components/category/CategoryGrid';
+import { SalesReportChart } from '../../components/report/SalesReportChart';
 const ProductStockReportTableDyn = dynamic(() => import('@/components/report/ProductStockReportTable'), { ssr: false });
 const SalesReportTableDyn = dynamic(() => import('@/components/report/SalesReportTable'), { ssr: false });
 
@@ -361,6 +362,7 @@ export default function AdminDashboardPage() {
                 <ProductStockReportTableDyn />
               </TabsContent>
               <TabsContent value='sales'>
+                <SalesReportChart />
                 <SalesReportTableDyn />
               </TabsContent>
             </Tabs>
