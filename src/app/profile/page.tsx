@@ -1,39 +1,21 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuthStore } from '../../store/authStore';
+import React from 'react';
 import { ProfileSidebar } from '@/components/profile/ProfileSidebar';
 import { ProfileForm } from '@/components/form/profile/ProfileForm';
+import { useProtectedRoute } from '@/hooks/useProtectedRoute'; // Import the hook
 
 export default function UserProfilePage() {
-    const { isAuthenticated, checkAuthStatus } = useAuthStore();
-    const router = useRouter();
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-        const check = async () => {
-            await checkAuthStatus();
-            setIsLoading(false);
-        };
-        check();
-    }, [checkAuthStatus]);
-
-    useEffect(() => {
-        if (!isLoading && !isAuthenticated) {
-            router.push('/auth');
-        }
-    }, [isLoading, isAuthenticated, router]);
-
+    const { isLoading, isAuthenticated  } = useProtectedRoute();
     if (isLoading) {
         return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
     }
-
     if (!isAuthenticated) {
         return null;
     }
-
+    
     return (
+
         <div className="min-h-screen bg-gray-50">
             <header className="bg-white shadow-sm">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -42,7 +24,6 @@ export default function UserProfilePage() {
                     </div>
                 </div>
             </header>
-
             <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                     <ProfileSidebar />

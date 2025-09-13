@@ -7,7 +7,6 @@ import { Address, Province, City, AddressFormValues } from '@/types/address';
 import { getProvinces, getCitiesByProvinceId } from '@/services/locationService';
 import { createAddress, updateAddress } from '@/services/addressService';
 
-// --- Yup Validation Schema ---
 const addressSchema = Yup.object().shape({
   label: Yup.string().required('Label is required'),
   recipientName: Yup.string().required("Recipient's name is required"),
@@ -43,10 +42,9 @@ export const AddressModal: React.FC<AddressModalProps> = ({ address, onClose, on
         provinceId: 0,
         cityId: 0,
         postalCode: address.postalCode || '',
-        isPrimary: address.isPrimary || false,
+        primary: address.primary || false,
     };
 
-    // Fetch all provinces when the modal opens
     useEffect(() => {
         const fetchProvinces = async () => {
             try {
@@ -59,7 +57,6 @@ export const AddressModal: React.FC<AddressModalProps> = ({ address, onClose, on
         fetchProvinces();
     }, []);
 
-    // When provinces are loaded, if we are editing, find and set the province ID
     useEffect(() => {
         if (isEditing && address.province && provinces.length > 0) {
             const province = provinces.find(p => p.name === address.province);
@@ -71,7 +68,6 @@ export const AddressModal: React.FC<AddressModalProps> = ({ address, onClose, on
         }
     }, [provinces, isEditing, address.province]);
 
-    // When a province is selected, fetch its cities
     useEffect(() => {
         if (selectedProvinceId) {
             const fetchCities = async () => {
@@ -92,7 +88,6 @@ export const AddressModal: React.FC<AddressModalProps> = ({ address, onClose, on
         }
     }, [selectedProvinceId]);
     
-    // When cities are loaded, if we are editing, find and set the city ID
     useEffect(() => {
         if (isEditing && address.city && cities.length > 0) {
             const city = cities.find(c => c.name === address.city);
@@ -115,12 +110,17 @@ export const AddressModal: React.FC<AddressModalProps> = ({ address, onClose, on
                         setStatus(null);
                         
                         try {
-                            const payload = {
-                                ...values,
+                           const payload = {
+                                label: values.label,
+                                recipientName: values.recipientName,
+                                phone: values.phone,
+                                fullAddress: values.fullAddress,
                                 provinceId: Number(values.provinceId),
                                 cityId: Number(values.cityId),
+                                postalCode: values.postalCode,
+                                primary: values.primary,
                             };
-
+                            console.log(payload)
                             const response = isEditing
                                 ? await updateAddress(address.id!, payload)
                                 : await createAddress(payload);
@@ -162,8 +162,8 @@ export const AddressModal: React.FC<AddressModalProps> = ({ address, onClose, on
                             <Field as="textarea" name="fullAddress" placeholder="Full Address (Street name, building, house number)" className="w-full p-2 border rounded" />
                             <ErrorMessage name="fullAddress" component="p" className="text-red-500 text-xs" />
                             <div className="flex items-center">
-                                <Field type="checkbox" name="isPrimary" id="isPrimary" className="h-4 w-4 text-emerald-600 border-gray-300 rounded" />
-                                <label htmlFor="isPrimary" className="ml-2 block text-sm text-gray-900">Set as primary address</label>
+                                <Field type="checkbox" name="primary" id="primary" className="h-4 w-4 text-emerald-600 border-gray-300 rounded" />
+                                <label htmlFor="primary" className="ml-2 block text-sm text-gray-900">Set as primary address</label>
                             </div>
                             <div className="flex justify-end space-x-4 mt-6">
                                 <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 rounded-lg">Cancel</button>
