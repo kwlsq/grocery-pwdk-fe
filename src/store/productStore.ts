@@ -5,6 +5,7 @@ import {
   ApiResponse,
   ProductCategory,
   CreateCategoryRequest,
+  UniqueProduct,
 } from "../types/product";
 import { buildApiUrl, API_CONFIG } from "../config/api";
 
@@ -20,6 +21,7 @@ const getAuthToken = (): string => {
 export const useProductStore = create<ProductState>((set) => ({
   products: [],
   productsThisStore: [],
+  uniqueProducts: [],
   categories: [],
   loading: false,
   error: null,
@@ -207,7 +209,6 @@ export const useProductStore = create<ProductState>((set) => ({
   createCategory: async (data: CreateCategoryRequest) => {
     set({ loading: true, error: null });
     try {
-
       const token = getAuthToken();
 
       const response = await axios.post(
@@ -363,6 +364,44 @@ export const useProductStore = create<ProductState>((set) => ({
       );
     } catch (e) {
       console.error(e);
+    }
+  },
+
+  fetchUniqueProduct: async () => {
+    set({ loading: true, error: null });
+
+    try {
+      const token = getAuthToken();
+
+      //Fetch from API if no cache
+      const response = await axios.get(
+        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS_CRUD}/unique`,
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        const uniqueProducts: UniqueProduct[] = response.data.data;
+
+        //Save to state and localStorage
+        set({ uniqueProducts, loading: false });
+      } else {
+        set({
+          error: response.data.message || "Failed to fetch categories",
+          loading: false,
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      set({
+        error:
+          error instanceof Error ? error.message : "Failed to fetch categories",
+        loading: false,
+      });
     }
   },
 }));

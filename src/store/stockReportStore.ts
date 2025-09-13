@@ -30,16 +30,24 @@ export const useStockReportStore = create<StockReportState>((set, get) => ({
   productPage: 0,
   productSize: API_CONFIG.DEFAULT_PAGE_SIZE,
   productMonth: undefined,
+  lastFetched: null,
+  isFetching: false,
 
   fetchReports: async (opts) => {
-    const page = opts?.page ?? get().page;
-    const size = opts?.size ?? get().size;
+    const state = get();
+    const page = opts?.page ?? state.page;
+    const size = opts?.size ?? state.size;
     const filters: StockReportFilters = {
-      ...get().filters,
+      ...state.filters,
       ...(opts?.filters || {}),
     };
 
-    set({ loading: true, error: null, page, size, filters });
+    // Prevent duplicate requests
+    if (state.isFetching) {
+      return;
+    }
+
+    set({ isFetching: true, loading: true, error: null, page, size, filters });
     try {
       const token = getAuthToken();
 
@@ -74,11 +82,14 @@ export const useStockReportStore = create<StockReportState>((set, get) => ({
             hasPrevious: data.hasPrevious,
           },
           loading: false,
+          isFetching: false,
+          lastFetched: Date.now(),
         });
       } else {
         set({
           error: response.data.message || "Failed to fetch stock reports",
           loading: false,
+          isFetching: false,
         });
       }
     } catch (err) {
@@ -86,6 +97,7 @@ export const useStockReportStore = create<StockReportState>((set, get) => ({
         error:
           err instanceof Error ? err.message : "Failed to fetch stock reports",
         loading: false,
+        isFetching: false,
       });
     }
   },

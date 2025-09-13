@@ -89,10 +89,16 @@ export interface CreateCategoryRequest{
   name: string;
 }
 
+export interface UniqueProduct {
+  id: string,
+  name: string
+}
+
 export interface ProductState {
   categories: ProductCategory[];
   products: Product[];
   productsThisStore: Product[];
+  uniqueProducts: UniqueProduct[];
   loading: boolean;
   error: string | null;
   pagination: PaginationInfo | null;
@@ -122,4 +128,5 @@ export interface ProductState {
   updateProduct: (id: string, data: UpdateProductDTO) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
   updateProductStock: (id: string, data: UpdateProductStock[]) => Promise<void>;
+  fetchUniqueProduct: () => Promise<void>;
 }

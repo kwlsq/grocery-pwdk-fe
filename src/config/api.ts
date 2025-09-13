@@ -19,7 +19,7 @@ export const API_CONFIG = {
     SALES_REPORTS: '/sales-reports',
     STORE: '/store'
   },
-  DEFAULT_PAGE_SIZE: 10,
+  DEFAULT_PAGE_SIZE: 12,
 };
 
 // Helper function to build API URLs

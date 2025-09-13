@@ -20,16 +20,24 @@ export const useSalesReportStore = create<SalesReportState>((set, get) => ({
   page: 0,
   size: API_CONFIG.DEFAULT_PAGE_SIZE,
   filters: {},
+  lastFetched: null,
+  isFetching: false,
 
   fetchSales: async (opts) => {
-    const page = opts?.page ?? get().page;
-    const size = opts?.size ?? get().size;
+    const state = get();
+    const page = opts?.page ?? state.page;
+    const size = opts?.size ?? state.size;
     const filters: SalesReportFilters = {
-      ...get().filters,
+      ...state.filters,
       ...(opts?.filters || {}),
     };
 
-    set({ loading: true, error: null, page, size, filters });
+    // Prevent duplicate requests
+    if (state.isFetching) {
+      return;
+    }
+
+    set({ isFetching: true, loading: true, error: null, page, size, filters });
     try {
       const token = getAuthToken();
 
@@ -63,12 +71,14 @@ export const useSalesReportStore = create<SalesReportState>((set, get) => ({
             hasPrevious: data.hasPrevious,
           },
           loading: false,
+          isFetching: false,
+          lastFetched: Date.now(),
         });
       } else {
-        set({ error: response.data.message || "Failed to fetch sales reports", loading: false });
+        set({ error: response.data.message || "Failed to fetch sales reports", loading: false, isFetching: false });
       }
     } catch (err) {
-      set({ error: err instanceof Error ? err.message : "Failed to fetch sales reports", loading: false });
+      set({ error: err instanceof Error ? err.message : "Failed to fetch sales reports", loading: false, isFetching: false });
     }
   },
 

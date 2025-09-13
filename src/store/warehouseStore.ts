@@ -19,6 +19,8 @@ export const useWarehouseStore = create<WarehouseState>((set, get) => ({
   loading: false,
   error: null,
   pagination: null,
+  lastFetched: null,
+  isFetching: false,
 
   fetchWarehouses: async (storeId: string) => {
     set({ loading: true, error: null });

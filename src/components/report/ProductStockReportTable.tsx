@@ -5,6 +5,7 @@ import { useStockReportStore } from "@/store/stockReportStore";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useProductStore } from "@/store/productStore";
 
 export default function ProductStockReportTable() {
   const [month, setMonth] = useState<string>("all");
@@ -23,9 +24,11 @@ export default function ProductStockReportTable() {
     setProductPage,
   } = useStockReportStore();
 
+  const { uniqueProducts, fetchUniqueProduct } = useProductStore();
+
   useEffect(() => {
-    // Ensure summary reports loaded (uses existing defaults in store)
-    fetchReports({ page: 0, size: 100 });
+    // Ensure all unique products fetched
+    fetchUniqueProduct();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -40,21 +43,6 @@ export default function ProductStockReportTable() {
     }
     return opts;
   }, []);
-
-  const uniqueProducts = useMemo(() => {
-    const map = new Map<string, { productID: string; productName: string; productVersion: string }>();
-    for (const r of reports) {
-      if (!map.has(r.productID)) {
-        map.set(r.productID, { productID: r.productID, productName: r.productName, productVersion: r.productVersion });
-      }
-    }
-    return Array.from(map.values());
-  }, [reports]);
-
-  const fetchDetails = async (prodId: string) => {
-    await fetchProductReports({ productId: prodId, page: 0, size: productSize, month: month === "all" ? undefined : month });
-    setProductPage(0);
-  };
 
   useEffect(() => {
     if (!selectedProductId) return;
@@ -91,17 +79,15 @@ export default function ProductStockReportTable() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
             {uniqueProducts.map((p) => (
-              <div key={p.productID} className="border rounded-md p-3 flex items-center justify-between">
+              <div key={p.id} className="border rounded-md p-3 flex items-center justify-between">
                 <div>
-                  <div className="font-medium">{p.productName}</div>
-                  <div className="text-xs text-gray-500">Version: {p.productVersion}</div>
+                  <div className="font-medium">{p.name}</div>
                 </div>
                 <Button
                   size="sm"
                   onClick={() => {
-                    setSelectedProductId(p.productID);
-                    setSelectedProductName(p.productName);
-                    fetchDetails(p.productID);
+                    setSelectedProductId(p.id);
+                    setSelectedProductName(p.name);
                   }}
                 >
                   View

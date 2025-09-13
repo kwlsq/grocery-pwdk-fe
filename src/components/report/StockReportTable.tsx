@@ -72,20 +72,6 @@ export default function StockReportTable() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.storeId, isManager]);
-  useEffect(() => {
-    fetchStores();
-    fetchReports({ page: 0, size });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (filters.storeId) {
-      fetchWarehouses(filters.storeId);
-      // reset warehouse when store changes
-      setFilters({ ...filters, warehouseId: "" });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.storeId]);
 
   const handlePrev = () => {
     if (pagination?.hasPrevious) {

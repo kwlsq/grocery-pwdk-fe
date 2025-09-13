@@ -58,6 +58,8 @@ export type StockReportState = {
   page: number
   size: number
   filters: StockReportFilters
+  lastFetched: number | null
+  isFetching: boolean
   fetchReports: (opts?: { page?: number; size?: number; filters?: StockReportFilters }) => Promise<void>
   setPage: (page: number) => void
   setFilters: (filters: StockReportFilters) => void

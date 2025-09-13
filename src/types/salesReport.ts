@@ -43,6 +43,8 @@ export type SalesReportState = {
   page: number;
   size: number;
   filters: SalesReportFilters;
+  lastFetched: number | null;
+  isFetching: boolean;
   fetchSales: (opts?: { page?: number; size?: number; filters?: SalesReportFilters }) => Promise<void>;
   setPage: (page: number) => void;
   setFilters: (filters: SalesReportFilters) => void;
