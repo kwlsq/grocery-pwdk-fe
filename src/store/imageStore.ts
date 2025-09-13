@@ -34,7 +34,7 @@ export const useImageStore = create<ImageState>((set) => ({
       );
 
       const response = await axios.post(url, {
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        headers: { Authorization: `Bearer ${token}` },
         withCredentials: true,
       });
 
