@@ -18,7 +18,7 @@ export const AddressCard: React.FC<AddressCardProps> = ({ address, onEdit, onDel
             <div>
                 <div className="flex items-center gap-2">
                     <h3 className="font-semibold">{address.label}</h3>
-                    {address.isPrimary && <span className="text-xs bg-emerald-100 text-emerald-800 font-medium px-2 py-0.5 rounded-full">Primary</span>}
+                    {address.primary && <span className="text-xs bg-emerald-100 text-emerald-800 font-medium px-2 py-0.5 rounded-full">Primary</span>}
                 </div>
                 <p className="text-gray-600">{address.recipientName} ({address.phone})</p>
                 <p className="text-gray-600">{address.fullAddress}, {address.city}, {address.province}, {address.postalCode}</p>

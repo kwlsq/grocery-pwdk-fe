@@ -8,18 +8,22 @@ import { RegisterForm } from '@/components/form/register/RegisterForm';
 
 export default function AuthPage() {
   const [view, setView] = useState<'login' | 'register'>('login');
-  const { isAuthenticated, checkAuthStatus } = useAuthStore();
+  const { isAuthenticated,  } = useAuthStore();
   const router = useRouter();
 
-  useEffect(() => {
-    checkAuthStatus();
-  }, [checkAuthStatus]);
+
 
   useEffect(() => {
     if (isAuthenticated) {
       router.push('/');
+      alert(" You already Log in ")
+      
     }
-  }, [isAuthenticated, router]);
+    
+  }, [isAuthenticated,, router]);
+  
+  if (isAuthenticated) {
+      return null; }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">

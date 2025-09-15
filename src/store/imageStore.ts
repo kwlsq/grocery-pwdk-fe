@@ -22,29 +22,31 @@ export const useImageStore = create<ImageState>((set) => ({
     set({ isUploading: true, error: null });
     try {
       const token = getAuthToken();
-
+  
       const formData = new FormData();
       formData.append("file", file);
-
-      const url = buildApiUrl(
-        API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.IMAGE + "/upload-single", {
-          productID,
-          isPrimary
+  
+      const response = await axios.post(
+        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.IMAGE}/upload-single`,
+        formData,
+        {
+          params: { productID, isPrimary },
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
+          withCredentials: true,
         }
       );
-
-      const response = await axios.post(url, {
-        headers: { Authorization: `Bearer ${token}` },
-        withCredentials: true,
-      });
-
+  
       const uploaded: ProductImage = response.data?.data as ProductImage;
       set((state) => ({
         images: [...state.images, uploaded],
         isUploading: false,
       }));
-    } catch (err: unknown) {
-      console.log("Error: ", err);
+    } catch (err) {
+      console.log("Error:", err);
+      set({ isUploading: false, error: "Upload failed" });
     }
   },
 

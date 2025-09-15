@@ -58,11 +58,20 @@ export default function SalesReportTable() {
             </SelectContent>
           </Select>
 
-          <Input
-            placeholder="Category ID (optional)"
-            value={filters.categoryId || ""}
-            onChange={(e) => setFilters({ ...filters, categoryId: e.target.value })}
-          />
+          <Select value={filters.categoryId || ""} onValueChange={(v) => setFilters({ ...filters, categoryId: v })}>
+            <SelectTrigger disabled={user?.role !== 'ADMIN'}>
+              <SelectValue placeholder="Select Category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectLabel>Categories</SelectLabel>
+                {categories.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+
           <Input
             placeholder="Product ID (optional)"
             value={filters.productId || ""}

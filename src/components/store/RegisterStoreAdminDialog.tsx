@@ -48,9 +48,6 @@ export default function RegisterStoreAdmin() {
         fullName: data.fullName
       }
 
-      console.log(newStoreAdmin);
-      
-
       await registerStoreAdmin(newStoreAdmin)
       reset();
       setOpen(false);

@@ -174,6 +174,7 @@ export const useProductStore = create<ProductState>((set) => ({
     try {
       //Check if categories exist in localStorage
       const cachedCategories = localStorage.getItem("categories");
+      
       if (cachedCategories) {
         set({ categories: JSON.parse(cachedCategories), loading: false });
         return; // ✅ Skip API call if cache exists

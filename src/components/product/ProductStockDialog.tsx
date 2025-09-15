@@ -108,7 +108,6 @@ export default function ProductStock({ id, product }: { id: string, product: Pro
 
       // Only proceed if there are actually changes to submit
       if (inventories.length === 0) {
-        console.log('No changes detected, skipping update');
         setOpen(false);
         return;
       }

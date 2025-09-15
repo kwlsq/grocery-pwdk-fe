@@ -79,8 +79,6 @@ export default function CreateCategoryDialog() {
                   name: name.trim(),
                   ...(parentID ? { parentID } : {}),
                 };
-
-                console.log(newCategory);
                 await createCategory(newCategory);
               } finally {
                 if (typeof window !== 'undefined') {

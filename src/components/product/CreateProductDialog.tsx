@@ -44,6 +44,27 @@ const productSchema = z.object({
 
 type ProductFormValues = z.infer<typeof productSchema>;
 
+// File validation function
+const validateImageFile = (file: File): string | null => {
+  const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+  const maxSizeInBytes = 1 * 1024 * 1024; // 1MB in bytes
+  
+  // Get file extension
+  const fileExtension = file.name.split('.').pop()?.toLowerCase();
+  
+  // Check if extension is allowed
+  if (!fileExtension || !allowedExtensions.includes(fileExtension)) {
+    return `File format not supported. Only .jpg, .jpeg, .png, and .gif files are allowed.`;
+  }
+  
+  // Check file size
+  if (file.size > maxSizeInBytes) {
+    return `File size too large. Maximum file size is 1MB.`;
+  }
+  
+  return null; // No error
+};
+
 export default function CreateProduct({ storeID }: { storeID: string }) {
   const { categories, fetchCategories, createProduct } = useProductStore();
   const { warehouses, fetchWarehouses } = useWarehouseStore();
@@ -54,6 +75,10 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
   const [mediaPreviews, setMediaPreviews] = useState<string[]>();
+  const [imageErrors, setImageErrors] = useState<{
+    thumbnail?: string;
+    media?: string;
+  }>({});
   const { uploadMultiImage, uploadSingleImage, isUploading } = useImageStore();
   const [isMounted, setMounted] = useState(false);
 
@@ -65,7 +90,6 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
 
     return start <= now && now <= end;
   });
-
 
   const {
     register,
@@ -84,11 +108,7 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
       price: '',
       weight: '',
       categoryID: '',
-      stocks: warehouses.map((w) => ({
-        warehouseId: w.id,
-        selected: false,
-        quantity: '',
-      })),
+      stocks: [],
     },
     mode: 'onBlur',
   });
@@ -103,7 +123,20 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
     fetchCategories();
     fetchDiscount();
     fetchWarehouses(storeID)
-  }, [fetchCategories, fetchWarehouses]);
+  }, [fetchCategories, fetchWarehouses, fetchDiscount, storeID]);
+  
+
+  // Update stocks when warehouses are loaded
+  useEffect(() => {
+    if (warehouses.length > 0) {
+      const stocksData = warehouses.map((w) => ({
+        warehouseId: w.id,
+        selected: false,
+        quantity: '',
+      }));
+      setValue('stocks', stocksData);
+    }
+  }, [warehouses, setValue]);
 
   const { fields } = useFieldArray({
     control,
@@ -114,23 +147,64 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
     const selectedFiles = e.target.files;
     if (selectedFiles) {
       const fileArray = Array.from(selectedFiles);
-      setFiles(fileArray);
-
-      const mediaUrls = fileArray.map((file) => URL.createObjectURL(file));
-      setMediaPreviews(mediaUrls);
+      
+      // Clear previous media error
+      setImageErrors(prev => ({ ...prev, media: undefined }));
+      
+      // Validate each file
+      const validFiles: File[] = [];
+      let hasError = false;
+      
+      for (const file of fileArray) {
+        const validationError = validateImageFile(file);
+        if (validationError) {
+          setImageErrors(prev => ({ 
+            ...prev, 
+            media: validationError 
+          }));
+          hasError = true;
+          break;
+        }
+        validFiles.push(file);
+      }
+      
+      if (!hasError) {
+        setFiles(validFiles);
+        const mediaUrls = validFiles.map((file) => URL.createObjectURL(file));
+        setMediaPreviews(mediaUrls);
+      }
     }
   }
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = e.target.files;
     if (selectedFiles && selectedFiles.length > 0) {
-      setThumbnail(selectedFiles[0]);
-      setThumbnailPreview(URL.createObjectURL(selectedFiles[0]));
+      const file = selectedFiles[0];
+      
+      // Clear previous thumbnail error
+      setImageErrors(prev => ({ ...prev, thumbnail: undefined }));
+      
+      // Validate thumbnail file
+      const validationError = validateImageFile(file);
+      if (validationError) {
+        setImageErrors(prev => ({ 
+          ...prev, 
+          thumbnail: validationError 
+        }));
+        return;
+      }
+      
+      setThumbnail(file);
+      setThumbnailPreview(URL.createObjectURL(file));
     }
   }
 
   const onSubmit = async (data: ProductFormValues) => {
     try {
+      // Check for image validation errors before submitting
+      if (imageErrors.thumbnail || imageErrors.media) {
+        return;
+      }
 
       const inventories = data.stocks
         .filter((stock) => stock.quantity !== undefined && stock.quantity !== "")
@@ -188,6 +262,7 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
           setThumbnailPreview("");
           setFiles([]);
           setMediaPreviews([]);
+          setImageErrors({});
         }
       }}>
       <DialogTrigger asChild>
@@ -316,6 +391,7 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
           <div className="flex flex-col">
             <div className="flex flex-col gap-2">
               <Label className="block text-sm font-medium text-gray-700">Product Image</Label>
+              <p className="text-xs text-gray-500">Allowed formats: .jpg, .jpeg, .png, .gif | Max size: 1MB per file</p>
 
               {/* Upload event image */}
               <div className="flex flex-col gap-4 p-6 border border-neutral-300 rounded-xl">
@@ -334,13 +410,15 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
                   <div>
                     <input
                       type="file"
-                      name="multipartFiles"
-                      accept="image/*"
-                      multiple
+                      name="thumbnailFile"
+                      accept=".jpg,.jpeg,.png,.gif"
                       onChange={handleThumbnailChange}
                       className={cn("p-4 border-neutral-200 border-dashed border-[1px] rounded-md w-full hover:bg-neutral-100", thumbnail && "hidden")}
                     />
                   </div>
+                  {imageErrors.thumbnail && (
+                    <p className="text-xs text-red-600">{imageErrors.thumbnail}</p>
+                  )}
                 </div>
                 <div className="flex flex-col gap-2">
                   <Label>Product carousel</Label>
@@ -362,12 +440,15 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
                     <input
                       type="file"
                       name="multipartFiles"
-                      accept="image/*"
+                      accept=".jpg,.jpeg,.png,.gif"
                       multiple
                       onChange={handleMediaChange}
                       className={cn("p-4 border-neutral-200 border-dashed border-[1px] rounded-md w-full hover:bg-neutral-100", files?.length === 5 && "hidden")}
                     />
                   </div>
+                  {imageErrors.media && (
+                    <p className="text-xs text-red-600">{imageErrors.media}</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -415,7 +496,7 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
             <Button variant="outline" onClick={() => setOpen(false)} type="button">
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting || !!imageErrors.thumbnail || !!imageErrors.media}>
               {isSubmitting && isUploading ? "Creating new product..." : "Create Product"}
             </Button>
           </div>

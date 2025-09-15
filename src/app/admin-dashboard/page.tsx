@@ -92,7 +92,6 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     if (!mounted) return;
     if (user?.role !== 'MANAGER') return;
-    console.log(user?.role);
 
     fetchWarehouseByUser();
   }, [mounted, fetchWarehouseByUser, user])
