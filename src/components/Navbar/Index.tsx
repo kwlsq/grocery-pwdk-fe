@@ -40,7 +40,7 @@ export default function Navbar(){
                             <ShoppingCartIcon className="h-6 w-6 text-gray-600" />
                         </button>
                         {(user?.role === 'ADMIN' || user?.role === 'MANAGER') && (
-                            <Link href="/admin-dashboard" className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700">
+                            <Link href="/admin-dashboard" className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700">
                                 Admin Dashboard
                             </Link>
                         )}
@@ -53,7 +53,7 @@ export default function Navbar(){
                                 </button>
                             </>
                         ) : (
-                            <Link href="/auth" className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700">
+                            <Link href="/auth" className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700">
                                 Login / Sign Up
                             </Link>
                         )}

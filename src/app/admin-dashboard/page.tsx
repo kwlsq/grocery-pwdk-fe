@@ -38,30 +38,13 @@ export default function AdminDashboardPage() {
   const { categories, fetchCategories, deleteCategory } = useProductStore();
 
   // Main tabs
-  const tabsData =
-    user?.role === 'ADMIN'
-      ? [
-        { value: 'stores', label: 'Store' },
-        { value: 'users', label: 'User' },
-        { value: 'discounts', label: 'Discount' },
-        { value: 'chart', label: 'Report' },
-        { value: 'categories', label: 'Category' }
-      ]
-      : user?.role === 'MANAGER'
-        ? [
-          { value: 'warehouse', label: 'Warehouse' },
-          { value: 'discounts', label: 'Discount' },
-          { value: 'chart', label: 'Report' },
-          { value: 'categories', label: 'Category' }
-
-        ]
-        : [
-          { value: 'stores', label: 'Store' },
-          { value: 'users', label: 'User' },
-          { value: 'discounts', label: 'Discount' },
-          { value: 'chart', label: 'Report' },
-          { value: 'categories', label: 'Category' }
-        ];
+  const tabsData = [
+    { value: 'stores', label: 'Store' },
+    { value: 'users', label: 'User' },
+    { value: 'discounts', label: 'Discount' },
+    { value: 'chart', label: 'Report' },
+    { value: 'categories', label: 'Category' }
+  ];
 
   // Report tabs
   const reportTabsData = [

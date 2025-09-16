@@ -24,13 +24,14 @@ const discountSchema = z
     minPurchase: z.number().min(0, 'Minimum purchase must be positive'),
     startAt: z.date({ message: 'Start date is required' }),
     endAt: z.date({ message: 'End date is required' }),
-    type: z.enum(['PRODUCT_DISCOUNT', 'PERCENTAGE']),
+    type: z.enum(['PRODUCT_DISCOUNT', 'TRANSACTION_DISCOUNT', 'SHIPPING_DISCOUNT', 'REFERRAL']),
+    unit: z.enum(['PERCENTAGE', 'CURRENCY', 'PRODUCT'])
   })
   .refine((data) => data.endAt > data.startAt, {
     message: 'End date must be after start date',
     path: ['endAt'],
   })
-  .refine((data) => (data.type === 'PERCENTAGE' ? data.value <= 100 : true), {
+  .refine((data) => (data.unit === 'PERCENTAGE' ? data.value <= 100 : true), {
     message: 'Percentage discount cannot exceed 100%',
     path: ['value'],
   });
@@ -129,13 +130,40 @@ export default function CreateDiscountDialog() {
                     <SelectGroup>
                       <SelectLabel>Type</SelectLabel>
                       <SelectItem value="PRODUCT_DISCOUNT">Product Discount</SelectItem>
-                      <SelectItem value="PERCENTAGE">Percentage</SelectItem>
+                      <SelectItem value="TRANSACTION_DISCOUNT">Transaction Discount</SelectItem>
+                      <SelectItem value="SHIPPING_DISCOUNT">Shipping Discount</SelectItem>
+                      <SelectItem value="REFERRAL">Referral</SelectItem>
                     </SelectGroup>
                   </SelectContent>
                 </Select>
               )}
             />
             {errors.type && <p className="text-sm text-red-500">{errors.type.message}</p>}
+          </div>
+
+          {/* Unit */}
+          <div className="grid gap-2">
+            <Label htmlFor="unit">Unit</Label>
+            <Controller
+              name="unit"
+              control={control}
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Choose unit" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>Unit</SelectLabel>
+                      <SelectItem value="PERCENTAGE">Percentage</SelectItem>
+                      <SelectItem value="CURRENCY">Currency</SelectItem>
+                      <SelectItem value="PRODUCT">Product</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {errors.unit && <p className="text-sm text-red-500">{errors.unit.message}</p>}
           </div>
 
           {/* Value */}

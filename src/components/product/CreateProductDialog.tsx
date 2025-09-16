@@ -48,25 +48,25 @@ type ProductFormValues = z.infer<typeof productSchema>;
 const validateImageFile = (file: File): string | null => {
   const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
   const maxSizeInBytes = 1 * 1024 * 1024; // 1MB in bytes
-  
+
   // Get file extension
   const fileExtension = file.name.split('.').pop()?.toLowerCase();
-  
+
   // Check if extension is allowed
   if (!fileExtension || !allowedExtensions.includes(fileExtension)) {
     return `File format not supported. Only .jpg, .jpeg, .png, and .gif files are allowed.`;
   }
-  
+
   // Check file size
   if (file.size > maxSizeInBytes) {
     return `File size too large. Maximum file size is 1MB.`;
   }
-  
+
   return null; // No error
 };
 
 export default function CreateProduct({ storeID }: { storeID: string }) {
-  const { categories, fetchCategories, createProduct } = useProductStore();
+  const { categories, fetchCategories, createProduct, error } = useProductStore();
   const { warehouses, fetchWarehouses } = useWarehouseStore();
   const { discounts, fetchDiscount } = useDiscountStore();
   const [open, setOpen] = useState(false);
@@ -85,10 +85,8 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
   const now = new Date();
 
   const filteredDiscount = discounts.filter((discount) => {
-    const start = new Date(discount.startAt);
     const end = new Date(discount.endAt);
-
-    return start <= now && now <= end;
+    return end >= now;
   });
 
   const {
@@ -124,7 +122,7 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
     fetchDiscount();
     fetchWarehouses(storeID)
   }, [fetchCategories, fetchWarehouses, fetchDiscount, storeID]);
-  
+
 
   // Update stocks when warehouses are loaded
   useEffect(() => {
@@ -147,27 +145,27 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
     const selectedFiles = e.target.files;
     if (selectedFiles) {
       const fileArray = Array.from(selectedFiles);
-      
+
       // Clear previous media error
       setImageErrors(prev => ({ ...prev, media: undefined }));
-      
+
       // Validate each file
       const validFiles: File[] = [];
       let hasError = false;
-      
+
       for (const file of fileArray) {
         const validationError = validateImageFile(file);
         if (validationError) {
-          setImageErrors(prev => ({ 
-            ...prev, 
-            media: validationError 
+          setImageErrors(prev => ({
+            ...prev,
+            media: validationError
           }));
           hasError = true;
           break;
         }
         validFiles.push(file);
       }
-      
+
       if (!hasError) {
         setFiles(validFiles);
         const mediaUrls = validFiles.map((file) => URL.createObjectURL(file));
@@ -180,20 +178,20 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
     const selectedFiles = e.target.files;
     if (selectedFiles && selectedFiles.length > 0) {
       const file = selectedFiles[0];
-      
+
       // Clear previous thumbnail error
       setImageErrors(prev => ({ ...prev, thumbnail: undefined }));
-      
+
       // Validate thumbnail file
       const validationError = validateImageFile(file);
       if (validationError) {
-        setImageErrors(prev => ({ 
-          ...prev, 
-          thumbnail: validationError 
+        setImageErrors(prev => ({
+          ...prev,
+          thumbnail: validationError
         }));
         return;
       }
-      
+
       setThumbnail(file);
       setThumbnailPreview(URL.createObjectURL(file));
     }
@@ -237,17 +235,12 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
       }
 
       reset();
-      setOpen(false);
+      setOpen(false); // only close if no error thrown
 
-    } catch (error: unknown) {
-      let message = 'Failed to create product';
-      if (axios.isAxiosError(error)) {
-        const axiosErr = error as AxiosError<{ message?: string }>;
-        message = axiosErr.response?.data?.message || axiosErr.message || message;
-      } else if (error instanceof Error) {
-        message = error.message;
-      }
-      setError('name', { message });
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to create product";
+      setError("name", { message }); // show under the Name field
     }
   };
 
@@ -286,6 +279,7 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
               <Input type="text" {...register('name')} placeholder='Input your product name' />
             </div>
             {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name.message}</p>}
+            {error !== null && <p className="mt-1 text-xs text-red-600">{error}</p>}
           </div>
 
           {/* Description */}
