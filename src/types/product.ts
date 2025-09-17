@@ -68,12 +68,12 @@ export interface CreateProductDTO {
 }
 
 export interface UpdateProductDTO {
-  name: string;
-  description: string;
-  price: number;
-  weight: number;
-  categoryID: string;
-  changeReason: string;
+  name?: string;
+  description?: string;
+  price?: number;
+  weight?: number;
+  categoryID?: string;
+  changeReason?: string;
   promotions?: {
     promotionID: string;
   }[];
@@ -84,10 +84,22 @@ export interface UpdateProductStock {
   stock: number;
 }
 
+export interface CreateCategoryRequest{
+  parentID?: string | undefined;
+  name: string;
+}
+
+export interface UniqueProduct {
+  id: string,
+  name: string
+}
+
 export interface ProductState {
   categories: ProductCategory[];
+  selectedProduct: Product | null;
   products: Product[];
   productsThisStore: Product[];
+  uniqueProducts: UniqueProduct[];
   loading: boolean;
   error: string | null;
   pagination: PaginationInfo | null;
@@ -101,7 +113,7 @@ export interface ProductState {
     userLongitude?: number,
     maxDistanceKM?: number
   ) => Promise<void>;
-  fetchProductById: (id: string) => Promise<Product>;
+  setSelectedProduct: (product: Product) => void;
   fetchProductByStoreID: (
     id: string,
     page?: number,
@@ -111,8 +123,11 @@ export interface ProductState {
     sort?: string
   ) => Promise<void>;
   fetchCategories: () => Promise<void>;
+  createCategory: (data: CreateCategoryRequest) => Promise<void>;
+  deleteCategory: (id: string) => Promise<void>;
   createProduct: (data: CreateProductDTO) => Promise<void>;
   updateProduct: (id: string, data: UpdateProductDTO) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
   updateProductStock: (id: string, data: UpdateProductStock[]) => Promise<void>;
+  fetchUniqueProduct: () => Promise<void>;
 }

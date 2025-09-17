@@ -78,6 +78,7 @@ export const useDiscountStore = create<DiscountState>((set, get) => ({
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
+          withCredentials: true
         }
       );
 

@@ -1,24 +1,53 @@
 import { create } from "zustand";
 import axios from "axios";
-import { CreateWarehouseDTO, Warehouse, WarehouseApiResponse } from "../types/warehouse";
+import {
+  CreateWarehouseDTO,
+  WarehouseApiResponse,
+  UniqueWarehouse,
+} from "../types/warehouse";
 import { API_CONFIG, buildApiUrl } from "@/config/api";
 import { WarehouseState } from "../types/warehouse";
 
+const getAuthToken = (): string => {
+  const token =
+    (typeof window !== "undefined" && localStorage.getItem("accessToken")) ||
+    (typeof window !== "undefined" && sessionStorage.getItem("accessToken")) ||
+    "";
+
+  return token;
+};
+
 export const useWarehouseStore = create<WarehouseState>((set) => ({
   warehouses: [],
+  uniqueWarehouses: [],
   loading: false,
   error: null,
   pagination: null,
+  lastFetched: null,
+  isFetching: false,
 
   fetchWarehouses: async (storeId: string, page = 0, size = 12) => {
     set({ loading: true, error: null });
     try {
-      const response = await axios.get<WarehouseApiResponse>(
-        buildApiUrl(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.WAREHOUSE}/${storeId}`, {
+      const token = getAuthToken();
+
+      const url = buildApiUrl(
+        API_CONFIG.BASE_URL +
+          API_CONFIG.ENDPOINTS.WAREHOUSE +
+          "/store/" +
+          storeId,
+        {
           page,
-          size
-        })
+          size,
+        }
       );
+
+      const response = await axios.get<WarehouseApiResponse>(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        withCredentials: true,
+      });
 
       if (response.data.success) {
         set({
@@ -48,6 +77,44 @@ export const useWarehouseStore = create<WarehouseState>((set) => ({
       });
     }
   },
+  fetchUniqueWarehouse: async (storeId: string) => {
+    set({ loading: true, error: null });
+    try {
+      const token = getAuthToken();
+
+      const url = buildApiUrl(
+        API_CONFIG.BASE_URL +
+          API_CONFIG.ENDPOINTS.WAREHOUSE +
+          "/unique/" +
+          storeId
+      );
+
+      const response = await axios.get(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        withCredentials: true,
+      });
+
+      if (response.data.success) {
+        const uniqueWarehouses: UniqueWarehouse[] = response.data.data;
+
+        set({ uniqueWarehouses, loading: false });
+      } else {
+        set({
+          error: response.data.message || "Failed to fetch warehouse",
+          loading: false,
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching warehouses:", error);
+      set({
+        error:
+          error instanceof Error ? error.message : "Failed to fetch warehouses",
+        loading: false,
+      });
+    }
+  },
 
   createWarehouse: async (data: CreateWarehouseDTO) => {
     set({ loading: true, error: null });
@@ -56,10 +123,14 @@ export const useWarehouseStore = create<WarehouseState>((set) => ({
         API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.WAREHOUSE
       );
 
-      const response = await axios.post(url, data, {
+      const token = getAuthToken();
+
+      await axios.post(url, data, {
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
+        withCredentials: true,
       });
 
       set({ loading: false, error: null });
@@ -71,5 +142,5 @@ export const useWarehouseStore = create<WarehouseState>((set) => ({
         loading: false,
       });
     }
-  }
+  },
 }));

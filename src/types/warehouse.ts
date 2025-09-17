@@ -1,11 +1,22 @@
 import { PaginationInfo } from "./common";
 
 export interface Warehouse {
+  storeID: string;
   id: string;
   name: string;
+  address: string;
   latitude: number;
   longitude: number;
   active: boolean;
+  warehouseAdmin: WarehouseAdmin
+}
+
+export interface WarehouseAdmin {
+  userID: string,
+  userName: string,
+  userRole: string,
+  photo: string,
+  phoneNumber: string
 }
 
 export interface WarehouseApiResponse {
@@ -30,14 +41,35 @@ export interface CreateWarehouseDTO {
   latitude: number,
   longitude: number,
   isActive: boolean
+  storeAdminID?: string | null
 }
 
+export interface UpdateWarehouseDTO {
+  storeID: string,
+  name?: string,
+  address?: string,
+  latitude?: number,
+  longitude?: number,
+  isActive?: boolean
+  storeAdminID?: string
+}
+
+export interface UniqueWarehouse {
+  id: string,
+  name: string
+}
 
 export interface WarehouseState {
   pagination: PaginationInfo | null;
   warehouses: Warehouse[];
+  uniqueWarehouses: UniqueWarehouse[];
   loading: boolean;
   error: string | null;
-  fetchWarehouses: (storeId: string) => Promise<void>;
+  fetchWarehouses: (
+    storeId: string,
+    page?: number,
+    size?: number,
+  ) => Promise<void>;
   createWarehouse: (data: CreateWarehouseDTO) => Promise<void>;
+  fetchUniqueWarehouse: (storeId: string) => Promise<void>;
 }

@@ -1,11 +1,28 @@
 import { create } from "zustand";
 import axios from "axios";
-import { ProductState, ApiResponse, ProductCategory } from "../types/product";
+import {
+  ProductState,
+  ApiResponse,
+  ProductCategory,
+  CreateCategoryRequest,
+  UniqueProduct,
+} from "../types/product";
 import { buildApiUrl, API_CONFIG } from "../config/api";
 
+const getAuthToken = (): string => {
+  const token =
+    (typeof window !== "undefined" && localStorage.getItem("accessToken")) ||
+    (typeof window !== "undefined" && sessionStorage.getItem("accessToken")) ||
+    "";
+
+  return token;
+};
+
 export const useProductStore = create<ProductState>((set) => ({
+  selectedProduct: null,
   products: [],
   productsThisStore: [],
+  uniqueProducts: [],
   categories: [],
   loading: false,
   error: null,
@@ -69,28 +86,8 @@ export const useProductStore = create<ProductState>((set) => ({
     }
   },
 
-  fetchProductById: async (id: string) => {
-    set({ loading: true, error: null });
-    try {
-      const response = await axios.get(
-        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS}/${id}`
-      );
-      if (response.data.success) {
-        const product = response.data.data;
-        set({ products: [product], loading: false });
-        return product;
-      } else {
-        throw new Error(response.data.message || "Failed to fetch product");
-      }
-    } catch (error) {
-      console.error("Error fetching product by ID:", error);
-      set({
-        error:
-          error instanceof Error ? error.message : "Failed to fetch product",
-        loading: false,
-      });
-      return null;
-    }
+  setSelectedProduct: (product) => {
+    set({selectedProduct: product})
   },
 
   fetchProductByStoreID: async (
@@ -103,11 +100,7 @@ export const useProductStore = create<ProductState>((set) => ({
   ) => {
     set({ loading: true, error: null });
     try {
-
-      const token =
-        (typeof window !== "undefined" && localStorage.getItem("accessToken")) ||
-        (typeof window !== "undefined" && sessionStorage.getItem("accessToken")) ||
-        "";
+      const token = getAuthToken();
 
       const url = buildApiUrl(
         API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.PRODUCTS_ADMIN + "/" + id,
@@ -121,7 +114,9 @@ export const useProductStore = create<ProductState>((set) => ({
       );
 
       const response = await axios.get<ApiResponse>(url, {
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         withCredentials: true,
       });
 
@@ -160,6 +155,7 @@ export const useProductStore = create<ProductState>((set) => ({
     try {
       //Check if categories exist in localStorage
       const cachedCategories = localStorage.getItem("categories");
+      
       if (cachedCategories) {
         set({ categories: JSON.parse(cachedCategories), loading: false });
         return; // ✅ Skip API call if cache exists
@@ -192,22 +188,63 @@ export const useProductStore = create<ProductState>((set) => ({
     }
   },
 
+  createCategory: async (data: CreateCategoryRequest) => {
+    set({ loading: true, error: null });
+    try {
+      const token = getAuthToken();
+
+      const response = await axios.post(
+        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CATEGORY_CRUD}`,
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          withCredentials: true,
+        }
+      );
+
+      set(() => ({ loading: false }));
+      return response.data;
+    } catch (e) {
+      console.error(e);
+    }
+  },
+
+  deleteCategory: async (id: string) => {
+    set({ loading: true, error: null });
+    try {
+      const token = getAuthToken();
+
+      await axios.delete(
+        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CATEGORY_CRUD}/${id}`,
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+    } catch (e) {
+      console.error(e);
+    }
+  },
+
   createProduct: async (data) => {
     set({ loading: true, error: null });
     try {
-
-      const token =
-      (typeof window !== "undefined" && localStorage.getItem("accessToken")) ||
-      (typeof window !== "undefined" && sessionStorage.getItem("accessToken")) ||
-      "";
+      const token = getAuthToken();
 
       const response = await axios.post(
         `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS_CRUD}`,
         data,
         {
-          headers: { "Content-Type": "application/json",
+          headers: {
+            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
-           },
+          },
+          withCredentials: true,
         }
       );
 
@@ -223,45 +260,68 @@ export const useProductStore = create<ProductState>((set) => ({
   },
 
   updateProduct: async (id, data) => {
+    if (!id?.trim()) {
+      throw new Error("Product ID is required");
+    }
+
     set({ loading: true, error: null });
+
     try {
-      const token =
-        (typeof window !== "undefined" &&
-          localStorage.getItem("accessToken")) ||
-        (typeof window !== "undefined" &&
-          sessionStorage.getItem("accessToken")) ||
-        "";
+      const token = getAuthToken();
 
-      const response = await axios.patch(
-        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS_CRUD}/${id}`,
-        data,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const url = `${API_CONFIG.BASE_URL}${
+        API_CONFIG.ENDPOINTS.PRODUCTS_CRUD
+      }/${id.trim()}`;
 
-      return response.data.data;
-    } catch (e) {
-      console.error(e);
+      const response = await axios.patch(url, data, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        withCredentials: true,
+      });
+
+      if (response.data.success) {
+        const updatedProduct = response.data.data;
+
+        // Update the product in both arrays
+        set((state) => ({
+          products: state.products.map((product) =>
+            product.id === id ? updatedProduct : product
+          ),
+          productsThisStore: state.productsThisStore.map((product) =>
+            product.id === id ? updatedProduct : product
+          ),
+          loading: false,
+        }));
+
+        return updatedProduct;
+      } else {
+        throw new Error(response.data.message || "Failed to update product");
+      }
+    } catch (error) {
+      const errorMessage = "Error : " + error;
+      console.error("Error updating product:", errorMessage);
+      set({
+        error: errorMessage,
+        loading: false,
+      });
+      throw error; // Re-throw for component error handling
     }
   },
 
   deleteProduct: async (id) => {
     set({ loading: true, error: null });
     try {
-      const token =
-        (typeof window !== "undefined" && localStorage.getItem("accessToken")) ||
-        (typeof window !== "undefined" && sessionStorage.getItem("accessToken")) ||
-        "";
+      const token = getAuthToken();
 
       await axios.delete(
         `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS_CRUD}/${id}`,
         {
           withCredentials: true,
-          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
     } catch (e) {
@@ -272,23 +332,58 @@ export const useProductStore = create<ProductState>((set) => ({
   updateProductStock: async (id, data) => {
     set({ loading: true, error: null });
     try {
-      const token =
-        (typeof window !== "undefined" &&
-          localStorage.getItem("accessToken")) ||
-        (typeof window !== "undefined" &&
-          sessionStorage.getItem("accessToken")) ||
-        "";
+      const token = getAuthToken();
 
       await axios.patch(
         `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS_CRUD}/stocks/${id}`,
         data,
         {
           withCredentials: true,
-          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
     } catch (e) {
       console.error(e);
+    }
+  },
+
+  fetchUniqueProduct: async () => {
+    set({ loading: true, error: null });
+
+    try {
+      const token = getAuthToken();
+
+      //Fetch from API if no cache
+      const response = await axios.get(
+        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS_CRUD}/unique`,
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        const uniqueProducts: UniqueProduct[] = response.data.data;
+
+        //Save to state and localStorage
+        set({ uniqueProducts, loading: false });
+      } else {
+        set({
+          error: response.data.message || "Failed to fetch categories",
+          loading: false,
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      set({
+        error:
+          error instanceof Error ? error.message : "Failed to fetch categories",
+        loading: false,
+      });
     }
   },
 }));

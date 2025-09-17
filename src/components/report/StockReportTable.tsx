@@ -9,6 +9,7 @@ import { useStockReportStore } from "@/store/stockReportStore";
 import { useStoreStore } from "@/store/storeStore";
 import { useWarehouseStore } from "@/store/warehouseStore";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuthStore } from "@/store/authStore";
 
 export default function StockReportTable() {
   const {
@@ -25,22 +26,52 @@ export default function StockReportTable() {
   } = useStockReportStore();
 
   const { stores, fetchStores } = useStoreStore();
-  const { warehouses, fetchWarehouses } = useWarehouseStore();
+  const { warehouse, warehouses, fetchWarehouses, fetchWarehouseByUser } = useWarehouseStore();
+  const { user } = useAuthStore();
+
+  const isManager = user?.role === 'MANAGER';
 
   useEffect(() => {
     fetchStores();
-    fetchReports({ page: 0, size });
+
+    // If manager, fetch their warehouse first
+    if (isManager) {
+      fetchWarehouseByUser();
+    } else {
+      // For non-managers, fetch reports immediately
+      fetchReports({ page: 0, size });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Effect to handle manager's warehouse data and auto-filter
   useEffect(() => {
-    if (filters.storeId) {
-      fetchWarehouses(filters.storeId, 0, 100);
+    if (isManager && warehouse) {
+      // Set filters with manager's store and warehouse
+      const managerFilters = {
+        storeId: warehouse.storeID,
+        warehouseId: warehouse.id,
+      };
+      setFilters(managerFilters);
+
+      // Fetch reports with manager's filters
+      fetchReports({
+        page: 0,
+        size,
+        filters: managerFilters
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [warehouse, isManager]);
+
+  useEffect(() => {
+    if (!isManager && filters.storeId) {
+      fetchWarehouses(filters.storeId);
       // reset warehouse when store changes
       setFilters({ ...filters, warehouseId: "" });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.storeId]);
+  }, [filters.storeId, isManager]);
 
   const handlePrev = () => {
     if (pagination?.hasPrevious) {
@@ -71,7 +102,7 @@ export default function StockReportTable() {
             value={filters.storeId || ""}
             onValueChange={(v) => setFilters({ ...filters, storeId: v })}
           >
-            <SelectTrigger>
+            <SelectTrigger disabled={user?.role !== 'ADMIN'}>
               <SelectValue placeholder="Select Store" />
             </SelectTrigger>
             <SelectContent>
@@ -88,7 +119,7 @@ export default function StockReportTable() {
             onValueChange={(v) => setFilters({ ...filters, warehouseId: v })}
             disabled={!filters.storeId}
           >
-            <SelectTrigger>
+            <SelectTrigger disabled={user?.role !== 'ADMIN'}>
               <SelectValue placeholder="Select Warehouse" />
             </SelectTrigger>
             <SelectContent>
@@ -114,7 +145,6 @@ export default function StockReportTable() {
           <TableHeader>
             <TableRow>
               <TableHead>Product</TableHead>
-              <TableHead>Version</TableHead>
               <TableHead>Store</TableHead>
               <TableHead>Warehouse</TableHead>
               <TableHead>Month</TableHead>
@@ -140,13 +170,14 @@ export default function StockReportTable() {
             ) : (
               reports.map((r, idx) => (
                 <TableRow key={idx}>
-                  <TableCell>{r.productName}</TableCell>
-                  <TableCell>{r.productVersion}</TableCell>
+                  <TableCell>
+                    {r.productName}
+                  </TableCell>
                   <TableCell>{r.storeName}</TableCell>
                   <TableCell>{r.warehouseName}</TableCell>
                   <TableCell>{r.month}</TableCell>
-                  <TableCell className="text-right">{r.totalAddition}</TableCell>
-                  <TableCell className="text-right">{r.totalReduction}</TableCell>
+                  <TableCell className="text-right text-green-600">{r.totalAddition}</TableCell>
+                  <TableCell className="text-right text-red-500">{r.totalReduction}</TableCell>
                   <TableCell className="text-right">{r.finalStock}</TableCell>
                   <TableCell className="text-right">{r.averagePrice.toLocaleString(undefined, { style: 'currency', currency: 'IDR' })}</TableCell>
                 </TableRow>

@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { useStoreStore } from "@/store/storeStore";
 import { useParams } from "next/navigation";
 import { useWarehouseStore } from "@/store/warehouseStore";
-import { CreateWarehouseDTO } from "@/types/warehouse";
+import { CreateWarehouseDTO, Warehouse } from "@/types/warehouse";
 import { useUsersStore } from "@/store/userStore";
 
 const warehouseSchema = z.object({
@@ -24,7 +24,7 @@ const warehouseSchema = z.object({
 
 type WarehouseFormValues = z.infer<typeof warehouseSchema>;
 
-export default function AddWarehouseDialog() {
+export default function EditWarehouseDialog({ id, warehouse }: { id: string; warehouse: Warehouse }) {
   const [open, setOpen] = React.useState(false);
   const [selectedAdmin, setSelectedAdmin] = React.useState<string | null>(null);
 
@@ -32,11 +32,10 @@ export default function AddWarehouseDialog() {
   const storeId = params.id as string;
 
   const { stores } = useStoreStore();
-  const currentStore = stores.find(store => store.id === storeId);
+  const currentStore = stores.find((store) => store.id === storeId);
 
   const { createWarehouse } = useWarehouseStore();
   const { users, fetchUsers } = useUsersStore();
-
 
   const {
     register,
@@ -46,33 +45,41 @@ export default function AddWarehouseDialog() {
   } = useForm<WarehouseFormValues>({
     resolver: zodResolver(warehouseSchema),
     defaultValues: {
-      name: "",
-      address: "",
-      latitude: 0,
-      longitude: 0,
+      name: warehouse.name,
+      address: warehouse.address,
+      latitude: warehouse.latitude,
+      longitude: warehouse.longitude,
     },
-    mode: "onBlur"
+    mode: "onBlur",
   });
 
+  // 👉 when dialog opens, set default admin
   React.useEffect(() => {
-    fetchUsers({ role: "MANAGER" })
-  }, [fetchUsers]);
+    if (warehouse?.warehouseAdmin?.userID) {
+      setSelectedAdmin(warehouse.warehouseAdmin.userID);
+    } else {
+      setSelectedAdmin(null);
+    }
+
+    fetchUsers({role: "MANAGER"})
+
+  }, [warehouse]);
 
   const onSubmit = async (data: WarehouseFormValues) => {
     try {
-      const newWarehouse: CreateWarehouseDTO = {
+      const updatedWarehouse: CreateWarehouseDTO = {
         name: data.name,
         storeID: storeId,
         address: data.address,
         latitude: Number(data.latitude),
         longitude: Number(data.longitude),
         isActive: true,
-        storeAdminID: selectedAdmin
-      }
+        storeAdminID: selectedAdmin ?? null, // allow null
+      };
 
-      await createWarehouse(newWarehouse);
+      await createWarehouse(updatedWarehouse);
 
-      toast.success("Warehouse added successfully!");
+      toast.success("Warehouse updated successfully!");
       reset();
       setOpen(false);
     } catch (error) {
@@ -88,108 +95,112 @@ export default function AddWarehouseDialog() {
         if (!isOpen) {
           reset();
         }
-      }}>
-      <DialogTrigger asChild>
+      }}
+    >
+      <DialogTrigger asChild className="w-full">
         <Button>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="icon icon-tabler icons-tabler-outline icon-tabler-edit"
+          >
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
+            <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
+            <path d="M16 5l3 3" />
           </svg>
-          Add Warehouse
+          Edit Warehouse
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Add New Warehouse</DialogTitle>
+          <DialogTitle>Edit Warehouse</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-4">
           {/* Store ID */}
           <div className="flex flex-col gap-2">
             <Label htmlFor="store_id">Store Name</Label>
-            <Input id="store_id" placeholder="Enter store ID" value={currentStore?.name} disabled />
+            <Input id="store_id" value={currentStore?.name} disabled />
           </div>
 
           {/* Name */}
           <div className="flex flex-col gap-2">
             <Label htmlFor="name">Name</Label>
-            <Input id="name" placeholder="Warehouse name" {...register("name")} />
+            <Input id="name" {...register("name")} />
             {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
           </div>
 
           {/* Address */}
           <div className="flex flex-col gap-2">
             <Label htmlFor="address">Address</Label>
-            <Input id="address" placeholder="Warehouse address" {...register("address")} />
+            <Input id="address" {...register("address")} />
             {errors.address && <p className="text-red-500 text-sm">{errors.address.message}</p>}
           </div>
 
           {/* Latitude */}
           <div className="flex flex-col gap-2">
             <Label htmlFor="latitude">Latitude</Label>
-            <Input
-              type="number"
-              step="any"
-              placeholder="e.g. -6.200000"
-              {...register("latitude", { valueAsNumber: true })}
-            />
+            <Input type="number" step="any" {...register("latitude", { valueAsNumber: true })} />
             {errors.latitude && <p className="text-red-500 text-sm">{errors.latitude.message}</p>}
           </div>
 
           {/* Longitude */}
           <div className="flex flex-col gap-2">
             <Label htmlFor="longitude">Longitude</Label>
-            <Input
-              type="number"
-              step="any"
-              placeholder="e.g. 106.816666"
-              {...register("longitude", { valueAsNumber: true })}
-            />
+            <Input type="number" step="any" {...register("longitude", { valueAsNumber: true })} />
             {errors.longitude && <p className="text-red-500 text-sm">{errors.longitude.message}</p>}
           </div>
 
+          {/* Store Admins */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {users.map((user) => {
+              const isCurrentAdmin = warehouse?.warehouseAdmin?.userID === user.id; // safe check
               const isSelected = selectedAdmin === user.id;
+
               return (
                 <button
                   type="button"
                   key={user.id}
                   onClick={() => setSelectedAdmin(user.id)}
                   className={`rounded-lg shadow-sm border p-4 flex items-center gap-4 w-full text-left transition
-          ${isSelected ? "border-blue-500 ring-2 ring-blue-300" : "border-gray-200"}`}
+                    ${isSelected
+                      ? "border-green-600"
+                      : isCurrentAdmin
+                        ? "border-green-600"
+                        : "border-gray-200"
+                    }`}
                 >
                   <div className="h-12 w-12 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center text-gray-500">
                     {user.photoUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={user.photoUrl}
-                        alt={user.fullName ?? user.email}
-                        className="h-full w-full object-cover"
-                      />
+                      <img src={user.photoUrl} alt={user.fullName ?? user.email} className="h-full w-full object-cover" />
                     ) : (
-                      <span className="font-semibold">
-                        {(user.fullName || user.email).charAt(0).toUpperCase()}
-                      </span>
+                      <span className="font-semibold">{(user.fullName || user.email).charAt(0).toUpperCase()}</span>
                     )}
                   </div>
                   <div className="flex-1 min-w-0 w-full">
                     <p className="text-sm text-gray-600 truncate">{user.fullName || user.email}</p>
-                    <span className="inline-block mt-2 text-xs px-2 py-0.5 rounded bg-gray-100">
-                      {user.role}
-                    </span>
+                    <span className="inline-block mt-2 text-xs px-2 py-0.5 rounded bg-gray-100">{user.role}</span>
                   </div>
                 </button>
               );
             })}
           </div>
 
-
           <div className="flex justify-end gap-2 pt-4">
             <Button variant="outline" onClick={() => setOpen(false)} type="button">
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Adding..." : "Add Warehouse"}
+              {isSubmitting ? "Updating..." : "Update Warehouse"}
             </Button>
           </div>
         </form>
@@ -197,3 +208,4 @@ export default function AddWarehouseDialog() {
     </Dialog>
   );
 }
+

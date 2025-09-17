@@ -11,18 +11,83 @@ import { Tabs, TabsList, TabsContent, TabsTrigger } from '@/components/ui/tabs';
 import { useProductStore } from '@/store/productStore';
 import ProductGrid from '@/components/product/ProductGrid';
 import CreateProduct from '@/components/product/CreateProductDialog';
+import { cn } from '@/lib/utils';
+import Navbar from '../../../../components/Navbar/Index';
 
 export default function StoreDetailsPage() {
   const params = useParams();
   const storeId = params.id as string;
 
+  const [currentPage, setCurrentPage] = useState(0); // 0-based for API
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
   const [mounted, setMounted] = useState(false);
+
   const { stores, fetchStores } = useStoreStore();
-  const { warehouses, loading: warehouseLoading, error: warehouseError, fetchWarehouses } = useWarehouseStore();
-  const { productsThisStore, error: productError, loading: productLoading, fetchProductByStoreID } = useProductStore();
+  const { warehouses, loading: warehouseLoading, error: warehouseError, fetchWarehouses, pagination: warehousePagination } = useWarehouseStore();
+  const { productsThisStore, error: productError, loading: productLoading, fetchProductByStoreID, pagination } = useProductStore();
+  const [activeTab, setActiveTab] = useState('warehouses');
 
   // Find the current store
   const currentStore = stores.find(store => store.id === storeId);
+
+  // Tab configuration data
+  const tabsData = [
+    { value: 'warehouses', label: 'Warehouses' },
+    { value: 'products', label: 'Products' }
+  ];
+
+  // Transform pagination data for ProductGrid component
+  const paginationData = pagination ? {
+    currentPage: pagination.page || 0, // 0-based page from API
+    totalPages: pagination.totalPages || 0,
+    hasNext: pagination.hasNext || false,
+    hasPrevious: pagination.hasPrevious || false
+  } : undefined;
+
+  // Transform pagination data for WarehouseGrid component
+  const warehousePaginationData = warehousePagination ? {
+    currentPage: warehousePagination.page || 0,
+    totalPages: warehousePagination.totalPages || 0,
+    hasNext: warehousePagination.hasNext || false,
+    hasPrevious: warehousePagination.hasPrevious || false,
+  } : undefined;
+
+  // Handle page change from ProductGrid
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    fetchProductByStoreID(storeId, newPage, pagination?.size || 12, searchTerm, selectedCategory);
+  };
+
+  // Handle search from ProductGrid
+  const handleSearch = (searchTerm: string, category: string) => {
+    setSearchTerm(searchTerm);
+    setSelectedCategory(category);
+    setCurrentPage(0);
+    fetchProductByStoreID(storeId, 0, pagination?.size || 12, searchTerm, category);
+  };
+
+  // Handle page change for warehouses
+  const handleWarehousePageChange = (newPage: number) => {
+    fetchWarehouses(storeId, newPage, warehousePagination?.size || 12);
+  };
+
+  // Refresh products data
+  const refreshProducts = () => {
+    fetchProductByStoreID(storeId, currentPage, pagination?.size || 12, searchTerm, selectedCategory);
+  };
+
+  // Count out of stock products
+  const outOfStockProducts = productsThisStore.filter(product => {
+    const inventories = product.productVersionResponse?.inventories;
+  
+    if (!Array.isArray(inventories) || inventories.length === 0) {
+      return true;
+    }
+  
+    const totalStock = inventories.reduce((sum, inv) => sum + (inv?.stock || 0), 0);
+    return totalStock === 0;
+  });
 
   useEffect(() => {
     setMounted(true);
@@ -39,9 +104,17 @@ export default function StoreDetailsPage() {
     // Fetch warehouses for this store
     if (storeId) {
       fetchWarehouses(storeId);
-      fetchProductByStoreID(storeId);
+      fetchProductByStoreID(storeId, 0, 12); // Initial load with first page
     }
+
   }, [mounted, storeId, stores.length, fetchStores, fetchWarehouses, fetchProductByStoreID]);
+
+  // Update currentPage when pagination data changes
+  useEffect(() => {
+    if (pagination?.page !== undefined) {
+      setCurrentPage(pagination.page);
+    }
+  }, [pagination?.page]);
 
   if (!mounted) {
     return null;
@@ -63,8 +136,9 @@ export default function StoreDetailsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50">
+      <Navbar/>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
         {/* Store Header */}
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8">
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
@@ -101,13 +175,25 @@ export default function StoreDetailsPage() {
           </div>
         </div>
 
-        <Tabs defaultValue='warehouses'>
+        <Tabs defaultValue='warehouses' onValueChange={setActiveTab}>
           <TabsList>
-            <TabsTrigger value='warehouses'>Warehouse</TabsTrigger>
-            <TabsTrigger value='products'>Product</TabsTrigger>
-            <TabsTrigger value='admin'>Admin</TabsTrigger>
+            {tabsData.map((tab) => (
+              <TabsTrigger
+                key={tab.value}
+                value={tab.value}
+                className={cn(
+                  "rounded-none h-full border-b-2 data-[state=active]:shadow-none",
+                  activeTab === tab.value
+                    ? "border-green-600 text-green-600"
+                    : "border-transparent"
+                )}
+              >
+                {tab.label}
+              </TabsTrigger>
+            ))}
           </TabsList>
-          <TabsContent value='warehouses'>
+
+          <TabsContent value='warehouses' className='flex flex-col gap-4 pt-2'>
             {/* Store Statistics */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
@@ -148,12 +234,13 @@ export default function StoreDetailsPage() {
                     </svg>
                   </div>
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Products</p>
-                    <p className="text-2xl font-semibold text-gray-900">{productsThisStore.length}</p>
+                    <p className="text-sm font-medium text-gray-600">Total Products</p>
+                    <p className="text-2xl font-semibold text-gray-900">{pagination?.totalElements || 0}</p>
                   </div>
                 </div>
               </div>
             </div>
+
             {/* Warehouses Section */}
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -177,10 +264,13 @@ export default function StoreDetailsPage() {
                 warehouses={warehouses}
                 loading={warehouseLoading}
                 error={warehouseError}
+                pagination={warehousePaginationData}
+                onPageChange={handleWarehousePageChange}
               />
             </div>
           </TabsContent>
-          <TabsContent value='products'>
+
+          <TabsContent value='products' className='flex flex-col gap-4 pt-2'>
             {/* Store Statistics */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
@@ -192,7 +282,7 @@ export default function StoreDetailsPage() {
                   </div>
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">Total Products</p>
-                    <p className="text-2xl font-semibold text-gray-900">{productsThisStore.length}</p>
+                    <p className="text-2xl font-semibold text-gray-900">{pagination?.totalElements || 0}</p>
                   </div>
                 </div>
               </div>
@@ -205,9 +295,9 @@ export default function StoreDetailsPage() {
                     </svg>
                   </div>
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Out of stock product</p>
+                    <p className="text-sm font-medium text-gray-600">Out of Stock Products</p>
                     <p className="text-2xl font-semibold text-gray-900">
-                      {warehouses.filter(warehouse => warehouse.active).length}
+                      {outOfStockProducts.length}
                     </p>
                   </div>
                 </div>
@@ -217,16 +307,19 @@ export default function StoreDetailsPage() {
                 <div className="flex items-center">
                   <div className="p-2 bg-purple-100 rounded-lg">
                     <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v2h4a1 1 0 0 1 0 2h-1v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6H3a1 1 0 0 1 0-2h4zM9 3v1h6V3H9zM6 6v14h12V6H6z" />
                     </svg>
                   </div>
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Products</p>
-                    <p className="text-2xl font-semibold text-gray-900">{productsThisStore.length}</p>
+                    <p className="text-sm font-medium text-gray-600">Pages</p>
+                    <p className="text-2xl font-semibold text-gray-900">
+                      {pagination ? `${(pagination.page || 0) + 1} of ${pagination.totalPages || 0}` : '0 of 0'}
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
+
             {/* Products Section */}
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -237,18 +330,27 @@ export default function StoreDetailsPage() {
                   </p>
                 </div>
                 <div className="flex gap-3">
-                  <Button onClick={() => fetchProductByStoreID(storeId)} variant={"secondary"}>
+                  <Button onClick={refreshProducts} variant={"secondary"}>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
                   </Button>
                 </div>
               </div>
-              <ProductGrid products={productsThisStore} error={productError} loading={productLoading} showSearchAndFilter={false} />
+
+              {/* Use ProductGrid with built-in pagination */}
+              <ProductGrid
+                products={productsThisStore}
+                error={productError}
+                loading={productLoading}
+                pagination={paginationData}
+                onPageChange={handlePageChange}
+                onSearch={handleSearch}
+                showSearchAndFilter={true}
+              />
             </div>
           </TabsContent>
         </Tabs>
-
       </div>
     </div>
   );
