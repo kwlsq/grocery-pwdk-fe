@@ -60,7 +60,7 @@ const StoreGrid = ({
 
   return (
     <div className="space-y-6">
-      {showSearchAndFilter && onSearch && (
+      { onSearch && (
         <SearchAndFilter onSearch={onSearch} />
       )}
 

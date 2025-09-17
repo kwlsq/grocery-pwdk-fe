@@ -13,12 +13,12 @@ import { useAuthStore } from "@/store/authStore";
 
 export default function SalesReportTable() {
   const { sales, loading, error, pagination, page, size, filters, fetchSales, setPage, setFilters } = useSalesReportStore();
-  const { stores, fetchStores } = useStoreStore();
+  const { uniqueStores, fetchUniqueStores } = useStoreStore();
   const { categories, fetchCategories, uniqueProducts, fetchUniqueProduct } = useProductStore();
   const { user } = useAuthStore();
 
   useEffect(() => {
-    fetchStores();
+    fetchUniqueStores();
     fetchCategories();
     fetchUniqueProduct();
     fetchSales({ page: 0, size });
@@ -53,7 +53,7 @@ export default function SalesReportTable() {
               <SelectContent>
                 <SelectGroup>
                   <SelectLabel>Stores</SelectLabel>
-                  {stores.map((s) => (
+                  {uniqueStores.map((s) => (
                     <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                   ))}
                 </SelectGroup>

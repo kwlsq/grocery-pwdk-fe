@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import axios from "axios";
-import { StoreApiResponse, StoreState } from "../types/store";
+import { StoreApiResponse, StoreState, UniqueStore } from "../types/store";
 import { API_CONFIG, buildApiUrl } from "../config/api";
 
 const getAuthToken = (): string => {
@@ -14,6 +14,7 @@ const getAuthToken = (): string => {
 
 export const useStoreStore = create<StoreState>((set, get) => ({
   stores: [],
+  uniqueStores: [],
   store: null,
   loading: false,
   error: null,
@@ -22,24 +23,6 @@ export const useStoreStore = create<StoreState>((set, get) => ({
   pagination: null,
 
   fetchStores: async (page = 0, size = 12, search = "") => {
-    const state = get();
-    const now = Date.now();
-    const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-
-    // Return cached data if recent and available
-    if (
-      state.stores.length > 0 &&
-      state.lastFetched &&
-      now - state.lastFetched < CACHE_DURATION
-    ) {
-      return;
-    }
-
-    // Prevent duplicate requests
-    if (state.isFetching) {
-      return;
-    }
-
     set({ isFetching: true, loading: true, error: null });
     try {
       const token = getAuthToken();
@@ -49,7 +32,7 @@ export const useStoreStore = create<StoreState>((set, get) => ({
         {
           page,
           size,
-          search
+          search,
         }
       );
 
@@ -90,6 +73,62 @@ export const useStoreStore = create<StoreState>((set, get) => ({
       });
     }
   },
+
+  fetchUniqueStores: async () => {
+    const state = get();
+    const now = Date.now();
+    const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+    // Return cached data if recent and available
+    if (
+      state.stores.length > 0 &&
+      state.lastFetched &&
+      now - state.lastFetched < CACHE_DURATION
+    ) {
+      return;
+    }
+
+    // Prevent duplicate requests
+    if (state.isFetching) {
+      return;
+    }
+
+    set({ isFetching: true, loading: true, error: null });
+    try {
+      const token = getAuthToken();
+
+      const url = buildApiUrl(
+        API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.STORE + "/unique"
+      );
+
+      const response = await axios.get(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        withCredentials: true,
+      });
+
+      if (response.data.success) {
+        const uniqueStores: UniqueStore[] = response.data.data;
+
+        set({ uniqueStores, loading: false });
+      } else {
+        set({
+          error: response.data.message || "Failed to fetch warehouse",
+          loading: false,
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching stores:", error);
+      set({
+        error:
+          error instanceof Error ? error.message : "Failed to fetch stores",
+        loading: false,
+        isFetching: false,
+      });
+    }
+  },
+
   fetchStoreByUser: async () => {
     set({ loading: true, error: null });
     try {

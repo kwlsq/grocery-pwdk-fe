@@ -54,10 +54,15 @@ export interface UpdateWarehouseDTO {
   storeAdminID?: string
 }
 
+export interface UniqueWarehouse {
+  id: string,
+  name: string
+}
 
 export interface WarehouseState {
   pagination: PaginationInfo | null;
   warehouses: Warehouse[];
+  uniqueWarehouses: UniqueWarehouse[];
   loading: boolean;
   error: string | null;
   fetchWarehouses: (
@@ -66,4 +71,5 @@ export interface WarehouseState {
     size?: number,
   ) => Promise<void>;
   createWarehouse: (data: CreateWarehouseDTO) => Promise<void>;
+  fetchUniqueWarehouse: (storeId: string) => Promise<void>;
 }

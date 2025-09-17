@@ -23,9 +23,15 @@ export interface StoreApiResponse {
     };
 }
 
+export interface UniqueStore {
+  id: string,
+  name: string
+}
+
 export interface StoreState {
   stores: Store[];
   store: Store | null
+  uniqueStores: UniqueStore[]
   loading: boolean;
   error: string | null;
   lastFetched: number | null;
@@ -37,4 +43,5 @@ export interface StoreState {
     search?: string,
   ) => Promise<void>;
   fetchStoreByUser: () => Promise<void>;
+  fetchUniqueStores: () => Promise<void>;
 }

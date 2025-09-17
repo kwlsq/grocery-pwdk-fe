@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import axios, { AxiosError } from 'axios';
 import { useProductStore } from '../../store/productStore';
 import { useWarehouseStore } from '@/store/warehouseStore';
 import { z } from 'zod';
@@ -67,7 +66,7 @@ const validateImageFile = (file: File): string | null => {
 
 export default function CreateProduct({ storeID }: { storeID: string }) {
   const { categories, fetchCategories, createProduct, error } = useProductStore();
-  const { warehouses, fetchWarehouses } = useWarehouseStore();
+  const { uniqueWarehouses, fetchUniqueWarehouse } = useWarehouseStore();
   const { discounts, fetchDiscount } = useDiscountStore();
   const [open, setOpen] = useState(false);
   const [selectedPromotions, setSelectedPromotions] = useState<string[]>([]);
@@ -120,21 +119,21 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
 
     fetchCategories();
     fetchDiscount();
-    fetchWarehouses(storeID)
-  }, [fetchCategories, fetchWarehouses, fetchDiscount, storeID]);
+    fetchUniqueWarehouse(storeID)
+  }, [fetchCategories, fetchUniqueWarehouse, fetchDiscount, storeID]);
 
 
   // Update stocks when warehouses are loaded
   useEffect(() => {
-    if (warehouses.length > 0) {
-      const stocksData = warehouses.map((w) => ({
+    if (uniqueWarehouses.length > 0) {
+      const stocksData = uniqueWarehouses.map((w) => ({
         warehouseId: w.id,
         selected: false,
         quantity: '',
       }));
       setValue('stocks', stocksData);
     }
-  }, [warehouses, setValue]);
+  }, [uniqueWarehouses, setValue]);
 
   const { fields } = useFieldArray({
     control,
@@ -360,7 +359,7 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
                     />
 
                     {/* Warehouse name */}
-                    <p className="w-full">{warehouses[index].name}</p>
+                    <p className="w-full">{uniqueWarehouses[index].name}</p>
                   </div>
                   <Input
                     type="number"
