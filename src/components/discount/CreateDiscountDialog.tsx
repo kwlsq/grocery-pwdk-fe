@@ -74,6 +74,7 @@ export default function CreateDiscountDialog() {
         startAt: data.startAt.toISOString(),
         endAt: data.endAt.toISOString(),
         type: data.type,
+        unit: data.unit
       });
 
       toast.success('Discount created successfully!');

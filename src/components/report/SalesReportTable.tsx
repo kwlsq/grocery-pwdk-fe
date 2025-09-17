@@ -14,12 +14,13 @@ import { useAuthStore } from "@/store/authStore";
 export default function SalesReportTable() {
   const { sales, loading, error, pagination, page, size, filters, fetchSales, setPage, setFilters } = useSalesReportStore();
   const { stores, fetchStores } = useStoreStore();
-  const { categories, fetchCategories } = useProductStore();
+  const { categories, fetchCategories, uniqueProducts, fetchUniqueProduct } = useProductStore();
   const { user } = useAuthStore();
 
   useEffect(() => {
     fetchStores();
     fetchCategories();
+    fetchUniqueProduct();
     fetchSales({ page: 0, size });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -43,50 +44,63 @@ export default function SalesReportTable() {
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row gap-2 items-end">
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 w-full">
-          <Select value={filters.storeId || ""} onValueChange={(v) => setFilters({ ...filters, storeId: v })}>
-            <SelectTrigger disabled={user?.role !== 'ADMIN'}>
-              <SelectValue placeholder="Select Store" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Stores</SelectLabel>
-                {stores.map((s) => (
-                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+        <div className="flex justify-between w-full">
+          <div className="flex gap-2 w-full">
+            <Select value={filters.storeId || ""} onValueChange={(v) => setFilters({ ...filters, storeId: v })}>
+              <SelectTrigger disabled={user?.role !== 'ADMIN'}>
+                <SelectValue placeholder="Select Store" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Stores</SelectLabel>
+                  {stores.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
 
-          <Select value={filters.categoryId || ""} onValueChange={(v) => setFilters({ ...filters, categoryId: v })}>
-            <SelectTrigger disabled={user?.role !== 'ADMIN'}>
-              <SelectValue placeholder="Select Category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Categories</SelectLabel>
-                {categories.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+            <Select value={filters.categoryId || ""} onValueChange={(v) => setFilters({ ...filters, categoryId: v })}>
+              <SelectTrigger disabled={user?.role !== 'ADMIN'}>
+                <SelectValue placeholder="Select Category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Categories</SelectLabel>
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
 
-          <Input
-            placeholder="Product ID (optional)"
-            value={filters.productId || ""}
-            onChange={(e) => setFilters({ ...filters, productId: e.target.value })}
-          />
-          <div className="grid grid-cols-2 gap-2">
+            <Select value={filters.productId || ""} onValueChange={(v) => setFilters({ ...filters, productId: v })}>
+              <SelectTrigger disabled={user?.role !== 'ADMIN'}>
+                <SelectValue placeholder="Select Product" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Products</SelectLabel>
+                  {uniqueProducts.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex gap-2 w-fit">
             <Input
               placeholder="Start Month (YYYY-MM)"
               value={filters.startMonth || ""}
               onChange={(e) => setFilters({ ...filters, startMonth: e.target.value })}
+              className="w-fit"
             />
             <Input
               placeholder="End Month (YYYY-MM)"
               value={filters.endMonth || ""}
               onChange={(e) => setFilters({ ...filters, endMonth: e.target.value })}
+              className="w-fit"
             />
           </div>
         </div>

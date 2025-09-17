@@ -6,13 +6,17 @@ import Link from 'next/link';
 import EditProduct from './EditProductDialog';
 import { useAuthStore } from '@/store/authStore';
 import ProductStock from './ProductStockDialog';
+import { useRouter } from 'next/navigation';
+import { useProductStore } from '@/store/productStore';
 
 interface ProductCardProps {
   product: Product;
 }
 
 const ProductCard = ({ product }: ProductCardProps) => {
+  const router = useRouter();
   const { user } = useAuthStore();
+  const { setSelectedProduct } = useProductStore();
   const { price, weight } = product.productVersionResponse;
 
   // Get the primary image or first image available
@@ -24,9 +28,16 @@ const ProductCard = ({ product }: ProductCardProps) => {
     0
   );
 
+  const handleClick = () => {
+    setSelectedProduct(product);          // store product in Zustand
+    router.push(`/product-details/${product.id}`); // navigate with id in URL
+  };
+
   return (
-    <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden border border-gray-100">
-      <Link href={`/product-details/${product.id}`} className="block" aria-label={`View details for ${product.name}`}>
+    <div
+    onClick={handleClick}
+    className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden border border-gray-100">
+      <div className="block" aria-label={`View details for ${product.name}`}>
         <div className="relative h-48 w-full">
           {primaryImage ? (
             <Image
@@ -79,7 +90,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
             </span>
           </div>
         </div>
-      </Link>
+      </div>
 
       <div className="px-4 pb-4 w-full">
         {user?.role === 'ADMIN' ? (

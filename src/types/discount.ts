@@ -7,7 +7,8 @@ export interface CreateDiscountDTO {
   minPurchase: number,
   startAt: string,
   endAt: string,
-  type: string
+  type: string,
+  unit: string
 }
 
 export interface Discount {

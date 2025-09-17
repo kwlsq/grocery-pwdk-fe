@@ -96,6 +96,7 @@ export interface UniqueProduct {
 
 export interface ProductState {
   categories: ProductCategory[];
+  selectedProduct: Product | null;
   products: Product[];
   productsThisStore: Product[];
   uniqueProducts: UniqueProduct[];
@@ -112,7 +113,7 @@ export interface ProductState {
     userLongitude?: number,
     maxDistanceKM?: number
   ) => Promise<void>;
-  fetchProductById: (id: string) => Promise<Product>;
+  setSelectedProduct: (product: Product) => void;
   fetchProductByStoreID: (
     id: string,
     page?: number,

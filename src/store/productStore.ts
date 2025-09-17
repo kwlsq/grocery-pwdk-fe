@@ -19,6 +19,7 @@ const getAuthToken = (): string => {
 };
 
 export const useProductStore = create<ProductState>((set) => ({
+  selectedProduct: null,
   products: [],
   productsThisStore: [],
   uniqueProducts: [],
@@ -85,28 +86,8 @@ export const useProductStore = create<ProductState>((set) => ({
     }
   },
 
-  fetchProductById: async (id: string) => {
-    set({ loading: true, error: null });
-    try {
-      const response = await axios.get(
-        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS}/${id}`
-      );
-      if (response.data.success) {
-        const product = response.data.data;
-        set({ products: [product], loading: false });
-        return product;
-      } else {
-        throw new Error(response.data.message || "Failed to fetch product");
-      }
-    } catch (error) {
-      console.error("Error fetching product by ID:", error);
-      set({
-        error:
-          error instanceof Error ? error.message : "Failed to fetch product",
-        loading: false,
-      });
-      return null;
-    }
+  setSelectedProduct: (product) => {
+    set({selectedProduct: product})
   },
 
   fetchProductByStoreID: async (
