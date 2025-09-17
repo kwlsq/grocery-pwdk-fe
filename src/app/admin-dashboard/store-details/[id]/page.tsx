@@ -24,7 +24,7 @@ export default function StoreDetailsPage() {
   const [mounted, setMounted] = useState(false);
 
   const { stores, fetchStores } = useStoreStore();
-  const { warehouses, loading: warehouseLoading, error: warehouseError, fetchWarehouses } = useWarehouseStore();
+  const { warehouses, loading: warehouseLoading, error: warehouseError, fetchWarehouses, pagination: warehousePagination } = useWarehouseStore();
   const { productsThisStore, error: productError, loading: productLoading, fetchProductByStoreID, pagination } = useProductStore();
   const [activeTab, setActiveTab] = useState('warehouses');
 
@@ -45,6 +45,14 @@ export default function StoreDetailsPage() {
     hasPrevious: pagination.hasPrevious || false
   } : undefined;
 
+  // Transform pagination data for WarehouseGrid component
+  const warehousePaginationData = warehousePagination ? {
+    currentPage: warehousePagination.page || 0,
+    totalPages: warehousePagination.totalPages || 0,
+    hasNext: warehousePagination.hasNext || false,
+    hasPrevious: warehousePagination.hasPrevious || false,
+  } : undefined;
+
   // Handle page change from ProductGrid
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
@@ -57,6 +65,11 @@ export default function StoreDetailsPage() {
     setSelectedCategory(category);
     setCurrentPage(0);
     fetchProductByStoreID(storeId, 0, pagination?.size || 12, searchTerm, category);
+  };
+
+  // Handle page change for warehouses
+  const handleWarehousePageChange = (newPage: number) => {
+    fetchWarehouses(storeId, newPage, warehousePagination?.size || 12);
   };
 
   // Refresh products data
@@ -251,6 +264,8 @@ export default function StoreDetailsPage() {
                 warehouses={warehouses}
                 loading={warehouseLoading}
                 error={warehouseError}
+                pagination={warehousePaginationData}
+                onPageChange={handleWarehousePageChange}
               />
             </div>
           </TabsContent>

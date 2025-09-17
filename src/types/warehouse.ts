@@ -58,11 +58,12 @@ export interface UpdateWarehouseDTO {
 export interface WarehouseState {
   pagination: PaginationInfo | null;
   warehouses: Warehouse[];
-  warehouse: Warehouse | null
   loading: boolean;
   error: string | null;
-  fetchWarehouses: (storeId: string) => Promise<void>;
+  fetchWarehouses: (
+    storeId: string,
+    page?: number,
+    size?: number,
+  ) => Promise<void>;
   createWarehouse: (data: CreateWarehouseDTO) => Promise<void>;
-  fetchWarehouseByID: (id: string) => Promise<void>;
-  fetchWarehouseByUser: () => Promise<void>;
 }

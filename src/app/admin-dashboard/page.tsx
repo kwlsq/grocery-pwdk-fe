@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { Tabs, TabsList, TabsContent, TabsTrigger } from '@/components/ui/tabs';
 import { useAuthStore } from '@/store/authStore';
-import { useWarehouseStore } from '@/store/warehouseStore';
 import { useProductStore } from '@/store/productStore';
 import { useDiscountStore } from '@/store/discountStore';
 import { useUsersStore } from '../../store/userStore';
@@ -18,7 +17,6 @@ import dynamic from 'next/dynamic';
 const StockReportTableDyn = dynamic(() => import('@/components/report/StockReportTable'), { ssr: false });
 import CreateDiscountDialog from '@/components/discount/CreateDiscountDialog';
 import StoreGrid from '../../components/store/StoreGrid';
-import WarehouseGrid from '@/components/warehouse/WarehouseGrid';
 import Navbar from '../../components/Navbar/Index';
 import CreateCategoryDialog from '@/components/category/CreateCategoryDialog';
 import CategoryGrid from '@/components/category/CategoryGrid';
@@ -30,11 +28,10 @@ export default function AdminDashboardPage() {
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState('stores');
   const [reportTab, setReportTab] = useState('summary');
-  const { stores, loading, error, fetchStores } = useStoreStore();
+  const { stores, store, loading, error, fetchStores, fetchStoreByUser, pagination: storePagination } = useStoreStore();
   const { users, loading: usersLoading, error: usersError, fetchUsers, selectedRole, setSelectedRole } = useUsersStore();
-  const { discounts, loading: discountsLoading, error: discountsError, pagination, fetchDiscount } = useDiscountStore();
+  const { discounts, loading: discountsLoading, error: discountsError, pagination: discountPagination, fetchDiscount } = useDiscountStore();
   const { user } = useAuthStore();
-  const { warehouse, fetchWarehouseByUser } = useWarehouseStore();
   const { categories, fetchCategories, deleteCategory } = useProductStore();
 
   // Main tabs
@@ -76,8 +73,8 @@ export default function AdminDashboardPage() {
     if (!mounted) return;
     if (user?.role !== 'MANAGER') return;
 
-    fetchWarehouseByUser();
-  }, [mounted, fetchWarehouseByUser, user])
+    fetchStoreByUser();
+  }, [mounted, fetchStoreByUser, user])
 
   useEffect(() => {
     if (!mounted) return;
@@ -172,23 +169,6 @@ export default function AdminDashboardPage() {
             ))}
           </TabsList>
 
-          <TabsContent value='warehouse'>
-            {/* Actions Bar */}
-            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-8">
-              <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900">Stores</h2>
-                  <p className="text-sm text-gray-600">
-                    Manage your store network and monitor performance
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Warehouse Grid */}
-            <WarehouseGrid warehouses={warehouse ? [warehouse] : []} />
-          </TabsContent>
-
           <TabsContent value='stores'>
             {/* Actions Bar */}
             <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-8">
@@ -207,7 +187,7 @@ export default function AdminDashboardPage() {
                     Add Store
                   </button>
                   <Button
-                    onClick={fetchStores}
+                    onClick={() => { fetchStores(0, 12, "") }}
                     className="bg-blue-600 hover:bg-blue-700"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -220,7 +200,20 @@ export default function AdminDashboardPage() {
             </div>
 
             {/* Stores Grid */}
-            <StoreGrid stores={stores} loading={loading} error={error} />
+            <StoreGrid
+              stores={stores}
+              loading={loading}
+              error={error}
+              pagination={storePagination ? {
+                currentPage: storePagination.page,
+                totalPages: storePagination.totalPages,
+                hasNext: storePagination.hasNext,
+                hasPrevious: storePagination.hasPrevious,
+              } : undefined}
+              onPageChange={(page) => fetchStores(page, 12, "")}
+              showSearchAndFilter
+            />
+
           </TabsContent>
 
           <TabsContent value='users'>
@@ -297,11 +290,11 @@ export default function AdminDashboardPage() {
               discounts={discounts}
               loading={discountsLoading}
               error={discountsError || undefined}
-              pagination={pagination ? {
-                currentPage: pagination.page,
-                totalPages: pagination.totalPages,
-                hasNext: pagination.hasNext,
-                hasPrevious: pagination.hasPrevious,
+              pagination={discountPagination ? {
+                currentPage: discountPagination.page,
+                totalPages: discountPagination.totalPages,
+                hasNext: discountPagination.hasNext,
+                hasPrevious: discountPagination.hasPrevious,
               } : undefined}
               onPageChange={() => {
                 // If backend supports pagination params later, wire here

@@ -2,14 +2,30 @@
 
 import { Warehouse } from '../../types/warehouse';
 import WarehouseCard from './WarehouseCard';
+import { cn } from '@/lib/utils';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationPrevious,
+  PaginationNext,
+} from '@/components/ui/pagination';
 
 interface WarehouseGridProps {
   warehouses: Warehouse[];
   loading?: boolean;
   error?: string | null;
+  pagination?: {
+    currentPage: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrevious: boolean;
+  };
+  onPageChange?: (newPage: number) => void;
 }
 
-const WarehouseGrid = ({ warehouses, loading = false, error = null }: WarehouseGridProps) => {
+const WarehouseGrid = ({ warehouses, loading = false, error = null, pagination, onPageChange }: WarehouseGridProps) => {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-96">
@@ -47,10 +63,55 @@ const WarehouseGrid = ({ warehouses, loading = false, error = null }: WarehouseG
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {warehouses.map((warehouse) => (
-        <WarehouseCard key={warehouse.id} warehouse={warehouse} />
-      ))}
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {warehouses.map((warehouse) => (
+          <WarehouseCard key={warehouse.id} warehouse={warehouse} />
+        ))}
+      </div>
+
+      {pagination && pagination.totalPages > 1 && onPageChange && (
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  onPageChange(pagination.currentPage - 1);
+                }}
+                className={cn(!pagination.hasPrevious && 'pointer-events-none opacity-50')}
+              />
+            </PaginationItem>
+
+            {Array.from({ length: pagination.totalPages }, (_, i) => (
+              <PaginationItem key={i}>
+                <PaginationLink
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onPageChange(i);
+                  }}
+                  isActive={pagination.currentPage === i}
+                >
+                  {i + 1}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+
+            <PaginationItem>
+              <PaginationNext
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  onPageChange(pagination.currentPage + 1);
+                }}
+                className={cn(!pagination.hasNext && 'pointer-events-none opacity-50')}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
     </div>
   );
 };

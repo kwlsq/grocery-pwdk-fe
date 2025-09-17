@@ -13,22 +13,25 @@ const getAuthToken = (): string => {
   return token;
 };
 
-export const useWarehouseStore = create<WarehouseState>((set, get) => ({
+export const useWarehouseStore = create<WarehouseState>((set) => ({
   warehouses: [],
-  warehouse: null,
   loading: false,
   error: null,
   pagination: null,
   lastFetched: null,
   isFetching: false,
 
-  fetchWarehouses: async (storeId: string) => {
+  fetchWarehouses: async (storeId: string, page = 0, size = 4,) => {
     set({ loading: true, error: null });
     try {
       const token = getAuthToken();
 
       const url = buildApiUrl(
-        API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.WAREHOUSE + "/store/" + storeId
+        API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.WAREHOUSE + "/store/" + storeId,
+        {
+          page,
+          size
+        }
       );
 
       const response = await axios.get<WarehouseApiResponse>(url, {
@@ -84,80 +87,6 @@ export const useWarehouseStore = create<WarehouseState>((set, get) => ({
         },
         withCredentials: true,
       });
-
-      set({ loading: false, error: null });
-    } catch (error) {
-      console.error("Error while creating warehouse:", error);
-      set({
-        error:
-          error instanceof Error ? error.message : "Failed to create warehouse",
-        loading: false,
-      });
-    }
-  },
-
-  fetchWarehouseByID : async (id) => {
-    set({ loading: true, error: null });
-    try {
-      const url = buildApiUrl(
-        API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.WAREHOUSE + "/" + id
-      );
-
-      const token = getAuthToken();
-
-      const response = await axios.get(url, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        withCredentials: true,
-      });
-
-      if (response.data.success) {
-        set({ warehouse: response.data.data, loading: false });
-      } else {
-        set({
-          error: "Failed to fetch warehouse by ID",
-          loading: false,
-        });
-      }
-
-      set({ loading: false, error: null });
-    } catch (error) {
-      console.error("Error while creating warehouse:", error);
-      set({
-        error:
-          error instanceof Error ? error.message : "Failed to create warehouse",
-        loading: false,
-      });
-    }
-  },
-
-  fetchWarehouseByUser: async () => {
-    set({ loading: true, error: null });
-    try {
-      const url = buildApiUrl(
-        API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.WAREHOUSE + "/store-admin"
-      );
-
-      const token = getAuthToken();
-
-      const response = await axios.get(url, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        withCredentials: true,
-      });
-
-      if (response.data.success) {
-        set({ warehouse: response.data.data, loading: false });
-      } else {
-        set({
-          error: "Failed to fetch warehouse by ID",
-          loading: false,
-        });
-      }
 
       set({ loading: false, error: null });
     } catch (error) {

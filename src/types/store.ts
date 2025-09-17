@@ -1,3 +1,5 @@
+import { PaginationInfo } from "./common";
+
 export interface Store {
   id: string;
   name: string;
@@ -8,7 +10,31 @@ export interface Store {
 
 export interface StoreApiResponse {
   success: boolean;
-  statusCode: number;
-  message: string;
-  data: Store[];
+    statusCode: number;
+    message: string;
+    data: {
+      page: number;
+      size: number;
+      totalElements: number;
+      totalPages: number;
+      hasNext: boolean;
+      hasPrevious: boolean;
+      content: Store[];
+    };
+}
+
+export interface StoreState {
+  stores: Store[];
+  store: Store | null
+  loading: boolean;
+  error: string | null;
+  lastFetched: number | null;
+  isFetching: boolean;
+  pagination: PaginationInfo | null
+  fetchStores: (
+    page?: number,
+    size?: number,
+    search?: string,
+  ) => Promise<void>;
+  fetchStoreByUser: () => Promise<void>;
 }
