@@ -1,9 +1,9 @@
 'use client';
+
 import { FC } from 'react';
 import { User } from '@/types/user';
 import { cn } from '@/lib/utils';
 import EditUserDialog from './EditUserDialog';
-import { useUsersStore } from '@/store/userStore';
 
 interface UserCardProps {
   user: User;
@@ -16,9 +16,6 @@ const roleColor: Record<User['role'], string> = {
 };
 
 const UserCard: FC<UserCardProps> = ({ user }) => {
-
-  const { deleteUser } = useUsersStore();
-
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex items-center gap-4">
@@ -43,7 +40,6 @@ const UserCard: FC<UserCardProps> = ({ user }) => {
       <div className={cn('flex h-full gap-2', user.role !== 'MANAGER' && "hidden")}>
         <EditUserDialog user={user}/>
       </div>
-      
     </div>
   );
 };

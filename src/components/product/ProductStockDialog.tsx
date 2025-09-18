@@ -62,7 +62,7 @@ export default function ProductStock({ id, product }: { id: string, product: Pro
         );
 
         const currentStock = matchingInventory ? matchingInventory.stock : 0;
-        
+
         return {
           warehouseId: warehouse.id,
           warehouseName: warehouse.name,
@@ -70,9 +70,9 @@ export default function ProductStock({ id, product }: { id: string, product: Pro
           newStock: currentStock.toString(),
         };
       });
-      
+
       setStockData(initialStockData);
-      
+
       // Set form default values
       setValue('stocks', initialStockData.map(data => ({
         warehouseId: data.warehouseId,
@@ -91,14 +91,27 @@ export default function ProductStock({ id, product }: { id: string, product: Pro
     );
   };
 
+
   const onSubmit = async (data: StockFormValues) => {
     try {
-      // Prepare inventories data for update
-      const inventories = data.stocks.map(stock => ({
-        warehouseID: stock.warehouseId,
-        stock: Number(stock.quantity),
-      }));
-      
+      // Only prepare inventories data for items that have changed
+      const inventories = data.stocks
+        .filter((stock, index) => {
+          const originalStock = stockData[index].currentStock;
+          const newStock = Number(stock.quantity);
+          return newStock !== originalStock; // Only include changed values
+        })
+        .map(stock => ({
+          warehouseID: stock.warehouseId,
+          stock: Number(stock.quantity),
+        }));
+
+      // Only proceed if there are actually changes to submit
+      if (inventories.length === 0) {
+        setOpen(false);
+        return;
+      }
+
       await updateProductStock(id, inventories);
 
       reset();
@@ -127,7 +140,7 @@ export default function ProductStock({ id, product }: { id: string, product: Pro
         }
       }}>
       <DialogTrigger asChild className='w-fit'>
-        <Button>
+        <Button variant={"secondary"} className='text-gray-400'>
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-packages">
             <path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M7 16.5l-5 -3l5 -3l5 3v5.5l-5 3z" /><path d="M2 13.5v5.5l5 3" /><path d="M7 16.545l5 -3.03" /><path d="M17 16.5l-5 -3l5 -3l5 3v5.5l-5 3z" /><path d="M12 19l5 3" /><path d="M17 16.5l5 -3" /><path d="M12 13.5v-5.5l-5 -3l5 -3l5 3v5.5" /><path d="M7 5.03v5.455" /><path d="M12 8l5 -3" />
           </svg>

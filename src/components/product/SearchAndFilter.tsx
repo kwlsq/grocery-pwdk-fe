@@ -1,18 +1,18 @@
 'use client';
 
+import { useProductStore } from '@/store/productStore';
 import { FC, useState } from 'react';
 
 interface SearchAndFilterProps {
   onSearch: (searchTerm: string, category: string) => void;
-  categories?: { id: string; name: string }[];
 }
 
 const SearchAndFilter: FC<SearchAndFilterProps> = ({
-  onSearch,
-  categories = [],
+  onSearch
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
+  const { categories } = useProductStore();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

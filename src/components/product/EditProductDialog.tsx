@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useMemo } from 'react';
 import axios, { AxiosError } from 'axios';
 import { useProductStore } from '../../store/productStore';
 import { z } from 'zod';
@@ -14,35 +14,71 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import { Product, UpdateProductDTO } from '@/types/product';
+import { Product, UpdateProductDTO, ProductImage } from '@/types/product';
 import { useImageStore } from '@/store/imageStore';
 import { useDiscountStore } from '@/store/discountStore';
 
 const productSchema = z.object({
-  name: z.string().min(1, 'Name cannot be blank'),
-  description: z.string().min(1, 'Description cannot be blank'),
+  name: z.string().min(1, 'Name cannot be blank').max(255, 'Name is too long'),
+  description: z.string().min(1, 'Description cannot be blank').max(2000, 'Description is too long'),
   price: z
     .string()
-    .refine((val) => !isNaN(Number(val)) && Number(val) > 0, 'Price must be a positive number'),
+    .refine((val) => !isNaN(Number(val)) && Number(val) > 0, 'Price must be a positive number')
+    .refine((val) => Number(val) <= 999999999, 'Price is too high'),
   weight: z
     .string()
-    .refine((val) => !isNaN(Number(val)) && Number(val) > 0, 'Weight must be a positive number'),
+    .refine((val) => !isNaN(Number(val)) && Number(val) > 0, 'Weight must be a positive number')
+    .refine((val) => Number(val) <= 999999, 'Weight is too high'),
   categoryID: z.string().min(1, 'Category is required')
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
 
-export default function EditProduct({ id, product }: { id: string, product: Product }) {
-  const { categories, fetchCategories, updateProduct } = useProductStore();
-  const [open, setOpen] = useState(false);
-  const [files, setFiles] = useState<File[] | null>(null);
-  const [thumbnail, setThumbnail] = useState<File | null>(null);
-  const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
-  const [mediaPreviews, setMediaPreviews] = useState<string[]>();
-  const { isUploading } = useImageStore();
-  const { discounts, fetchDiscount } = useDiscountStore();
-  const [selectedPromotions, setSelectedPromotions] = useState<string[]>(() => (product.promotions || []).map(p => p.id));
+interface MediaState {
+  files: File[];
+  thumbnail: File | null;
+  thumbnailPreview: string;
+  mediaPreviews: string[];
+  deletedThumbnail: boolean;
+  deletedMedia: string[];
+}
 
+const initialMediaState: MediaState = {
+  files: [],
+  thumbnail: null,
+  thumbnailPreview: "",
+  mediaPreviews: [],
+  deletedThumbnail: false,
+  deletedMedia: []
+};
+
+const MAX_MEDIA_FILES = 5;
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+export default function EditProduct({ id, product }: { id: string, product: Product }) {
+  const { categories, fetchCategories, updateProduct, deleteProduct } = useProductStore();
+  const { isUploading, uploadMultiImage, uploadSingleImage, deleteImage } = useImageStore();
+  const { discounts, fetchDiscount } = useDiscountStore();
+
+  const [open, setOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [mediaState, setMediaState] = useState<MediaState>(initialMediaState);
+  const [selectedPromotions, setSelectedPromotions] = useState<string[]>([]);
+  const [updateError, setUpdateError] = useState<string>('');
+
+  // Memoized current thumbnail
+  const currentThumbnail = useMemo(() =>
+    product.productImages?.find(img => img.primary),
+    [product.productImages]
+  );
+
+  // Memoized current media (non-thumbnail images)
+  const currentMedia = useMemo(() =>
+    product.productImages?.filter((img: ProductImage) =>
+      !img.primary && !mediaState.deletedMedia.includes(img.id)
+    ) || [],
+    [product.productImages, mediaState.deletedMedia]
+  );
 
   const {
     register,
@@ -58,51 +94,205 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
       description: product.description,
       price: String(product.productVersionResponse.price),
       weight: String(product.productVersionResponse.weight),
-      categoryID: categories.find(c => c.id === product.categoryID)?.id || ''
+      categoryID: product.categoryID || ''
     },
     mode: 'onBlur',
   });
 
+  // Initialize promotions on mount
   useEffect(() => {
-    fetchCategories();
-    fetchDiscount();
-  }, [fetchCategories]);
+    setSelectedPromotions((product.promotions || []).map(p => p.id));
+  }, [product.promotions]);
 
-  const handleMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = e.target.files;
-    if (selectedFiles) {
-      const fileArray = Array.from(selectedFiles);
-      setFiles(fileArray);
-
-      const mediaUrls = fileArray.map((file) => URL.createObjectURL(file));
-      setMediaPreviews(mediaUrls);
+  useEffect(() => {
+    if (open) {
+      fetchCategories();
+      fetchDiscount();
     }
-  }
+  }, [open, fetchCategories, fetchDiscount]);
 
-  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = e.target.files;
-    if (selectedFiles && selectedFiles.length > 0) {
-      setThumbnail(selectedFiles[0]);
-      setThumbnailPreview(URL.createObjectURL(selectedFiles[0]));
+  const validateFile = (file: File): string | null => {
+    if (file.size > MAX_FILE_SIZE) {
+      return `File ${file.name} is too large. Maximum size is 10MB.`;
     }
-  }
+    if (!file.type.startsWith('image/')) {
+      return `File ${file.name} is not a valid image.`;
+    }
+    return null;
+  };
+
+  const handleMediaChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = e.target.files;
+    if (!selectedFiles) return;
+
+    const fileArray = Array.from(selectedFiles);
+
+    // Validate files
+    for (const file of fileArray) {
+      const error = validateFile(file);
+      if (error) {
+        setUpdateError(error);
+        return;
+      }
+    }
+
+    // Check total media count
+    const totalMedia = currentMedia.length + mediaState.mediaPreviews.length + fileArray.length;
+    if (totalMedia > MAX_MEDIA_FILES) {
+      setUpdateError(`Maximum ${MAX_MEDIA_FILES} media files allowed`);
+      return;
+    }
+
+    setUpdateError('');
+    const mediaUrls = fileArray.map((file) => URL.createObjectURL(file));
+
+    setMediaState(prev => ({
+      ...prev,
+      files: [...prev.files, ...fileArray],
+      mediaPreviews: [...prev.mediaPreviews, ...mediaUrls]
+    }));
+  }, [currentMedia.length, mediaState.mediaPreviews.length]);
+
+  const handleThumbnailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = e.target.files;
+    if (!selectedFiles || selectedFiles.length === 0) return;
+
+    const file = selectedFiles[0];
+    const error = validateFile(file);
+    if (error) {
+      setUpdateError(error);
+      return;
+    }
+
+    setUpdateError('');
+    setMediaState(prev => ({
+      ...prev,
+      thumbnail: file,
+      thumbnailPreview: URL.createObjectURL(file),
+      // Preserve deletedThumbnail flag so we still delete existing primary before uploading new
+      deletedThumbnail: prev.deletedThumbnail
+    }));
+  }, []);
+
+  const handleDeleteThumbnail = useCallback(() => {
+    setMediaState(prev => ({
+      ...prev,
+      thumbnail: null,
+      thumbnailPreview: "",
+      deletedThumbnail: true
+    }));
+  }, []);
+
+  const handleDeleteMedia = useCallback((index: number) => {
+    setMediaState(prev => {
+      const newMediaPreviews = prev.mediaPreviews.filter((_, i) => i !== index);
+      const newFiles = prev.files.filter((_, i) => i !== index);
+
+      // Clean up URL
+      if (prev.mediaPreviews[index]) {
+        URL.revokeObjectURL(prev.mediaPreviews[index]);
+      }
+
+      return {
+        ...prev,
+        mediaPreviews: newMediaPreviews,
+        files: newFiles
+      };
+    });
+  }, []);
+
+  const handleDeleteCurrentMedia = useCallback((mediaId: string) => {
+    setMediaState(prev => ({
+      ...prev,
+      deletedMedia: [...prev.deletedMedia, mediaId]
+    }));
+  }, []);
+
+  const resetForm = useCallback(() => {
+    reset();
+    setMediaState(initialMediaState);
+    setSelectedPromotions((product.promotions || []).map(p => p.id));
+    setUpdateError('');
+
+    // Clean up object URLs
+    mediaState.mediaPreviews.forEach(url => URL.revokeObjectURL(url));
+    if (mediaState.thumbnailPreview) {
+      URL.revokeObjectURL(mediaState.thumbnailPreview);
+    }
+  }, [reset, product.promotions, mediaState]);
+
+  const handleImageOperations = async () => {
+    // Ensure thumbnail deletion happens before uploading a new primary
+    if (mediaState.deletedThumbnail && currentThumbnail) {
+      await deleteImage(currentThumbnail.id);
+    }
+
+    // Delete marked gallery media before uploads
+    if (mediaState.deletedMedia.length > 0) {
+      for (const mediaId of mediaState.deletedMedia) {
+        await deleteImage(mediaId);
+      }
+    }
+
+    // Upload new thumbnail as primary
+    if (mediaState.thumbnail) {
+      await uploadSingleImage(mediaState.thumbnail, id, true);
+    }
+
+    // Upload new gallery images
+    if (mediaState.files.length > 0) {
+      await uploadMultiImage(mediaState.files, id, false);
+    }
+  };
 
   const onSubmit = async (data: ProductFormValues) => {
     try {
+      setUpdateError('');
 
-      const product: UpdateProductDTO = {
-        name: data.name.trim(),
-        description: data.description.trim(),
-        price: Number(data.price),
-        weight: Number(data.weight),
-        categoryID: data.categoryID,
-        changeReason: "",
-        promotions: selectedPromotions.map((id) => ({ promotionID: id }))
-      };
+      // Build minimal payload: include only fields that changed
+      const payload: UpdateProductDTO = {};
 
-      await updateProduct(id, product);
+      const trimmedName = data.name.trim();
+      if (trimmedName !== product.name) payload.name = trimmedName;
 
-      reset();
+      const trimmedDescription = data.description.trim();
+      if (trimmedDescription !== product.description) payload.description = trimmedDescription;
+
+      const newPrice = Number(data.price);
+      if (!Number.isNaN(newPrice) && newPrice !== product.productVersionResponse.price) {
+        payload.price = newPrice;
+      }
+
+      const newWeight = Number(data.weight);
+      if (!Number.isNaN(newWeight) && newWeight !== product.productVersionResponse.weight) {
+        payload.weight = newWeight;
+      }
+
+      if (data.categoryID !== product.categoryID) payload.categoryID = data.categoryID;
+
+      const originalPromotionIds = (product.promotions || []).map(p => p.id).sort();
+      const newPromotionIds = [...selectedPromotions].sort();
+      const promotionsChanged = originalPromotionIds.length !== newPromotionIds.length ||
+        originalPromotionIds.some((id, i) => id !== newPromotionIds[i]);
+      if (promotionsChanged) {
+        payload.promotions = selectedPromotions.map((id) => ({ promotionID: id }));
+      }
+
+      // Optional change reason if anything changed
+      const changedKeys: string[] = Object.keys(payload);
+      if (changedKeys.length > 0) {
+        payload.changeReason = `Updated: ${changedKeys.join(', ')}`;
+      }
+
+      // Update product data only if there are changes
+      if (changedKeys.length > 0) {
+        await updateProduct(id, payload);
+      }
+
+      // Handle image operations
+      await handleImageOperations();
+
+      resetForm();
       setOpen(false);
 
     } catch (error: unknown) {
@@ -113,9 +303,34 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
       } else if (error instanceof Error) {
         message = error.message;
       }
+      setUpdateError(message);
       setError('name', { message });
     }
   };
+
+  const handleConfirmDelete = async () => {
+    try {
+      await deleteProduct(id);
+      setConfirmOpen(false);
+      setOpen(false);
+    } catch {
+      // Optionally surface error
+      setUpdateError('Failed to delete product');
+    }
+  };
+
+  const handlePromotionToggle = useCallback((promotionId: string) => {
+    setSelectedPromotions((prev) =>
+      prev.includes(promotionId)
+        ? prev.filter((id) => id !== promotionId)
+        : [...prev, promotionId]
+    );
+  }, []);
+
+  const shouldShowThumbnailUpload = !mediaState.thumbnailPreview &&
+    (!currentThumbnail || mediaState.deletedThumbnail);
+
+  const canAddMoreMedia = (currentMedia.length + mediaState.mediaPreviews.length) < MAX_MEDIA_FILES;
 
   return (
     <Dialog
@@ -123,17 +338,16 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
       onOpenChange={(isOpen) => {
         setOpen(isOpen);
         if (!isOpen) {
-          reset();
-          setThumbnail(null);
-          setThumbnailPreview("");
-          setFiles([]);
-          setMediaPreviews([]);
+          resetForm();
         }
       }}>
       <DialogTrigger asChild className='w-full'>
         <Button>
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-edit">
-            <path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" /><path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" /><path d="M16 5l3 3" />
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
+            <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
+            <path d="M16 5l3 3" />
           </svg>
           Edit Product
         </Button>
@@ -143,12 +357,23 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
           <DialogTitle>Edit Product</DialogTitle>
         </DialogHeader>
 
+        {updateError && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+            {updateError}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-4">
           {/* Name */}
           <div className="flex flex-col">
             <div className="flex flex-col gap-2">
               <Label className="block text-sm font-medium text-gray-700">Name</Label>
-              <Input type="text" {...register('name')} placeholder='Input your product name' />
+              <Input
+                type="text"
+                {...register('name')}
+                placeholder='Input your product name'
+                className={errors.name ? 'border-red-300' : ''}
+              />
             </div>
             {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name.message}</p>}
           </div>
@@ -160,6 +385,7 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
               <Textarea
                 {...register('description')}
                 placeholder="Your product's description"
+                className={errors.description ? 'border-red-300' : ''}
               />
             </div>
             {errors.description && <p className="mt-1 text-xs text-red-600">{errors.description.message}</p>}
@@ -170,20 +396,32 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
             <div className="flex flex-col">
               <div className='flex flex-col gap-2'>
                 <Label className="block text-sm font-medium text-gray-700">Price</Label>
-                <Input type="number" step="0.01" {...register('price')} placeholder="Product prices" />
+                <Input
+                  type="number"
+                  step="0.01"
+                  {...register('price')}
+                  placeholder="Product prices"
+                  className={errors.price ? 'border-red-300' : ''}
+                />
               </div>
               {errors.price && <p className="mt-1 text-xs text-red-600">{errors.price.message}</p>}
             </div>
 
             <div className="flex flex-col">
               <div className='flex flex-col gap-2'>
-                <Label className="block text-sm font-medium text-gray-700">Weight</Label>
-                <Input type="number" step="0.01" {...register('weight')} />
+                <Label className="block text-sm font-medium text-gray-700">Weight (kg)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  {...register('weight')}
+                  className={errors.weight ? 'border-red-300' : ''}
+                />
               </div>
               {errors.weight && <p className="mt-1 text-xs text-red-600">{errors.weight.message}</p>}
             </div>
           </div>
 
+          {/* Category */}
           <div className="flex flex-col">
             <div className='flex flex-col gap-2'>
               <Label>Category</Label>
@@ -192,7 +430,7 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
                 control={control}
                 render={({ field }) => (
                   <Select onValueChange={field.onChange} value={field.value}>
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger className={`w-full ${errors.categoryID ? 'border-red-300' : ''}`}>
                       <SelectValue placeholder="Select a category" />
                     </SelectTrigger>
                     <SelectContent>
@@ -212,67 +450,129 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
             {errors.categoryID && <p className="mt-1 text-xs text-red-600">{errors.categoryID.message}</p>}
           </div>
 
-          {/* Upload Image */}
+          {/* Images */}
           <div className="flex flex-col">
             <div className="flex flex-col gap-2">
-              <Label className="block text-sm font-medium text-gray-700">Product Image</Label>
+              <Label className="block text-sm font-medium text-gray-700">Product Images</Label>
 
-              {/* Upload event image */}
               <div className="flex flex-col gap-4 p-6 border border-neutral-300 rounded-xl">
+                {/* Thumbnail Section */}
                 <div className="flex flex-col gap-2">
                   <Label>Thumbnail</Label>
-                  {thumbnailPreview.length > 0
-                    &&
-                    <div className={cn("relative w-32 aspect-square border-[1px] border-gray-100 rounded-2xl", !thumbnail && "hidden")}>
-                      <Image
-                        src={thumbnailPreview}
-                        fill
-                        alt="image of event"
-                        className="object-contain"
-                      />
-                    </div>
-                  }
 
-                  <div>
+                  {/* Current thumbnail */}
+                  {currentThumbnail && !mediaState.deletedThumbnail && !mediaState.thumbnailPreview && (
+                    <div className="relative w-32 aspect-square border border-gray-200 rounded-2xl group">
+                      <Image
+                        src={currentThumbnail.url}
+                        fill
+                        alt="current thumbnail"
+                        className="object-cover rounded-2xl"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleDeleteThumbnail}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"
+                        aria-label="Delete thumbnail"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
+
+                  {/* New thumbnail preview */}
+                  {mediaState.thumbnailPreview && (
+                    <div className="relative w-32 aspect-square border border-gray-200 rounded-2xl group">
+                      <Image
+                        src={mediaState.thumbnailPreview}
+                        fill
+                        alt="new thumbnail preview"
+                        className="object-cover rounded-2xl"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleDeleteThumbnail}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"
+                        aria-label="Delete thumbnail"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Thumbnail upload */}
+                  {shouldShowThumbnailUpload && (
                     <input
                       type="file"
-                      name="multipartFiles"
                       accept="image/*"
-                      multiple
                       onChange={handleThumbnailChange}
-                      className={cn("p-4 border-neutral-200 border-dashed border-[1px] rounded-md w-full hover:bg-neutral-100", thumbnail && "hidden")}
+                      className="p-4 border-neutral-200 border-dashed border rounded-md w-full hover:bg-neutral-100"
                     />
-                  </div>
+                  )}
                 </div>
+
+                {/* Media Carousel Section */}
                 <div className="flex flex-col gap-2">
-                  <Label>Product carousel</Label>
+                  <Label>Product Gallery ({currentMedia.length + mediaState.mediaPreviews.length}/{MAX_MEDIA_FILES})</Label>
+
                   <div className="flex gap-2 w-full flex-wrap">
-                    {mediaPreviews?.map((media, index) => (
-                      <div key={index} className="relative w-32 aspect-square border-[1px] border-gray-100 rounded-2xl">
+                    {/* Current media */}
+                    {currentMedia.map((media: ProductImage) => (
+                      <div key={media.id} className="relative w-32 aspect-square border border-gray-200 rounded-2xl group">
+                        <Image
+                          src={media.url}
+                          fill
+                          alt="product image"
+                          className="object-cover rounded-2xl"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteCurrentMedia(media.id)}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"
+                          aria-label="Delete image"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+
+                    {/* New media previews */}
+                    {mediaState.mediaPreviews.map((media, index) => (
+                      <div key={`new-${index}`} className="relative w-32 aspect-square border border-gray-200 rounded-2xl group">
                         <Image
                           src={media}
                           fill
-                          alt="image of event"
-                          className="object-contain"
+                          alt="new image preview"
+                          className="object-cover rounded-2xl"
                         />
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteMedia(index)}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"
+                          aria-label="Delete image"
+                        >
+                          ×
+                        </button>
                       </div>
                     ))}
                   </div>
-                  <div>
+
+                  {/* Media upload */}
+                  {canAddMoreMedia && (
                     <input
                       type="file"
-                      name="multipartFiles"
                       accept="image/*"
                       multiple
                       onChange={handleMediaChange}
-                      className={cn("p-4 border-neutral-200 border-dashed border-[1px] rounded-md w-full hover:bg-neutral-100", files?.length === 5 && "hidden")}
+                      className="p-4 border-neutral-200 border-dashed border rounded-md w-full hover:bg-neutral-100"
                     />
-                  </div>
+                  )}
                 </div>
               </div>
             </div>
           </div>
 
+          {/* Promotions */}
           <div className="flex flex-col">
             <Label>Promotions</Label>
             {selectedPromotions.length > 0 && (
@@ -286,20 +586,14 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
                   ))}
               </div>
             )}
-            <div className='grid grid-cols-3 gap-2'>
+            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2'>
               {discounts.map((discount) => {
                 const isSelected = selectedPromotions.includes(discount.id);
                 return (
                   <button
                     type="button"
                     key={discount.id}
-                    onClick={() => {
-                      setSelectedPromotions((prev) =>
-                        prev.includes(discount.id)
-                          ? prev.filter((id) => id !== discount.id)
-                          : [...prev, discount.id]
-                      );
-                    }}
+                    onClick={() => handlePromotionToggle(discount.id)}
                     className={cn(
                       "text-left p-2 border rounded-xl transition-colors w-full",
                       isSelected ? "border-green-500 bg-green-50" : "border-gray-200 hover:border-gray-300"
@@ -310,7 +604,9 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
                         <span className="text-base font-bold text-green-600">
-                          {discount.unit === 'percentage' ? `${discount.value}%` : (discount.unit === 'currency' ? `Rp ${discount.value.toLocaleString()}` : `B1G1`)}
+                          {discount.unit === 'percentage' ? `${discount.value}%` :
+                            discount.unit === 'currency' ? `Rp ${discount.value.toLocaleString()}` :
+                              'B1G1'}
                         </span>
                         <span className="text-xs text-gray-500">min Rp {discount.minPurchase.toLocaleString()}</span>
                       </div>
@@ -319,16 +615,40 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
                 );
               })}
             </div>
-            {errors.categoryID && <p className="mt-1 text-xs text-red-600">{errors.categoryID.message}</p>}
           </div>
 
-          <div className="flex justify-end gap-2 pt-4">
-            <Button variant="outline" onClick={() => setOpen(false)} type="button">
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && isUploading ? "Updating product..." : "Update Product"}
-            </Button>
+          {/* Action Buttons */}
+          <div className='flex justify-between items-center'>
+            <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  type="button"
+                  variant={"link"}
+                  className='text-red-500 h-full'
+                >Delete</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <div className='space-y-4'>
+                  <div>Are you sure you want to delete product <span className='font-bold'>{product.name}</span>?</div>
+                  <div className='flex justify-end gap-2'>
+                    <Button type='button' variant={"secondary"} onClick={() => setConfirmOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type='button' variant={"destructive"} onClick={handleConfirmDelete}>
+                      Delete Product
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setOpen(false)} type="button">
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting || isUploading}>
+                {isSubmitting || isUploading ? "Updating product..." : "Update Product"}
+              </Button>
+            </div>
           </div>
         </form>
       </DialogContent>

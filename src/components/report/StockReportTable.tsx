@@ -9,6 +9,7 @@ import { useStockReportStore } from "@/store/stockReportStore";
 import { useStoreStore } from "@/store/storeStore";
 import { useWarehouseStore } from "@/store/warehouseStore";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuthStore } from "@/store/authStore";
 
 export default function StockReportTable() {
   const {
@@ -24,23 +25,51 @@ export default function StockReportTable() {
     setFilters,
   } = useStockReportStore();
 
-  const { stores, fetchStores } = useStoreStore();
-  const { warehouses, fetchWarehouses } = useWarehouseStore();
+  const { stores, store, fetchStores, fetchStoreByUser } = useStoreStore();
+  const { uniqueWarehouses, fetchUniqueWarehouse } = useWarehouseStore();
+  const { user } = useAuthStore();
+
+  const isManager = user?.role === 'MANAGER';
 
   useEffect(() => {
     fetchStores();
-    fetchReports({ page: 0, size });
+
+    if (isManager) {
+      fetchStoreByUser();
+    } else {
+      fetchReports({ page: 0, size });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    if (filters.storeId) {
-      fetchWarehouses(filters.storeId, 0, 100);
-      // reset warehouse when store changes
-      setFilters({ ...filters, warehouseId: "" });
+    if (isManager && store) {
+      const managerFilters = {
+        storeId: store.id,
+      };
+      setFilters(managerFilters);
+
+      fetchReports({
+        page: 0,
+        size,
+        filters: managerFilters
+      });
+      fetchUniqueWarehouse(store.id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.storeId]);
+  }, [store, isManager]);
+
+  useEffect(() => {
+    if (!isManager) {
+      if (filters.storeId) {
+        fetchUniqueWarehouse(filters.storeId);
+        setFilters({ ...filters, warehouseId: "" });
+      } else {
+        if (filters.warehouseId) setFilters({ ...filters, warehouseId: "" });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.storeId, isManager]);
 
   const handlePrev = () => {
     if (pagination?.hasPrevious) {
@@ -68,10 +97,10 @@ export default function StockReportTable() {
             onChange={(e) => setFilters({ ...filters, productName: e.target.value })}
           />
           <Select
-            value={filters.storeId || ""}
-            onValueChange={(v) => setFilters({ ...filters, storeId: v })}
+            value={isManager ? (store?.id || "") : (filters.storeId || "")}
+            onValueChange={(v) => { if (!isManager) setFilters({ ...filters, storeId: v }); }}
           >
-            <SelectTrigger>
+            <SelectTrigger disabled={isManager || user?.role !== 'ADMIN'}>
               <SelectValue placeholder="Select Store" />
             </SelectTrigger>
             <SelectContent>
@@ -86,7 +115,7 @@ export default function StockReportTable() {
           <Select
             value={filters.warehouseId || ""}
             onValueChange={(v) => setFilters({ ...filters, warehouseId: v })}
-            disabled={!filters.storeId}
+            disabled={isManager ? !store?.id : !filters.storeId}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select Warehouse" />
@@ -94,7 +123,7 @@ export default function StockReportTable() {
             <SelectContent>
               <SelectGroup>
                 <SelectLabel>Warehouses</SelectLabel>
-                {warehouses.map((w) => (
+                {uniqueWarehouses.map((w) => (
                   <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
                 ))}
               </SelectGroup>
@@ -114,7 +143,6 @@ export default function StockReportTable() {
           <TableHeader>
             <TableRow>
               <TableHead>Product</TableHead>
-              <TableHead>Version</TableHead>
               <TableHead>Store</TableHead>
               <TableHead>Warehouse</TableHead>
               <TableHead>Month</TableHead>
@@ -140,13 +168,14 @@ export default function StockReportTable() {
             ) : (
               reports.map((r, idx) => (
                 <TableRow key={idx}>
-                  <TableCell>{r.productName}</TableCell>
-                  <TableCell>{r.productVersion}</TableCell>
+                  <TableCell>
+                    {r.productName}
+                  </TableCell>
                   <TableCell>{r.storeName}</TableCell>
                   <TableCell>{r.warehouseName}</TableCell>
                   <TableCell>{r.month}</TableCell>
-                  <TableCell className="text-right">{r.totalAddition}</TableCell>
-                  <TableCell className="text-right">{r.totalReduction}</TableCell>
+                  <TableCell className="text-right text-green-600">{r.totalAddition}</TableCell>
+                  <TableCell className="text-right text-red-500">{r.totalReduction}</TableCell>
                   <TableCell className="text-right">{r.finalStock}</TableCell>
                   <TableCell className="text-right">{r.averagePrice.toLocaleString(undefined, { style: 'currency', currency: 'IDR' })}</TableCell>
                 </TableRow>

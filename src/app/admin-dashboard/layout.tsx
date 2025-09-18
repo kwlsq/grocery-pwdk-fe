@@ -37,7 +37,7 @@ export default function AdminDashboardLayout({
     if (!mounted || checkingAuth) return;
 
     // Check if user is authenticated and has ADMIN role
-    const allowed = isAuthenticated && user?.role === 'ADMIN';
+    const allowed = isAuthenticated && user?.role !== 'CUSTOMER';
     
     if (!allowed) {
       router.push('/fallback');
@@ -57,7 +57,7 @@ export default function AdminDashboardLayout({
   }
 
   // Don't render children if not authenticated or not admin
-  if (!isAuthenticated || user?.role !== 'ADMIN') {
+  if (!isAuthenticated || user?.role === 'CUSTOMER') {
     return null;
   }
 

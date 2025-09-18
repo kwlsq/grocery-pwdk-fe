@@ -42,7 +42,7 @@ export interface UsersState {
   selectedRole: '' | 'CUSTOMER' | 'MANAGER' | 'ADMIN';
   setSelectedRole: (role: '' | 'CUSTOMER' | 'MANAGER' | 'ADMIN') => void;
   fetchUsers: (params?: { page?: number; size?: number; role?: '' | 'CUSTOMER' | 'MANAGER' | 'ADMIN' }) => Promise<void>;
-  deleteUser: (params: { userID: string }) => Promise<void>;
+  deleteUser: (userID: string ) => Promise<void>;
   registerStoreAdmin: (data: RegisterUserDTO) => Promise<void>;
 }
 export interface LoginCredentials {

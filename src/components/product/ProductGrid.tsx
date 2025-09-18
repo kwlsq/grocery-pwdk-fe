@@ -1,10 +1,7 @@
 'use client';
 
-import { FC, useEffect, useState } from 'react';
-import { useProductStore } from '../../store/productStore';
-import { useLocationStore } from '../../store/locationStore';
+import { FC } from 'react';
 import ProductCard from './ProductCard';
-import LocationPrompt from '../location/LocationPrompt';
 import SearchAndFilter from './SearchAndFilter';
 import { Product } from '@/types/product';
 import {
@@ -29,7 +26,6 @@ interface ProductGridProps {
   };
   onPageChange?: (newPage: number) => void;
   onSearch?: (searchTerm: string, category: string) => void;
-  categories?: { id: string; name: string }[];
   showSearchAndFilter?: boolean;
 }
 
@@ -40,7 +36,6 @@ const ProductGrid: FC<ProductGridProps> = ({
   pagination,
   onPageChange,
   onSearch,
-  categories = [],
   showSearchAndFilter = false,
 }) => {
 
@@ -69,7 +64,7 @@ const ProductGrid: FC<ProductGridProps> = ({
     <div className="space-y-6">
       {/* Search and Filter Section - Only show when showSearchAndFilter is true */}
       {showSearchAndFilter && onSearch && (
-        <SearchAndFilter onSearch={onSearch} categories={categories} />
+        <SearchAndFilter onSearch={onSearch}/>
       )}
 
       {/* Products Grid */}

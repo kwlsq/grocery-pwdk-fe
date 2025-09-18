@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -9,12 +9,13 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { ChevronDownIcon } from 'lucide-react';
+import { ChevronDownIcon, EditIcon } from 'lucide-react';
 import { useDiscountStore } from '@/store/discountStore';
 import { z } from 'zod';
 import { toast } from 'sonner';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, Controller } from 'react-hook-form';
+import { Discount } from '@/types/discount';
 
 const discountSchema = z
   .object({
@@ -24,25 +25,24 @@ const discountSchema = z
     minPurchase: z.number().min(0, 'Minimum purchase must be positive'),
     startAt: z.date({ message: 'Start date is required' }),
     endAt: z.date({ message: 'End date is required' }),
-    type: z.enum(['PRODUCT_DISCOUNT', 'TRANSACTION_DISCOUNT', 'SHIPPING_DISCOUNT', 'REFERRAL']),
-    unit: z.enum(['PERCENTAGE', 'CURRENCY', 'PRODUCT'])
+    type: z.enum(['PRODUCT_DISCOUNT', 'PERCENTAGE']),
   })
   .refine((data) => data.endAt > data.startAt, {
     message: 'End date must be after start date',
     path: ['endAt'],
   })
-  .refine((data) => (data.unit === 'PERCENTAGE' ? data.value <= 100 : true), {
+  .refine((data) => (data.type === 'PERCENTAGE' ? data.value <= 100 : true), {
     message: 'Percentage discount cannot exceed 100%',
     path: ['value'],
   });
 
 type DiscountFormValue = z.infer<typeof discountSchema>;
 
-export default function CreateDiscountDialog() {
+export default function EditDiscountDialog({discount} : {discount: Discount}) {
   const [open, setOpen] = useState(false);
-  const [openStart, setOpenStart] = useState(false); // separate state for Start Popover
-  const [openEnd, setOpenEnd] = useState(false); // separate state for End Popover
-  const { createDiscount, loading } = useDiscountStore();
+  const [openStart, setOpenStart] = useState(false);
+  const [openEnd, setOpenEnd] = useState(false);
+  const { loading } = useDiscountStore(); // Changed from createDiscount to updateDiscount
 
   const {
     register,
@@ -53,52 +53,60 @@ export default function CreateDiscountDialog() {
   } = useForm<DiscountFormValue>({
     resolver: zodResolver(discountSchema),
     defaultValues: {
-      name: '',
-      description: '',
-      value: 0,
-      minPurchase: 0,
-      startAt: undefined,
-      endAt: undefined,
-      type: 'PRODUCT_DISCOUNT',
+      name: discount.name,
+      description: discount.description,
+      value: discount.value,
+      minPurchase: discount.minPurchase,
+      startAt: new Date(discount.startAt), // Convert string to Date
+      endAt: new Date(discount.endAt), // Convert string to Date
+      type: discount.type as 'PRODUCT_DISCOUNT' | 'PERCENTAGE',
     },
   });
 
+  // Reset form when discount prop changes
+  useEffect(() => {
+    reset({
+      name: discount.name,
+      description: discount.description,
+      value: discount.value,
+      minPurchase: discount.minPurchase,
+      startAt: new Date(discount.startAt),
+      endAt: new Date(discount.endAt),
+      type: discount.type as 'PRODUCT_DISCOUNT' | 'PERCENTAGE',
+    });
+  }, [discount, reset]);
+
   const onSubmit = async (data: DiscountFormValue) => {
     try {
+      // await updateDiscount(discount.id, { // Pass discount ID for update
+      //   name: data.name.trim(),
+      //   description: data.description.trim(),
+      //   value: data.value,
+      //   minPurchase: data.minPurchase,
+      //   startAt: data.startAt.toISOString(),
+      //   endAt: data.endAt.toISOString(),
+      //   type: data.type,
+      // });
 
-      await createDiscount({
-        name: data.name.trim(),
-        description: data.description.trim(),
-        value: data.value,
-        minPurchase: data.minPurchase,
-        startAt: data.startAt.toISOString(),
-        endAt: data.endAt.toISOString(),
-        type: data.type,
-        unit: data.unit
-      });
-
-      toast.success('Discount created successfully!');
-      reset();
+      toast.success('Discount updated successfully!');
       setOpen(false);
     } catch (error) {
-      toast.error('Failed to create discount: ' + error);
+      toast.error('Failed to update discount: ' + error);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-green-600 hover:bg-green-700">
-          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v12m6-6H6" />
-          </svg>
-          Create Discount
+        <Button variant="outline" size="sm" className="hover:bg-blue-50">
+          <EditIcon className="w-4 h-4 mr-1" />
+          Edit
         </Button>
       </DialogTrigger>
 
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Create Discount</DialogTitle>
+          <DialogTitle>Edit Discount</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4 py-4">
@@ -131,9 +139,7 @@ export default function CreateDiscountDialog() {
                     <SelectGroup>
                       <SelectLabel>Type</SelectLabel>
                       <SelectItem value="PRODUCT_DISCOUNT">Product Discount</SelectItem>
-                      <SelectItem value="TRANSACTION_DISCOUNT">Transaction Discount</SelectItem>
-                      <SelectItem value="SHIPPING_DISCOUNT">Shipping Discount</SelectItem>
-                      <SelectItem value="REFERRAL">Referral</SelectItem>
+                      <SelectItem value="PERCENTAGE">Percentage</SelectItem>
                     </SelectGroup>
                   </SelectContent>
                 </Select>
@@ -142,42 +148,29 @@ export default function CreateDiscountDialog() {
             {errors.type && <p className="text-sm text-red-500">{errors.type.message}</p>}
           </div>
 
-          {/* Unit */}
-          <div className="grid gap-2">
-            <Label htmlFor="unit">Unit</Label>
-            <Controller
-              name="unit"
-              control={control}
-              render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Choose unit" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectLabel>Unit</SelectLabel>
-                      <SelectItem value="PERCENTAGE">Percentage</SelectItem>
-                      <SelectItem value="CURRENCY">Currency</SelectItem>
-                      <SelectItem value="PRODUCT">Product</SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              )}
-            />
-            {errors.unit && <p className="text-sm text-red-500">{errors.unit.message}</p>}
-          </div>
-
           {/* Value */}
           <div className="grid gap-2">
             <Label htmlFor="value">Value</Label>
-            <Input id="value" type="number" {...register('value', { valueAsNumber: true })} />
+            <Input 
+              id="value" 
+              type="number" 
+              step="0.01"
+              {...register('value', { valueAsNumber: true })} 
+              className={errors.value ? 'border-red-500' : ''}
+            />
             {errors.value && <p className="text-sm text-red-500">{errors.value.message}</p>}
           </div>
 
           {/* Minimum Purchase */}
           <div className="grid gap-2">
             <Label htmlFor="minPurchase">Minimum Purchase</Label>
-            <Input id="minPurchase" type="number" {...register('minPurchase', { valueAsNumber: true })} />
+            <Input 
+              id="minPurchase" 
+              type="number" 
+              step="0.01"
+              {...register('minPurchase', { valueAsNumber: true })} 
+              className={errors.minPurchase ? 'border-red-500' : ''}
+            />
             {errors.minPurchase && <p className="text-sm text-red-500">{errors.minPurchase.message}</p>}
           </div>
 
@@ -191,7 +184,10 @@ export default function CreateDiscountDialog() {
                 return (
                   <Popover open={openStart} onOpenChange={setOpenStart}>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full justify-between">
+                      <Button 
+                        variant="outline" 
+                        className={`w-full justify-between ${errors.startAt ? 'border-red-500' : ''}`}
+                      >
                         {field.value ? field.value.toLocaleDateString() : 'Select date'}
                         <ChevronDownIcon className="h-4 w-4" />
                       </Button>
@@ -204,7 +200,7 @@ export default function CreateDiscountDialog() {
                           field.onChange(date);
                           setOpenStart(false);
                         }}
-                        disabled={(date) => date < new Date()} // No past dates
+                        disabled={(date) => date < new Date()}
                       />
                     </PopoverContent>
                   </Popover>
@@ -224,7 +220,10 @@ export default function CreateDiscountDialog() {
                 return (
                   <Popover open={openEnd} onOpenChange={setOpenEnd}>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full justify-between">
+                      <Button 
+                        variant="outline" 
+                        className={`w-full justify-between ${errors.endAt ? 'border-red-500' : ''}`}
+                      >
                         {field.value ? field.value.toLocaleDateString() : 'Select date'}
                         <ChevronDownIcon className="h-4 w-4" />
                       </Button>
@@ -237,9 +236,10 @@ export default function CreateDiscountDialog() {
                           field.onChange(date);
                           setOpenEnd(false);
                         }}
-                        disabled={(date) =>
-                          date <= (control._formValues.startAt || new Date())
-                        } // end date must be after start date
+                        disabled={(date) => {
+                          const startDate = control._formValues.startAt;
+                          return date <= (startDate || new Date());
+                        }}
                       />
                     </PopoverContent>
                   </Popover>
@@ -249,11 +249,14 @@ export default function CreateDiscountDialog() {
             {errors.endAt && <p className="text-sm text-red-500">{errors.endAt.message}</p>}
           </div>
 
-
           {/* Buttons */}
           <div className="flex justify-end gap-2 mt-4">
-            <Button variant="ghost" type="button" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button type="submit" disabled={loading}>{loading ? 'Creating...' : 'Create'}</Button>
+            <Button variant="ghost" type="button" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? 'Updating...' : 'Update'}
+            </Button>
           </div>
         </form>
       </DialogContent>
