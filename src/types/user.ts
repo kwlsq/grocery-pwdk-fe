@@ -68,5 +68,13 @@ export interface ResetPasswordData{
   token : string;
   newPassword : string;
 }
+export interface UpdateEmailRequest {
+    newEmail: string;
+    currentPassword: string;
+}
+
+export interface ConfirmEmailChangeRequest {
+    token: string;
+}
 
 

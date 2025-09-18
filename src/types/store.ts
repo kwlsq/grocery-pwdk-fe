@@ -1,11 +1,23 @@
+import { User } from "./user";
 import { PaginationInfo } from "./common";
 
+
 export interface Store {
-  id: string;
-  name: string;
-  description: string;
-  address: string;
-  active: boolean;
+    id: string;
+    name: string;
+    description: string;
+    address: string;
+    latitude: number;
+    longitude: number;
+    isActive: boolean;
+    storeManagers: User[];
+}
+export interface StoreRequestData {
+    name: string;
+    description?: string;
+    address: string;
+    latitude: number;
+    longitude: number;
 }
 
 export interface StoreApiResponse {
@@ -44,4 +56,6 @@ export interface StoreState {
   ) => Promise<void>;
   fetchStoreByUser: () => Promise<void>;
   fetchUniqueStores: () => Promise<void>;
+addStore: (newStoreData: StoreRequestData) => Promise<void>;
+
 }

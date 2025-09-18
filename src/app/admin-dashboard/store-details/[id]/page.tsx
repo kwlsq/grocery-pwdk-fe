@@ -153,11 +153,11 @@ export default function StoreDetailsPage() {
                 <span className="text-gray-600">{currentStore.address}</span>
               </div>
               <div className="flex items-center gap-2 mt-2">
-                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${currentStore.active
+                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${currentStore.isActive
                   ? 'bg-green-500 text-white'
                   : 'bg-red-500 text-white'
                   }`}>
-                  {currentStore.active ? 'Active' : 'Inactive'}
+                  {currentStore.isActive ? 'Active' : 'Inactive'}
                 </span>
                 <span className="text-xs text-gray-500">Store ID: {currentStore.id}</span>
               </div>

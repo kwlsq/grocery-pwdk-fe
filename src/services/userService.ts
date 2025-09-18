@@ -7,3 +7,6 @@ export const updateUserProfile = (formData: FormData) => {
     },
   });
 };
+export const requestEmailChange = (data: { newEmail: string; currentPassword: string; }) => {
+  return apiClient.post('/users/me/change-email', data);
+};
