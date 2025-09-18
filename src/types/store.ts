@@ -1,14 +1,19 @@
-export interface Store {
-  id: string;
-  name: string;
-  description: string;
-  address: string;
-  active: boolean;
-}
+import { User } from "./user";
 
-export interface StoreApiResponse {
-  success: boolean;
-  statusCode: number;
-  message: string;
-  data: Store[];
+export interface Store {
+    id: string;
+    name: string;
+    description?: string;
+    address: string;
+    latitude: number;
+    longitude: number;
+    isActive: boolean;
+    storeManagers: User[];
+}
+export interface StoreRequestData {
+    name: string;
+    description?: string;
+    address: string;
+    latitude: number;
+    longitude: number;
 }
