@@ -28,5 +28,7 @@ export const requestPasswordReset = (data: ForgotPasswordData) => {
 export const resetPassword = (data: ResetPasswordData) => {
     return apiClient.post('/auth/reset-password', data);
 };
-
+export const confirmEmailChange = (token: string) => {
+  return apiClient.post(`/auth/confirm-email-change?token=${token}`);
+};
 

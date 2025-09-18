@@ -16,6 +16,8 @@ import DiscountGrid from '@/components/discount/DiscountGrid';
 import dynamic from 'next/dynamic';
 const StockReportTableDyn = dynamic(() => import('@/components/report/StockReportTable'), { ssr: false });
 import CreateDiscountDialog from '@/components/discount/CreateDiscountDialog';
+import { cn } from '@/lib/utils';
+import {AddStoreDialog} from '@/components/store/AddStoreDialog';
 import StoreGrid from '../../components/store/StoreGrid';
 import Navbar from '../../components/Navbar/Index';
 import CreateCategoryDialog from '@/components/category/CreateCategoryDialog';
@@ -139,7 +141,7 @@ export default function AdminDashboardPage() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Active Stores</p>
                 <p className="text-2xl font-semibold text-gray-900">
-                  {stores.filter(store => store.active).length}
+                  {stores.filter(store => store.isActive).length}
                 </p>
               </div>
             </div>
@@ -155,7 +157,7 @@ export default function AdminDashboardPage() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Inactive Stores</p>
                 <p className="text-2xl font-semibold text-gray-900">
-                  {stores.filter(store => !store.active).length}
+                  {stores.filter(store => !store.isActive).length}
                 </p>
               </div>
             </div>
@@ -192,12 +194,8 @@ export default function AdminDashboardPage() {
                   </p>
                 </div>
                 <div className="flex gap-3">
-                  <Button className={cn("bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2", user?.role !== 'ADMIN' && "hidden")}>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    Add Store
-                  </Button>
+                  <AddStoreDialog/>
+
                   <Button
                     onClick={() => { fetchStores(0, 12, "") }}
                     className="bg-blue-600 hover:bg-blue-700"

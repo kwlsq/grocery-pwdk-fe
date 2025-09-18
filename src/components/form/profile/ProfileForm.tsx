@@ -5,6 +5,7 @@ import { useAuthStore } from '../../../store/authStore';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { updateUserProfile } from '../../../services/userService';
+import { ChangeEmailDialog } from '@/components/profile/ChangeEmailDialog';
 
 const CameraIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg> );
 
@@ -107,10 +108,15 @@ export const ProfileForm = () => {
                         </div>
 
                         <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email Address</label>
-                            <Field type="email" name="email" disabled className="mt-1 block w-full px-4 py-3 border rounded-md shadow-sm bg-gray-100 text-gray-500 cursor-not-allowed" />
-                            <p className="text-xs text-gray-400 mt-1">Email address cannot be changed.</p>
-                        </div>
+                <label htmlFor="email">
+                    Email Address
+                    </label>
+                <div className="flex items-center gap-4">
+                    <Field type="email" name="email" disabled className="mt-1 block w-full bg-gray-100 text-gray-500 cursor-not-allowed" />
+                    <ChangeEmailDialog />
+                </div>
+                <p className="text-xs text-gray-400 mt-1">A verification link will be sent to your new email address.</p>
+            </div>
 
                         <div className="pt-2">
                              <button type="submit" disabled={isSubmitting} className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:bg-emerald-400">
