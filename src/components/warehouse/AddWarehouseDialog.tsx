@@ -14,6 +14,8 @@ import { useParams } from "next/navigation";
 import { useWarehouseStore } from "@/store/warehouseStore";
 import { CreateWarehouseDTO } from "@/types/warehouse";
 import { useUsersStore } from "@/store/userStore";
+import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/store/authStore";
 
 const warehouseSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -27,15 +29,13 @@ type WarehouseFormValues = z.infer<typeof warehouseSchema>;
 export default function AddWarehouseDialog() {
   const [open, setOpen] = React.useState(false);
   const [selectedAdmin, setSelectedAdmin] = React.useState<string | null>(null);
-
   const params = useParams();
   const storeId = params.id as string;
-
   const { stores } = useStoreStore();
   const currentStore = stores.find(store => store.id === storeId);
-
   const { createWarehouse } = useWarehouseStore();
   const { users, fetchUsers } = useUsersStore();
+  const { user } = useAuthStore();
 
 
   const {
@@ -55,8 +55,9 @@ export default function AddWarehouseDialog() {
   });
 
   React.useEffect(() => {
+    if (user?.role !== 'ADMIN') return;
     fetchUsers({ role: "MANAGER" })
-  }, [fetchUsers]);
+  }, [fetchUsers, user]);
 
   const onSubmit = async (data: WarehouseFormValues) => {
     try {
@@ -90,7 +91,7 @@ export default function AddWarehouseDialog() {
         }
       }}>
       <DialogTrigger asChild>
-        <Button>
+        <Button className={cn(user?.role !== 'ADMIN' && "hidden")}>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
           </svg>

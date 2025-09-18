@@ -28,20 +28,30 @@ export default function AdminDashboardPage() {
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState('stores');
   const [reportTab, setReportTab] = useState('summary');
-  const { stores, store, loading, error, fetchStores, fetchStoreByUser, pagination: storePagination } = useStoreStore();
+  const { stores, loading, error, fetchStores, fetchStoreByUser, pagination: storePagination } = useStoreStore();
   const { users, loading: usersLoading, error: usersError, fetchUsers, selectedRole, setSelectedRole } = useUsersStore();
   const { discounts, loading: discountsLoading, error: discountsError, pagination: discountPagination, fetchDiscount } = useDiscountStore();
   const { user } = useAuthStore();
   const { categories, fetchCategories, deleteCategory } = useProductStore();
 
   // Main tabs
-  const tabsData = [
-    { value: 'stores', label: 'Store' },
-    { value: 'users', label: 'User' },
-    { value: 'discounts', label: 'Discount' },
-    { value: 'chart', label: 'Report' },
-    { value: 'categories', label: 'Category' }
-  ];
+  const tabsData =
+
+    user?.role === 'ADMIN'
+      ? [
+        { value: 'stores', label: 'Store' },
+        { value: 'users', label: 'User' },
+        { value: 'discounts', label: 'Discount' },
+        { value: 'chart', label: 'Report' },
+        { value: 'categories', label: 'Category' }
+      ]
+      :
+      [
+        { value: 'stores', label: 'Store' },
+        { value: 'discounts', label: 'Discount' },
+        { value: 'chart', label: 'Report' },
+        { value: 'categories', label: 'Category' }
+      ];
 
   // Report tabs
   const reportTabsData = [
@@ -61,8 +71,10 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     if (!mounted) return;
-    fetchUsers({ page: 0, size: 12, role: selectedRole });
-  }, [mounted, fetchUsers, selectedRole]);
+    if (user?.role === 'ADMIN') {
+      fetchUsers({ page: 0, size: 12, role: selectedRole });
+    }
+  }, [mounted, fetchUsers, selectedRole, user]);
 
   useEffect(() => {
     if (!mounted) return;
@@ -180,12 +192,12 @@ export default function AdminDashboardPage() {
                   </p>
                 </div>
                 <div className="flex gap-3">
-                  <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2">
+                  <Button className={cn("bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2", user?.role !== 'ADMIN' && "hidden")}>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
                     Add Store
-                  </button>
+                  </Button>
                   <Button
                     onClick={() => { fetchStores(0, 12, "") }}
                     className="bg-blue-600 hover:bg-blue-700"
