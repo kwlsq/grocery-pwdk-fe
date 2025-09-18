@@ -6,6 +6,9 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useProductStore } from "@/store/productStore";
+import { useStoreStore } from "@/store/storeStore";
+import { useWarehouseStore } from "@/store/warehouseStore";
+import { useAuthStore } from "@/store/authStore";
 
 export default function ProductStockReportTable() {
   const [month, setMonth] = useState<string>("all");
@@ -23,12 +26,46 @@ export default function ProductStockReportTable() {
   } = useStockReportStore();
 
   const { uniqueProducts, fetchUniqueProduct } = useProductStore();
+  const { stores, store, fetchStores, fetchStoreByUser } = useStoreStore();
+  const { uniqueWarehouses, fetchUniqueWarehouse } = useWarehouseStore();
+  const { user } = useAuthStore();
+
+  const isManager = user?.role === 'MANAGER';
+  const [storeId, setStoreId] = useState<string>("");
+  const [warehouseId, setWarehouseId] = useState<string>("");
 
   useEffect(() => {
-    // Ensure all unique products fetched
+    // Load stores and products; set manager's store if applicable
+    fetchStores();
+    if (isManager) {
+      fetchStoreByUser();
+    }
     fetchUniqueProduct();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Initialize fixed store for manager and load its warehouses
+  useEffect(() => {
+    if (isManager && store) {
+      setStoreId(store.id);
+      fetchUniqueWarehouse(store.id);
+      setWarehouseId("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store, isManager]);
+
+  // When non-manager selects a store, load its warehouses and reset selected warehouse
+  useEffect(() => {
+    if (!isManager) {
+      if (storeId) {
+        fetchUniqueWarehouse(storeId);
+        setWarehouseId("");
+      } else if (warehouseId) {
+        setWarehouseId("");
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storeId, isManager]);
 
   const monthOptions = useMemo(() => {
     const opts: { value: string; label: string }[] = [{ value: "all", label: "All months" }];
@@ -51,29 +88,79 @@ export default function ProductStockReportTable() {
 
   useEffect(() => {
     if (!selectedProductId) return;
-    fetchProductReports({ productId: selectedProductId, page: productPage, size: productSize, month: month === "all" ? undefined : month });
+    fetchProductReports({
+      productId: selectedProductId,
+      page: productPage,
+      size: productSize,
+      month: month === "all" ? undefined : month,
+      storeId: storeId || undefined,
+      warehouseId: warehouseId || undefined,
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedProductId, productPage]);
+  }, [selectedProductId, productPage, storeId, warehouseId, month]);
 
   return (
     <div className="space-y-4">
       {!selectedProductId ? (
         <>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">Month</span>
-            <Select value={month} onValueChange={setMonth}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="All months" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectLabel>Month</SelectLabel>
-                  {monthOptions.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+          <div className="flex flex-wrap items-end gap-2">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">Month</span>
+              <Select value={month} onValueChange={setMonth}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="All months" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Month</SelectLabel>
+                    {monthOptions.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">Store</span>
+              <Select
+                value={isManager ? (store?.id || "") : storeId}
+                onValueChange={(v) => { if (!isManager) setStoreId(v); }}
+              >
+                <SelectTrigger className="w-56" disabled={isManager}>
+                  <SelectValue placeholder="Select Store" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Stores</SelectLabel>
+                    {stores.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">Warehouse</span>
+              <Select
+                value={warehouseId}
+                onValueChange={setWarehouseId}
+                disabled={isManager ? !store?.id : !storeId}
+              >
+                <SelectTrigger className="w-56">
+                  <SelectValue placeholder="Select Warehouse" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Warehouses</SelectLabel>
+                    {uniqueWarehouses.map((w) => (
+                      <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
             {uniqueProducts.map((p) => (
@@ -101,7 +188,7 @@ export default function ProductStockReportTable() {
         <>
           <div className="flex items-center justify-between">
             <div className="font-semibold">{selectedProductName}</div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-end gap-2">
               <Select value={month} onValueChange={setMonth}>
                 <SelectTrigger className="w-40">
                   <SelectValue placeholder="All months" />
@@ -115,10 +202,43 @@ export default function ProductStockReportTable() {
                   </SelectGroup>
                 </SelectContent>
               </Select>
+              <Select
+                value={isManager ? (store?.id || "") : storeId}
+                onValueChange={(v) => { if (!isManager) setStoreId(v); }}
+              >
+                <SelectTrigger className="w-56" disabled={isManager}>
+                  <SelectValue placeholder="Select Store" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Stores</SelectLabel>
+                    {stores.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+              <Select
+                value={warehouseId}
+                onValueChange={setWarehouseId}
+                disabled={isManager ? !store?.id : !storeId}
+              >
+                <SelectTrigger className="w-56">
+                  <SelectValue placeholder="Select Warehouse" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Warehouses</SelectLabel>
+                    {uniqueWarehouses.map((w) => (
+                      <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
               <Button variant="secondary" onClick={() => { setSelectedProductId(""); setSelectedProductName(""); }}>Back</Button>
             </div>
           </div>
-          <div className="border rounded-md overflow-hidden">
+          <div className="border rounded-md overflow-hidden bg-white">
             <Table>
               <TableHeader>
                 <TableRow>

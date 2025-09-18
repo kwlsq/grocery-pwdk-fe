@@ -26,7 +26,7 @@ export default function StockReportTable() {
   } = useStockReportStore();
 
   const { stores, store, fetchStores, fetchStoreByUser } = useStoreStore();
-  const { uniqueWarehouses, fetchWarehouses } = useWarehouseStore();
+  const { uniqueWarehouses, fetchUniqueWarehouse } = useWarehouseStore();
   const { user } = useAuthStore();
 
   const isManager = user?.role === 'MANAGER';
@@ -34,40 +34,39 @@ export default function StockReportTable() {
   useEffect(() => {
     fetchStores();
 
-    // If manager, fetch their warehouse first
     if (isManager) {
       fetchStoreByUser();
     } else {
-      // For non-managers, fetch reports immediately
       fetchReports({ page: 0, size });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Effect to handle manager's warehouse data and auto-filter
   useEffect(() => {
     if (isManager && store) {
-      // Set filters with manager's store and warehouse
       const managerFilters = {
         storeId: store.id,
       };
       setFilters(managerFilters);
 
-      // Fetch reports with manager's filters
       fetchReports({
         page: 0,
         size,
         filters: managerFilters
       });
+      fetchUniqueWarehouse(store.id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store, isManager]);
 
   useEffect(() => {
-    if (!isManager && filters.storeId) {
-      fetchWarehouses(filters.storeId);
-      // reset warehouse when store changes
-      setFilters({ ...filters, warehouseId: "" });
+    if (!isManager) {
+      if (filters.storeId) {
+        fetchUniqueWarehouse(filters.storeId);
+        setFilters({ ...filters, warehouseId: "" });
+      } else {
+        if (filters.warehouseId) setFilters({ ...filters, warehouseId: "" });
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.storeId, isManager]);
@@ -98,10 +97,10 @@ export default function StockReportTable() {
             onChange={(e) => setFilters({ ...filters, productName: e.target.value })}
           />
           <Select
-            value={filters.storeId || ""}
-            onValueChange={(v) => setFilters({ ...filters, storeId: v })}
+            value={isManager ? (store?.id || "") : (filters.storeId || "")}
+            onValueChange={(v) => { if (!isManager) setFilters({ ...filters, storeId: v }); }}
           >
-            <SelectTrigger disabled={user?.role !== 'ADMIN'}>
+            <SelectTrigger disabled={isManager || user?.role !== 'ADMIN'}>
               <SelectValue placeholder="Select Store" />
             </SelectTrigger>
             <SelectContent>
@@ -116,7 +115,7 @@ export default function StockReportTable() {
           <Select
             value={filters.warehouseId || ""}
             onValueChange={(v) => setFilters({ ...filters, warehouseId: v })}
-            disabled={!filters.storeId}
+            disabled={isManager ? !store?.id : !filters.storeId}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select Warehouse" />

@@ -69,7 +69,7 @@ export type StockReportState = {
   productPage: number
   productSize: number
   productMonth?: string
-  fetchProductReports: (opts: { productId: string; page?: number; size?: number; month?: string }) => Promise<void>
+  fetchProductReports: (opts: { productId: string; page?: number; size?: number; month?: string; storeId?: string; warehouseId?: string }) => Promise<void>
   setProductPage: (page: number) => void
   setProductMonth: (month?: string) => void
 }

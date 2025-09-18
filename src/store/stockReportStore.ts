@@ -105,7 +105,7 @@ export const useStockReportStore = create<StockReportState>((set, get) => ({
   setPage: (page) => set({ page }),
   setFilters: (filters) => set({ filters }),
 
-  fetchProductReports: async ({ productId, page, size, month }) => {
+  fetchProductReports: async ({ productId, page, size, month, storeId, warehouseId }) => {
     const currentPage = page ?? get().productPage;
     const currentSize = size ?? get().productSize;
     const currentMonth = month ?? get().productMonth;
@@ -120,6 +120,12 @@ export const useStockReportStore = create<StockReportState>((set, get) => ({
       };
       if (currentMonth && currentMonth !== "all") {
         params["month"] = currentMonth;
+      }
+      if (storeId) {
+        params["storeId"] = storeId;
+      }
+      if (warehouseId) {
+        params["warehouseId"] = warehouseId;
       }
 
       const url = buildApiUrl(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.STOCK_REPORTS}/product/${productId}`, params);
