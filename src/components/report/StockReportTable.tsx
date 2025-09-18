@@ -25,8 +25,8 @@ export default function StockReportTable() {
     setFilters,
   } = useStockReportStore();
 
-  const { stores, fetchStores } = useStoreStore();
-  const { warehouse, warehouses, fetchWarehouses, fetchWarehouseByUser } = useWarehouseStore();
+  const { stores, store, fetchStores, fetchStoreByUser } = useStoreStore();
+  const { uniqueWarehouses, fetchWarehouses } = useWarehouseStore();
   const { user } = useAuthStore();
 
   const isManager = user?.role === 'MANAGER';
@@ -36,7 +36,7 @@ export default function StockReportTable() {
 
     // If manager, fetch their warehouse first
     if (isManager) {
-      fetchWarehouseByUser();
+      fetchStoreByUser();
     } else {
       // For non-managers, fetch reports immediately
       fetchReports({ page: 0, size });
@@ -46,11 +46,10 @@ export default function StockReportTable() {
 
   // Effect to handle manager's warehouse data and auto-filter
   useEffect(() => {
-    if (isManager && warehouse) {
+    if (isManager && store) {
       // Set filters with manager's store and warehouse
       const managerFilters = {
-        storeId: warehouse.storeID,
-        warehouseId: warehouse.id,
+        storeId: store.id,
       };
       setFilters(managerFilters);
 
@@ -62,7 +61,7 @@ export default function StockReportTable() {
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [warehouse, isManager]);
+  }, [store, isManager]);
 
   useEffect(() => {
     if (!isManager && filters.storeId) {
@@ -119,13 +118,13 @@ export default function StockReportTable() {
             onValueChange={(v) => setFilters({ ...filters, warehouseId: v })}
             disabled={!filters.storeId}
           >
-            <SelectTrigger disabled={user?.role !== 'ADMIN'}>
+            <SelectTrigger>
               <SelectValue placeholder="Select Warehouse" />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
                 <SelectLabel>Warehouses</SelectLabel>
-                {warehouses.map((w) => (
+                {uniqueWarehouses.map((w) => (
                   <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
                 ))}
               </SelectGroup>

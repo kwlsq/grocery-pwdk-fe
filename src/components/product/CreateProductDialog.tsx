@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 import { CreateProductDTO } from '@/types/product';
 import { useImageStore } from '@/store/imageStore';
 import { useDiscountStore } from '@/store/discountStore';
+import { useAuthStore } from '@/store/authStore';
 
 const productSchema = z.object({
   name: z.string().min(1, 'Name cannot be blank'),
@@ -80,6 +81,7 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
   }>({});
   const { uploadMultiImage, uploadSingleImage, isUploading } = useImageStore();
   const [isMounted, setMounted] = useState(false);
+  const { user } = useAuthStore();
 
   const now = new Date();
 
@@ -119,8 +121,12 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
 
     fetchCategories();
     fetchDiscount();
+  }, [fetchCategories, fetchDiscount, isMounted]);
+
+  useEffect(() => {
+    if (storeID === null) return;
     fetchUniqueWarehouse(storeID)
-  }, [fetchCategories, fetchUniqueWarehouse, fetchDiscount, storeID]);
+  },[fetchUniqueWarehouse, storeID])
 
 
   // Update stocks when warehouses are loaded
@@ -258,7 +264,7 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
         }
       }}>
       <DialogTrigger asChild>
-        <Button>
+        <Button className={cn(user?.role !== 'ADMIN' && "hidden")}>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
           </svg>

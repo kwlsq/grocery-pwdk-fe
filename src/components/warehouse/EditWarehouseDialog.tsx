@@ -14,6 +14,7 @@ import { useParams } from "next/navigation";
 import { useWarehouseStore } from "@/store/warehouseStore";
 import { CreateWarehouseDTO, Warehouse } from "@/types/warehouse";
 import { useUsersStore } from "@/store/userStore";
+import { useAuthStore } from "@/store/authStore";
 
 const warehouseSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -27,15 +28,13 @@ type WarehouseFormValues = z.infer<typeof warehouseSchema>;
 export default function EditWarehouseDialog({ id, warehouse }: { id: string; warehouse: Warehouse }) {
   const [open, setOpen] = React.useState(false);
   const [selectedAdmin, setSelectedAdmin] = React.useState<string | null>(null);
-
   const params = useParams();
   const storeId = params.id as string;
-
   const { stores } = useStoreStore();
   const currentStore = stores.find((store) => store.id === storeId);
-
   const { createWarehouse } = useWarehouseStore();
   const { users, fetchUsers } = useUsersStore();
+  const { user } = useAuthStore();
 
   const {
     register,
@@ -55,15 +54,19 @@ export default function EditWarehouseDialog({ id, warehouse }: { id: string; war
 
   // 👉 when dialog opens, set default admin
   React.useEffect(() => {
+
+    if (user?.role !== 'ADMIN') return;
+
     if (warehouse?.warehouseAdmin?.userID) {
       setSelectedAdmin(warehouse.warehouseAdmin.userID);
     } else {
       setSelectedAdmin(null);
     }
 
+
     fetchUsers({role: "MANAGER"})
 
-  }, [warehouse]);
+  }, [warehouse, user, fetchUsers]);
 
   const onSubmit = async (data: WarehouseFormValues) => {
     try {
