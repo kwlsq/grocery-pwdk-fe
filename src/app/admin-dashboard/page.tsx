@@ -21,6 +21,7 @@ import Navbar from '../../components/Navbar/Index';
 import CreateCategoryDialog from '@/components/category/CreateCategoryDialog';
 import CategoryGrid from '@/components/category/CategoryGrid';
 import { SalesReportChart } from '../../components/report/SalesReportChart';
+import { Store } from '@/types/store';
 const ProductStockReportTableDyn = dynamic(() => import('@/components/report/ProductStockReportTable'), { ssr: false });
 const SalesReportTableDyn = dynamic(() => import('@/components/report/SalesReportTable'), { ssr: false });
 
@@ -28,11 +29,13 @@ export default function AdminDashboardPage() {
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState('stores');
   const [reportTab, setReportTab] = useState('summary');
-  const { stores, loading, error, fetchStores, fetchStoreByUser, pagination: storePagination } = useStoreStore();
+  const { stores, loading, error, fetchStores, fetchStoreByUser, pagination: storePagination, store } = useStoreStore();
   const { users, loading: usersLoading, error: usersError, fetchUsers, selectedRole, setSelectedRole } = useUsersStore();
   const { discounts, loading: discountsLoading, error: discountsError, pagination: discountPagination, fetchDiscount } = useDiscountStore();
   const { user } = useAuthStore();
   const { categories, fetchCategories, deleteCategory } = useProductStore();
+
+  const storeForUser: Store[] = store ? [store] : [];
 
   // Main tabs
   const tabsData =
@@ -113,56 +116,6 @@ export default function AdminDashboardPage() {
           </p>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Stores</p>
-                <p className="text-2xl font-semibold text-gray-900">{stores.length}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Active Stores</p>
-                <p className="text-2xl font-semibold text-gray-900">
-                  {stores.filter(store => store.active).length}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center">
-              <div className="p-2 bg-red-100 rounded-lg">
-                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Inactive Stores</p>
-                <p className="text-2xl font-semibold text-gray-900">
-                  {stores.filter(store => !store.active).length}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-
         <Tabs defaultValue={tabsData[0]?.value} onValueChange={setActiveTab}>
           <TabsList>
             {tabsData.map((tab) => (
@@ -212,19 +165,58 @@ export default function AdminDashboardPage() {
             </div>
 
             {/* Stores Grid */}
-            <StoreGrid
-              stores={stores}
-              loading={loading}
-              error={error}
-              pagination={storePagination ? {
-                currentPage: storePagination.page,
-                totalPages: storePagination.totalPages,
-                hasNext: storePagination.hasNext,
-                hasPrevious: storePagination.hasPrevious,
-              } : undefined}
-              onPageChange={(page) => fetchStores(page, 12, "")}
-              showSearchAndFilter
-            />
+            <div className='pt-20'>
+              {loading &&
+                <div className='w-full h-full text-center justify-center'>
+                  Loading store…
+                </div>
+              }
+
+              {!loading && error && user?.role === 'MANAGER' && (
+                <div className="w-full h-full text-center justify-center">
+                  {error
+                    && 'No store assigned yet'}
+                </div>
+              )}
+
+              {!loading && !error && user?.role === 'MANAGER' && storeForUser.length === 0 && (
+                <div className="w-full h-full text-center justify-center">
+                  No store assigned yet
+                </div>
+              )}
+            </div>
+
+            {!loading && !error && user?.role === 'MANAGER' && storeForUser.length > 0 && (
+              <StoreGrid
+                stores={storeForUser}
+                loading={loading}
+                error={error}
+                pagination={storePagination ? {
+                  currentPage: storePagination.page,
+                  totalPages: storePagination.totalPages,
+                  hasNext: storePagination.hasNext,
+                  hasPrevious: storePagination.hasPrevious,
+                } : undefined}
+                onPageChange={(page) => fetchStores(page, 12, "")}
+                showSearchAndFilter
+              />
+            )}
+
+            {stores && user?.role === 'ADMIN' &&
+              <StoreGrid
+                stores={stores}
+                loading={loading}
+                error={error}
+                pagination={storePagination ? {
+                  currentPage: storePagination.page,
+                  totalPages: storePagination.totalPages,
+                  hasNext: storePagination.hasNext,
+                  hasPrevious: storePagination.hasPrevious,
+                } : undefined}
+                onPageChange={(page) => fetchStores(page, 12, "")}
+                showSearchAndFilter
+              />
+            }
 
           </TabsContent>
 
@@ -325,34 +317,42 @@ export default function AdminDashboardPage() {
               </div>
             </div>
             {/** Lazy load to avoid SSR issues with client store hooks */}
-            <Tabs defaultValue={reportTabsData[0]?.value} onValueChange={setReportTab}>
-              <TabsList>
-                {reportTabsData.map((tab) => (
-                  <TabsTrigger
-                    key={tab.value}
-                    value={tab.value}
-                    className={cn(
-                      "rounded-none h-full border-b-2 data-[state=active]:shadow-none",
-                      reportTab === tab.value
-                        ? "border-green-600 text-green-600"
-                        : "border-transparent"
-                    )}
-                  >
-                    {tab.label}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-              <TabsContent value='summary'>
-                <StockReportTableDyn />
-              </TabsContent>
-              <TabsContent value='product'>
-                <ProductStockReportTableDyn />
-              </TabsContent>
-              <TabsContent value='sales'>
-                <SalesReportChart />
-                <SalesReportTableDyn />
-              </TabsContent>
-            </Tabs>
+            {(storeForUser.length > 0 && user?.role ==='MANAGER') || user?.role === 'ADMIN'
+              ?
+              <Tabs defaultValue={reportTabsData[0]?.value} onValueChange={setReportTab}>
+                <TabsList>
+                  {reportTabsData.map((tab) => (
+                    <TabsTrigger
+                      key={tab.value}
+                      value={tab.value}
+                      className={cn(
+                        "rounded-none h-full border-b-2 data-[state=active]:shadow-none",
+                        reportTab === tab.value
+                          ? "border-green-600 text-green-600"
+                          : "border-transparent"
+                      )}
+                    >
+                      {tab.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+                <TabsContent value='summary'>
+                  <StockReportTableDyn />
+                </TabsContent>
+                <TabsContent value='product'>
+                  <ProductStockReportTableDyn />
+                </TabsContent>
+                <TabsContent value='sales'>
+                  <SalesReportChart />
+                  <SalesReportTableDyn />
+                </TabsContent>
+              </Tabs>
+              :
+              <p className='w-full text-center pt-20'>
+                Need to be assigned to a store first
+              </p>
+            }
+
           </TabsContent>
           <TabsContent value='categories'>
             <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-8">

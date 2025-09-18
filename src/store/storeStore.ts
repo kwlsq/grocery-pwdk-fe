@@ -148,14 +148,12 @@ export const useStoreStore = create<StoreState>((set, get) => ({
         set({ store: response.data.data, loading: false });
       } else {
         set({
-          error: "Failed to fetch warehouse by ID",
+          store: null,
+          error: response.data.message,
           loading: false,
         });
       }
-
-      set({ loading: false, error: null });
     } catch (error) {
-      console.error("Error while creating warehouse:", error);
       set({
         error:
           error instanceof Error ? error.message : "Failed to create warehouse",
