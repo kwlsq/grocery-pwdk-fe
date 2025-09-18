@@ -16,13 +16,13 @@ import DiscountGrid from '@/components/discount/DiscountGrid';
 import dynamic from 'next/dynamic';
 const StockReportTableDyn = dynamic(() => import('@/components/report/StockReportTable'), { ssr: false });
 import CreateDiscountDialog from '@/components/discount/CreateDiscountDialog';
-import { cn } from '@/lib/utils';
 import {AddStoreDialog} from '@/components/store/AddStoreDialog';
 import StoreGrid from '../../components/store/StoreGrid';
 import Navbar from '../../components/Navbar/Index';
 import CreateCategoryDialog from '@/components/category/CreateCategoryDialog';
 import CategoryGrid from '@/components/category/CategoryGrid';
 import { SalesReportChart } from '../../components/report/SalesReportChart';
+
 const ProductStockReportTableDyn = dynamic(() => import('@/components/report/ProductStockReportTable'), { ssr: false });
 const SalesReportTableDyn = dynamic(() => import('@/components/report/SalesReportTable'), { ssr: false });
 

@@ -5,26 +5,6 @@ import axios from "axios";
 import { StoreApiResponse, StoreState, UniqueStore } from "../types/store";
 import { API_CONFIG, buildApiUrl } from "../config/api";
 
-interface StoreState {
-    stores: Store[];
-    loading: boolean;
-    error: string | null;
-    fetchStores: () => Promise<void>;
-    addStore: (newStoreData: StoreRequestData) => Promise<void>;
-}
-
-    addStore: async (newStoreData) => {
-        try {
-            const response = await createStore(newStoreData);
-            set(state => ({ stores: [...state.stores, response.data] }));
-        } catch (err) {
-            console.error("Failed to add store", err);
-            throw err; // Re-throw so the form can display an error
-        }
-    },
-}));
-
-
 const getAuthToken = (): string => {
   const token =
     (typeof window !== "undefined" && localStorage.getItem("accessToken")) ||
@@ -185,4 +165,13 @@ export const useStoreStore = create<StoreState>((set, get) => ({
       });
     }
   },
+  addStore: async (newStoreData) => {
+        try {
+            const response = await createStore(newStoreData);
+            set(state => ({ stores: [...state.stores, response.data] }));
+        } catch (err) {
+            console.error("Failed to add store", err);
+            throw err; // Re-throw so the form can display an error
+        }
+    },
 }));

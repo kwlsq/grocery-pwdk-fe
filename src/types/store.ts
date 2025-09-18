@@ -5,7 +5,7 @@ import { PaginationInfo } from "./common";
 export interface Store {
     id: string;
     name: string;
-    description?: string;
+    description: string;
     address: string;
     latitude: number;
     longitude: number;
@@ -18,13 +18,6 @@ export interface StoreRequestData {
     address: string;
     latitude: number;
     longitude: number;
-
-export interface Store {
-  id: string;
-  name: string;
-  description: string;
-  address: string;
-  active: boolean;
 }
 
 export interface StoreApiResponse {
@@ -63,4 +56,6 @@ export interface StoreState {
   ) => Promise<void>;
   fetchStoreByUser: () => Promise<void>;
   fetchUniqueStores: () => Promise<void>;
+addStore: (newStoreData: StoreRequestData) => Promise<void>;
+
 }
