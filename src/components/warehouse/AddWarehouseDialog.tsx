@@ -16,6 +16,7 @@ import { CreateWarehouseDTO } from "@/types/warehouse";
 import { useUsersStore } from "@/store/userStore";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
+import { WarehouseLocationInput } from './WarehouseLocation';
 
 const warehouseSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -42,6 +43,7 @@ export default function AddWarehouseDialog() {
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
+    setValue
   } = useForm<WarehouseFormValues>({
     resolver: zodResolver(warehouseSchema),
     defaultValues: {
@@ -115,36 +117,13 @@ export default function AddWarehouseDialog() {
             {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
           </div>
 
-          {/* Address */}
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="address">Address</Label>
-            <Input id="address" placeholder="Warehouse address" {...register("address")} />
-            {errors.address && <p className="text-red-500 text-sm">{errors.address.message}</p>}
-          </div>
-
-          {/* Latitude */}
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="latitude">Latitude</Label>
-            <Input
-              type="number"
-              step="any"
-              placeholder="e.g. -6.200000"
-              {...register("latitude", { valueAsNumber: true })}
-            />
-            {errors.latitude && <p className="text-red-500 text-sm">{errors.latitude.message}</p>}
-          </div>
-
-          {/* Longitude */}
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="longitude">Longitude</Label>
-            <Input
-              type="number"
-              step="any"
-              placeholder="e.g. 106.816666"
-              {...register("longitude", { valueAsNumber: true })}
-            />
-            {errors.longitude && <p className="text-red-500 text-sm">{errors.longitude.message}</p>}
-          </div>
+          <WarehouseLocationInput
+            onLocationSelect={(address, lat, lng) => {
+              setValue('address', address);
+              setValue('latitude', lat);
+              setValue('longitude', lng);
+            }}
+          />
 
           <div className="flex justify-end gap-2 pt-4">
             <Button variant="outline" onClick={() => setOpen(false)} type="button">

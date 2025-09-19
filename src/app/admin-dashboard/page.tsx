@@ -117,7 +117,7 @@ export default function AdminDashboardPage() {
             Manage your stores and monitor their status
           </p>
         </div>
-        
+
         <Tabs defaultValue={tabsData[0]?.value} onValueChange={setActiveTab}>
           <TabsList>
             {tabsData.map((tab) => (
@@ -163,22 +163,22 @@ export default function AdminDashboardPage() {
             </div>
 
             {/* Stores Grid */}
-            <div className='pt-20'>
+            <div className=''>
               {loading &&
-                <div className='w-full h-full text-center justify-center'>
+                <div className='w-full h-full text-center justify-center pt-20'>
                   Loading store…
                 </div>
               }
 
               {!loading && error && user?.role === 'MANAGER' && (
-                <div className="w-full h-full text-center justify-center">
+                <div className="w-full h-full text-center justify-center pt-20">
                   {error
                     && 'No store assigned yet'}
                 </div>
               )}
 
               {!loading && !error && user?.role === 'MANAGER' && storeForUser.length === 0 && (
-                <div className="w-full h-full text-center justify-center">
+                <div className="w-full h-full text-center justify-center pt-20">
                   No store assigned yet
                 </div>
               )}
@@ -315,6 +315,42 @@ export default function AdminDashboardPage() {
               </div>
             </div>
             {/** Lazy load to avoid SSR issues with client store hooks */}
+            {(storeForUser.length > 0 && user?.role ==='MANAGER') || user?.role === 'ADMIN'
+              ?
+              <Tabs defaultValue={reportTabsData[0]?.value} onValueChange={setReportTab}>
+                <TabsList>
+                  {reportTabsData.map((tab) => (
+                    <TabsTrigger
+                      key={tab.value}
+                      value={tab.value}
+                      className={cn(
+                        "rounded-none h-full border-b-2 data-[state=active]:shadow-none",
+                        reportTab === tab.value
+                          ? "border-green-600 text-green-600"
+                          : "border-transparent"
+                      )}
+                    >
+                      {tab.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+                <TabsContent value='summary'>
+                  <StockReportTableDyn />
+                </TabsContent>
+                <TabsContent value='product'>
+                  <ProductStockReportTableDyn />
+                </TabsContent>
+                <TabsContent value='sales'>
+                  <SalesReportChart />
+                  <SalesReportTableDyn />
+                </TabsContent>
+              </Tabs>
+              :
+              <p className='w-full text-center pt-20'>
+                Need to be assigned to a store first
+              </p>
+            }
+
             {(storeForUser.length > 0 && user?.role ==='MANAGER') || user?.role === 'ADMIN'
               ?
               <Tabs defaultValue={reportTabsData[0]?.value} onValueChange={setReportTab}>
