@@ -163,22 +163,22 @@ export default function AdminDashboardPage() {
             </div>
 
             {/* Stores Grid */}
-            <div className='pt-20'>
+            <div className=''>
               {loading &&
-                <div className='w-full h-full text-center justify-center'>
+                <div className='w-full h-full text-center justify-center pt-20'>
                   Loading store…
                 </div>
               }
 
               {!loading && error && user?.role === 'MANAGER' && (
-                <div className="w-full h-full text-center justify-center">
+                <div className="w-full h-full text-center justify-center pt-20">
                   {error
                     && 'No store assigned yet'}
                 </div>
               )}
 
               {!loading && !error && user?.role === 'MANAGER' && storeForUser.length === 0 && (
-                <div className="w-full h-full text-center justify-center">
+                <div className="w-full h-full text-center justify-center pt-20">
                   No store assigned yet
                 </div>
               )}
