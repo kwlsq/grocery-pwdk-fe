@@ -13,12 +13,14 @@ import ProductGrid from '@/components/product/ProductGrid';
 import CreateProduct from '@/components/product/CreateProductDialog';
 import { cn } from '@/lib/utils';
 import Navbar from '../../../../components/Navbar/Index';
+import { AssignManagerDialog } from '@/components/store/AssignManagerDialog';
+import { EditStoreDialog } from '@/components/store/EditStoreDialog';
 
 export default function StoreDetailsPage() {
   const params = useParams();
   const storeId = params.id as string;
 
-  const [currentPage, setCurrentPage] = useState(0); // 0-based for API
+  const [currentPage, setCurrentPage] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [mounted, setMounted] = useState(false);
@@ -39,7 +41,7 @@ export default function StoreDetailsPage() {
 
   // Transform pagination data for ProductGrid component
   const paginationData = pagination ? {
-    currentPage: pagination.page || 0, // 0-based page from API
+    currentPage: pagination.page || 0,
     totalPages: pagination.totalPages || 0,
     hasNext: pagination.hasNext || false,
     hasPrevious: pagination.hasPrevious || false
@@ -77,6 +79,11 @@ export default function StoreDetailsPage() {
     fetchProductByStoreID(storeId, currentPage, pagination?.size || 12, searchTerm, selectedCategory);
   };
 
+  // Handle successful manager assignment
+  const handleManagerAssignmentSuccess = () => {
+    fetchStores(); // Refresh stores to update manager info
+  };
+
   // Count out of stock products
   const outOfStockProducts = productsThisStore.filter(product => {
     const inventories = product.productVersionResponse?.inventories;
@@ -104,7 +111,7 @@ export default function StoreDetailsPage() {
     // Fetch warehouses for this store
     if (storeId) {
       fetchWarehouses(storeId);
-      fetchProductByStoreID(storeId, 0, 12); // Initial load with first page
+      fetchProductByStoreID(storeId, 0, 12);
     }
 
   }, [mounted, storeId, stores.length, fetchStores, fetchWarehouses, fetchProductByStoreID]);
@@ -139,19 +146,53 @@ export default function StoreDetailsPage() {
     <div className="min-h-screen bg-gray-50">
       <Navbar/>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
-        {/* Store Header */}
+        {/* Enhanced Store Header with Manager Info */}
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8">
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-            <div>
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+            <div className="flex-1">
               <h1 className="text-3xl font-bold text-gray-900">{currentStore.name}</h1>
               <p className="text-gray-600 mt-2">{currentStore.description}</p>
-              <div className="flex items-center gap-2 mt-3">
+              
+              {/* Store Manager Section */}
+              {currentStore.storeManager ? (
+                <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-100 rounded-full">
+                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-blue-900">Store Manager</p>
+                      <p className="text-lg font-semibold text-blue-800">{currentStore.storeManager.name}</p>
+                      <p className="text-sm text-blue-600">{currentStore.storeManager.email}</p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-amber-100 rounded-full">
+                      <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-amber-900">No Manager Assigned</p>
+                      <p className="text-sm text-amber-700">This store needs a manager to operate effectively</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex items-center gap-2 mt-4">
                 <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
                 <span className="text-gray-600">{currentStore.address}</span>
               </div>
+              
               <div className="flex items-center gap-2 mt-2">
                 <span className={`px-2 py-1 rounded-full text-xs font-semibold ${currentStore.isActive
                   ? 'bg-green-500 text-white'
@@ -163,14 +204,22 @@ export default function StoreDetailsPage() {
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col gap-3">
               <CreateProduct storeID={storeId} />
-              <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-                Edit Store
-              </button>
+              
+              {/* Manager Assignment Button */}
+              <AssignManagerDialog 
+                store={currentStore}
+                allStores={stores}
+                onSuccess={handleManagerAssignmentSuccess}
+              />
+              
+             <EditStoreDialog 
+  store={currentStore}
+  onSuccess={() => {
+    fetchStores(); // Refresh stores to show updated data
+  }}
+/>
             </div>
           </div>
         </div>
@@ -194,8 +243,25 @@ export default function StoreDetailsPage() {
           </TabsList>
 
           <TabsContent value='warehouses' className='flex flex-col gap-4 pt-2'>
-            {/* Store Statistics */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Enhanced Store Statistics with Manager Status */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              {/* Manager Status Card */}
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <div className="flex items-center">
+                  <div className={`p-2 rounded-lg ${currentStore.storeManager ? 'bg-green-100' : 'bg-red-100'}`}>
+                    <svg className={`w-6 h-6 ${currentStore.storeManager ? 'text-green-600' : 'text-red-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Manager Status</p>
+                    <p className={`text-lg font-semibold ${currentStore.storeManager ? 'text-green-600' : 'text-red-600'}`}>
+                      {currentStore.storeManager ? 'Assigned' : 'Not Assigned'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                 <div className="flex items-center">
                   <div className="p-2 bg-blue-100 rounded-lg">
@@ -271,8 +337,25 @@ export default function StoreDetailsPage() {
           </TabsContent>
 
           <TabsContent value='products' className='flex flex-col gap-4 pt-2'>
-            {/* Store Statistics */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Store Statistics for Products Tab */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              {/* Manager Status Card */}
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <div className="flex items-center">
+                  <div className={`p-2 rounded-lg ${currentStore.storeManager ? 'bg-green-100' : 'bg-red-100'}`}>
+                    <svg className={`w-6 h-6 ${currentStore.storeManager ? 'text-green-600' : 'text-red-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Manager Status</p>
+                    <p className={`text-lg font-semibold ${currentStore.storeManager ? 'text-green-600' : 'text-red-600'}`}>
+                      {currentStore.storeManager ? 'Assigned' : 'Not Assigned'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                 <div className="flex items-center">
                   <div className="p-2 bg-blue-100 rounded-lg">
@@ -289,13 +372,13 @@ export default function StoreDetailsPage() {
 
               <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                 <div className="flex items-center">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <div className="p-2 bg-red-100 rounded-lg">
+                    <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z" />
                     </svg>
                   </div>
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Out of Stock Products</p>
+                    <p className="text-sm font-medium text-gray-600">Out of Stock</p>
                     <p className="text-2xl font-semibold text-gray-900">
                       {outOfStockProducts.length}
                     </p>
@@ -338,7 +421,6 @@ export default function StoreDetailsPage() {
                 </div>
               </div>
 
-              {/* Use ProductGrid with built-in pagination */}
               <ProductGrid
                 products={productsThisStore}
                 error={productError}
