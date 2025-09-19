@@ -25,14 +25,14 @@ export default function StockReportTable() {
     setFilters,
   } = useStockReportStore();
 
-  const { stores, store, fetchStores, fetchStoreByUser } = useStoreStore();
+  const { stores, store, fetchStores, fetchStoreByUser, uniqueStores, fetchUniqueStores } = useStoreStore();
   const { uniqueWarehouses, fetchUniqueWarehouse } = useWarehouseStore();
   const { user } = useAuthStore();
 
   const isManager = user?.role === 'MANAGER';
 
   useEffect(() => {
-    fetchStores();
+    fetchUniqueStores();
 
     if (isManager) {
       fetchStoreByUser();
@@ -106,7 +106,7 @@ export default function StockReportTable() {
             <SelectContent>
               <SelectGroup>
                 <SelectLabel>Stores</SelectLabel>
-                {stores.map((s) => (
+                {uniqueStores.map((s) => (
                   <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                 ))}
               </SelectGroup>
