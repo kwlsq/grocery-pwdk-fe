@@ -1,4 +1,3 @@
-import { User } from "./user";
 import { PaginationInfo } from "./common";
 
 
@@ -10,8 +9,13 @@ export interface Store {
     latitude: number;
     longitude: number;
     isActive: boolean;
-    storeManagers: User[];
+    storeManager?: {
+        id: string;
+        name: string;
+        email: string;
+    };
 }
+
 export interface StoreRequestData {
     name: string;
     description?: string;
@@ -58,4 +62,12 @@ export interface StoreState {
   fetchUniqueStores: () => Promise<void>;
 addStore: (newStoreData: StoreRequestData) => Promise<void>;
 
+}
+export interface UpdateStoreData {
+    name: string;
+    description?: string;
+    address: string;
+    latitude: number;
+    longitude: number;
+    isActive: boolean;
 }

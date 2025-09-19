@@ -1,5 +1,5 @@
 import apiClient from './apiClient'; // Use our central API client
-import { Store,StoreRequestData } from '@/types/store'; // We will create these types next
+import { Store,StoreRequestData, UpdateStoreData } from '@/types/store'; // We will create these types next
 
 /**
  * Fetches a list of all stores. Requires ADMIN role.
@@ -25,4 +25,6 @@ export const assignManager = (storeId: string, userId: string) => {
   return apiClient.post<Store>(`/stores/${storeId}/assign-manager`, { userId });
 };
 
-// Add functions for update and delete as you build those UI features
+export const updateStore = (storeId: string, storeData: UpdateStoreData) => {
+    return apiClient.put<Store>(`/stores/${storeId}`, storeData);
+};
