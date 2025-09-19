@@ -25,7 +25,7 @@ interface ProductGridProps {
     hasPrevious: boolean;
   };
   onPageChange?: (newPage: number) => void;
-  onSearch?: (searchTerm: string, category: string) => void;
+  onSearch?: (searchTerm: string, category: string, sortBy?: string, sortDirection?: string) => void;
   showSearchAndFilter?: boolean;
 }
 
