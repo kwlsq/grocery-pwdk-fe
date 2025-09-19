@@ -25,7 +25,7 @@ export default function StockReportTable() {
     setFilters,
   } = useStockReportStore();
 
-  const { stores, store, fetchStores, fetchStoreByUser, uniqueStores, fetchUniqueStores } = useStoreStore();
+  const { store, fetchStoreByUser, uniqueStores, fetchUniqueStores } = useStoreStore();
   const { uniqueWarehouses, fetchUniqueWarehouse } = useWarehouseStore();
   const { user } = useAuthStore();
 

@@ -12,7 +12,7 @@ const getAuthToken = (): string => {
   return token;
 };
 
-export const useStoreStore = create<StoreState>((set, get) => ({
+export const useStoreStore = create<StoreState>((set) => ({
   stores: [],
   uniqueStores: [],
   store: null,
