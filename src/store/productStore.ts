@@ -87,7 +87,7 @@ export const useProductStore = create<ProductState>((set) => ({
   },
 
   setSelectedProduct: (product) => {
-    set({selectedProduct: product})
+    set({ selectedProduct: product });
   },
 
   fetchProductByStoreID: async (
@@ -155,7 +155,7 @@ export const useProductStore = create<ProductState>((set) => ({
     try {
       //Check if categories exist in localStorage
       const cachedCategories = localStorage.getItem("categories");
-      
+
       if (cachedCategories) {
         set({ categories: JSON.parse(cachedCategories), loading: false });
         return; // ✅ Skip API call if cache exists
@@ -248,14 +248,36 @@ export const useProductStore = create<ProductState>((set) => ({
         }
       );
 
-      set((state) => ({
-        products: [response.data, ...state.products],
-        loading: false,
-      }));
-
-      return response.data.data.id;
+      if (response.data.success) {
+        set((state) => ({
+          products: [response.data, ...state.products],
+          loading: false,
+        }));
+        return response.data.data.id;
+      } else {
+        // Set error and throw exception so the component knows creation failed
+        const errorMessage =
+          response.data.message || "Failed to create product";
+        set({ loading: false, error: errorMessage });
+        throw new Error(errorMessage);
+      }
     } catch (e) {
-      console.error(e);
+      if (axios.isAxiosError(e) && e.response) {
+        // Backend sent an error response
+        const errorMessage =
+          e.response.data?.message ||
+          `Request failed with status ${e.response.status}`;
+        set({
+          loading: false,
+          error: errorMessage,
+        });
+        throw new Error(errorMessage);
+      } else {
+        // Network or unexpected error
+        const errorMessage = "Unexpected error occurred";
+        set({ loading: false, error: errorMessage });
+        throw new Error(errorMessage);
+      }
     }
   },
 

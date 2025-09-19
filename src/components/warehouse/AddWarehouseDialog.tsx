@@ -28,7 +28,6 @@ type WarehouseFormValues = z.infer<typeof warehouseSchema>;
 
 export default function AddWarehouseDialog() {
   const [open, setOpen] = React.useState(false);
-  const [selectedAdmin, setSelectedAdmin] = React.useState<string | null>(null);
   const params = useParams();
   const storeId = params.id as string;
   const { stores } = useStoreStore();
@@ -67,8 +66,7 @@ export default function AddWarehouseDialog() {
         address: data.address,
         latitude: Number(data.latitude),
         longitude: Number(data.longitude),
-        isActive: true,
-        storeAdminID: selectedAdmin
+        isActive: true
       }
 
       await createWarehouse(newWarehouse);
