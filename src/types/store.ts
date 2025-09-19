@@ -57,6 +57,8 @@ export interface StoreState {
     page?: number,
     size?: number,
     search?: string,
+    sortBy?: string,
+    sortDirection?: string,
   ) => Promise<void>;
   fetchStoreByUser: () => Promise<void>;
   fetchUniqueStores: () => Promise<void>;

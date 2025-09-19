@@ -69,6 +69,9 @@ export interface WarehouseState {
     storeId: string,
     page?: number,
     size?: number,
+    search?: string,
+    sortBy?: string,
+    sortDirection?: string,
   ) => Promise<void>;
   createWarehouse: (data: CreateWarehouseDTO) => Promise<void>;
   fetchUniqueWarehouse: (storeId: string) => Promise<void>;

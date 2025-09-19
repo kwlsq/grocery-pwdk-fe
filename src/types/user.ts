@@ -41,7 +41,7 @@ export interface UsersState {
   pagination: PaginationInfo | null;
   selectedRole: '' | 'CUSTOMER' | 'MANAGER' | 'ADMIN';
   setSelectedRole: (role: '' | 'CUSTOMER' | 'MANAGER' | 'ADMIN') => void;
-  fetchUsers: (params?: { page?: number; size?: number; role?: '' | 'CUSTOMER' | 'MANAGER' | 'ADMIN' }) => Promise<void>;
+  fetchUsers: (params?: { page?: number; size?: number; role?: '' | 'CUSTOMER' | 'MANAGER' | 'ADMIN'; search?: string; sortBy?: string; sortDirection?: string }) => Promise<void>;
   deleteUser: (userID: string ) => Promise<void>;
   registerStoreAdmin: (data: RegisterUserDTO) => Promise<void>;
 }

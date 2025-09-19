@@ -33,7 +33,8 @@ export const useProductStore = create<ProductState>((set) => ({
     size = 12,
     search = "",
     category = "",
-    sort = "",
+    sortBy = "",
+    sortDirection = "",
     userLatitude?: number,
     userLongitude?: number,
     maxDistanceKM?: number
@@ -46,7 +47,8 @@ export const useProductStore = create<ProductState>((set) => ({
           size,
           search,
           category,
-          sort,
+          sortBy,
+          sortDirection,
           ...(userLatitude !== undefined ? { userLatitude: userLatitude } : {}),
           ...(userLongitude !== undefined
             ? { userLongitude: userLongitude }

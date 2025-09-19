@@ -108,7 +108,8 @@ export interface ProductState {
     size?: number,
     search?: string,
     category?: string,
-    sort?: string,
+    sortBy?: string,
+    sortDirection?: string,
     userLatitude?: number,
     userLongitude?: number,
     maxDistanceKM?: number

@@ -24,7 +24,7 @@ interface StoreGridProps {
     hasPrevious: boolean;
   };
   onPageChange?: (newPage: number) => void;
-  onSearch?: (searchTerm: string, category: string) => void;
+  onSearch?: (searchTerm: string, category: string, sort?: string) => void;
   showSearchAndFilter?: boolean;
 }
 
@@ -60,7 +60,7 @@ const StoreGrid = ({
 
   return (
     <div className="space-y-6">
-      { onSearch && (
+      { showSearchAndFilter && onSearch && (
         <SearchAndFilter onSearch={onSearch} />
       )}
 
