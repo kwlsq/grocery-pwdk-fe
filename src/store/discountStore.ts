@@ -83,10 +83,7 @@ export const useDiscountStore = create<DiscountState>((set, get) => ({
       );
 
       if (response.data.success) {
-        set((state) => ({
-          discounts: [...state.discounts, ...response.data.data],
-          loading: false,
-        }));
+        set({loading: false, error: null})
       } else {
         set({
           error: response.data.message || "Failed to create discount",

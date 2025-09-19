@@ -604,7 +604,7 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
                         <span className="text-base font-bold text-green-600">
-                          {discount.unit === 'percentage' ? `${discount.value}%` :
+                          {discount.unit === 'PERCENTAGE' ? `${discount.value}%` :
                             discount.unit === 'currency' ? `Rp ${discount.value.toLocaleString()}` :
                               'B1G1'}
                         </span>

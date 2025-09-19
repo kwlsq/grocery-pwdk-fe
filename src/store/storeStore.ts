@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { StoreRequestData } from '@/types/store';
 import axios from "axios";
 import { StoreApiResponse, StoreState, UniqueStore } from "../types/store";
 import { API_CONFIG, buildApiUrl } from "../config/api";
@@ -13,7 +12,7 @@ const getAuthToken = (): string => {
   return token;
 };
 
-export const useStoreStore = create<StoreState>((set, get) => ({
+export const useStoreStore = create<StoreState>((set) => ({
   stores: [],
   uniqueStores: [],
   store: null,
@@ -70,24 +69,6 @@ export const useStoreStore = create<StoreState>((set, get) => ({
   },
 
   fetchUniqueStores: async () => {
-    const state = get();
-    const now = Date.now();
-    const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-
-    // Return cached data if recent and available
-    if (
-      state.stores.length > 0 &&
-      state.lastFetched &&
-      now - state.lastFetched < CACHE_DURATION
-    ) {
-      return;
-    }
-
-    // Prevent duplicate requests
-    if (state.isFetching) {
-      return;
-    }
-
     set({ isFetching: true, loading: true, error: null });
     try {
       const token = getAuthToken();
@@ -109,10 +90,11 @@ export const useStoreStore = create<StoreState>((set, get) => ({
         set({ uniqueStores, loading: false });
       } else {
         set({
-          error: response.data.message || "Failed to fetch warehouse",
+          error: response.data.message || "Failed to fetch stores",
           loading: false,
         });
       }
+      
     } catch (error) {
       console.error("Error fetching stores:", error);
       set({

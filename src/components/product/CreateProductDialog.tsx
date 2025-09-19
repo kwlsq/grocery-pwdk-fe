@@ -489,7 +489,7 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
                     </div>
                     <p className="text-xs text-gray-600 mb-2 line-clamp-2">{discount.description}</p>
                     <span className="text-sm font-semibold text-green-700">
-                      {discount.unit === 'percentage'
+                      {discount.unit === 'PERCENTAGE'
                         ? `${discount.value}%`
                         : (discount.unit === 'currency' ? `Rp ${discount.value.toLocaleString()}` : `B1G1`)}
                     </span>

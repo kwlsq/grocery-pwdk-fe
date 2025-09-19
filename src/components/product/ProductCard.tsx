@@ -2,7 +2,6 @@
 
 import { Product } from '../../types/product';
 import Image from 'next/image';
-import Link from 'next/link';
 import EditProduct from './EditProductDialog';
 import { useAuthStore } from '@/store/authStore';
 import ProductStock from './ProductStockDialog';
@@ -94,7 +93,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
       <div className="px-4 pb-4 w-full">
         {user?.role === 'ADMIN' ? (
-          <div className='w-full flex gap-2'>
+          <div className='w-full flex gap-2' onClick={(e) => e.stopPropagation()}>
             <div className='w-full'>
               <EditProduct id={product.id} product={product} />
             </div>
@@ -106,6 +105,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
           <button
             disabled={totalStock === 0}
             className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+            onClick={(e) => e.stopPropagation()}
           >
             {totalStock === 0 ? 'Out of Stock' : 'Add to Cart'}
           </button>
