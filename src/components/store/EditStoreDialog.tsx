@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useStoreStore } from '@/store/storeStore';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { Button } from '@/components/ui/button';
@@ -9,10 +8,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { StoreRequestData } from '@/types/store';
-import { StoreLocationInput } from './StoreLocation'; // Fixed import
+import { Switch } from '../ui/Switch';
+import { StoreLocationInput } from './StoreLocation';
+import { updateStore } from '@/services/storeService';
+import { Store } from '@/types/store';
 
-const addStoreSchema = Yup.object().shape({
+interface EditStoreDialogProps {
+    store: Store;
+    onSuccess?: () => void;
+}
+
+const editStoreSchema = Yup.object().shape({
     name: Yup.string()
         .min(2, 'Store name must be at least 2 characters')
         .max(100, 'Store name must not exceed 100 characters')
@@ -28,62 +34,61 @@ const addStoreSchema = Yup.object().shape({
         .min(-180, 'Invalid longitude')
         .max(180, 'Invalid longitude')
         .required('Location coordinates are required'),
+    isActive: Yup.boolean().required(),
 });
 
-export const AddStoreDialog = () => {
-    const { addStore } = useStoreStore();
+export const EditStoreDialog: React.FC<EditStoreDialogProps> = ({ store, onSuccess }) => {
     const [open, setOpen] = useState(false);
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2">
+                <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="gap-2"
+                >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
-                    Add Store
-                </button>
+                    Edit Store
+                </Button>
             </DialogTrigger>
-           <DialogContent 
-    className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto"
-    onInteractOutside={(e) => {
-        // Type cast to Element to access querySelector
-        if (e.currentTarget && e.currentTarget instanceof Element) {
-            const isSubmitting = e.currentTarget.querySelector('[type="submit"][disabled]');
-            if (isSubmitting) e.preventDefault();
-        }
-    }}
->
+            <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle>Add New Store</DialogTitle>
+                    <DialogTitle>Edit Store</DialogTitle>
+                    <p className="text-sm text-gray-600">
+                        Update store information and location
+                    </p>
                 </DialogHeader>
+                
                 <Formik
-                    initialValues={{ 
-                        name: '', 
-                        description: '', 
-                        address: '', 
-                        latitude: 0, 
-                        longitude: 0 
+                    initialValues={{
+                        name: store.name,
+                        description: store.description || '',
+                        address: store.address,
+                        latitude: store.latitude,
+                        longitude: store.longitude,
+                        isActive: store.isActive,
                     }}
-                    validationSchema={addStoreSchema}
-                    onSubmit={async (values: StoreRequestData, { setSubmitting, setStatus, resetForm }) => {
+                    validationSchema={editStoreSchema}
+                    onSubmit={async (values, { setSubmitting, setStatus }) => {
                         try {
                             setStatus('');
-                            await addStore(values);
-                            resetForm();
+                            await updateStore(store.id, values);
                             setOpen(false);
-                            // You might want to add a toast notification here
+                            onSuccess?.();
                         } catch (error: any) {
                             const errorMessage = error?.response?.data?.message || 
                                                 error?.message || 
-                                                'Failed to create store. Please try again.';
+                                                'Failed to update store. Please try again.';
                             setStatus(errorMessage);
                         } finally {
                             setSubmitting(false);
                         }
                     }}
                 >
-                    {({ isSubmitting, status, setFieldValue, values, setStatus }) => (
+                    {({ isSubmitting, status, setFieldValue, values }) => (
                         <Form className="space-y-4 py-4">
                             {status && (
                                 <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
@@ -114,16 +119,36 @@ export const AddStoreDialog = () => {
                                 <ErrorMessage name="description" component="p" className="text-red-500 text-xs mt-1" />
                             </div>
 
+                            {/* Store Status Toggle */}
+                            <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                                <div>
+                                    <Label htmlFor="isActive" className="text-sm font-medium">
+                                        Store Status
+                                    </Label>
+                                    <p className="text-xs text-gray-500">
+                                        {values.isActive ? 'Store is currently active' : 'Store is currently inactive'}
+                                    </p>
+                                </div>
+                                <Field name="isActive">
+                                    {({ field }: any) => (
+                                        <Switch
+                                            checked={field.value}
+                                            onCheckedChange={(checked) => setFieldValue('isActive', checked)}
+                                        />
+                                    )}
+                                </Field>
+                            </div>
+
                             <StoreLocationInput 
                                 onLocationSelect={(address, lat, lng) => {
                                     setFieldValue('address', address);
                                     setFieldValue('latitude', lat);
                                     setFieldValue('longitude', lng);
-                                    setStatus(''); // Clear errors when location is selected
                                 }}
+                                defaultLocation={{ lat: store.latitude, lng: store.longitude }}
                             />
                             
-                            {/* Location validation feedback */}
+                            {/* Location confirmation */}
                             {values.address && values.latitude !== 0 && values.longitude !== 0 && (
                                 <div className="text-green-600 text-sm flex items-center gap-2 p-2 bg-green-50 rounded-lg">
                                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -150,7 +175,7 @@ export const AddStoreDialog = () => {
                                     disabled={isSubmitting || !values.address || values.latitude === 0}
                                     className="min-w-[100px]"
                                 >
-                                    {isSubmitting ? "Saving..." : "Save Store"}
+                                    {isSubmitting ? "Updating..." : "Update Store"}
                                 </Button>
                             </DialogFooter>
                         </Form>

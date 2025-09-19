@@ -76,5 +76,20 @@ export interface UpdateEmailRequest {
 export interface ConfirmEmailChangeRequest {
     token: string;
 }
+export interface PaginatedUserResponse {
+    content: User[];
+    totalElements: number;
+    totalPages: number;
+    page: number;
+    size: number;
+    hasNext: boolean;
+    hasPrevious: boolean;
+}
 
+export interface APIWrapper<T> {
+    success: boolean;
+    statusCode: number;
+    message: string;
+    data: T;
+}
 
