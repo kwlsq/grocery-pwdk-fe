@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Tabs, TabsList, TabsContent, TabsTrigger } from '@/components/ui/tabs';
 import { useAuthStore } from '@/store/authStore';
 import { useProductStore } from '@/store/productStore';
 import { useDiscountStore } from '@/store/discountStore';
 import { useUsersStore } from '../../store/userStore';
 import { useStoreStore } from '../../store/storeStore';
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
+// removed unused Select imports
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import UserGrid from '@/components/user/UserGrid';
@@ -17,7 +17,9 @@ import dynamic from 'next/dynamic';
 const StockReportTableDyn = dynamic(() => import('@/components/report/StockReportTable'), { ssr: false });
 import CreateDiscountDialog from '@/components/discount/CreateDiscountDialog';
 import {AddStoreDialog} from '@/components/store/AddStoreDialog';
+import StoreSearchFilter from '@/components/store/StoreSearchFilter';
 import StoreGrid from '../../components/store/StoreGrid';
+import UserSearchFilter from '@/components/user/UserSearchFilter';
 import Navbar from '../../components/Navbar/Index';
 import CreateCategoryDialog from '@/components/category/CreateCategoryDialog';
 import CategoryGrid from '@/components/category/CategoryGrid';
@@ -69,17 +71,29 @@ export default function AdminDashboardPage() {
     setMounted(true);
   }, []);
 
-  useEffect(() => {
-    if (!mounted) return;
-    fetchStores();
-  }, [mounted, fetchStores]);
+  const [storeSearch, setStoreSearch] = useState("");
+  const [storeSortBy, setStoreSortBy] = useState("id");
+  const [storeSortDirection, setStoreSortDirection] = useState("asc");
+  const [usersLoadedOnce, setUsersLoadedOnce] = useState(false);
+
+  const handleUserFilterChange = useCallback(({ role, search, sortBy, sortDirection }: { role: '' | 'CUSTOMER' | 'MANAGER' | 'ADMIN' | 'all'; search: string; sortBy: string; sortDirection: 'asc' | 'desc' }) => {
+    const normalizedRole = role === 'all' ? '' : (role as '' | 'CUSTOMER' | 'MANAGER' | 'ADMIN');
+    setSelectedRole(normalizedRole);
+    fetchUsers({ page: 0, size: 12, role: normalizedRole, search, sortBy, sortDirection });
+  }, [fetchUsers, setSelectedRole]);
 
   useEffect(() => {
     if (!mounted) return;
+    fetchStores(0, 12, storeSearch, storeSortBy, storeSortDirection);
+  }, [mounted, fetchStores, storeSearch, storeSortBy, storeSortDirection]);
+
+  useEffect(() => {
+    if (!mounted || usersLoadedOnce) return;
     if (user?.role === 'ADMIN') {
       fetchUsers({ page: 0, size: 12, role: selectedRole });
+      setUsersLoadedOnce(true);
     }
-  }, [mounted, fetchUsers, selectedRole, user]);
+  }, [mounted, user?.role, usersLoadedOnce, fetchUsers]);
 
   useEffect(() => {
     if (!mounted) return;
@@ -149,8 +163,18 @@ export default function AdminDashboardPage() {
                 <div className="flex gap-3">
                   <AddStoreDialog/>
 
+                  <StoreSearchFilter
+                    defaultSearch={storeSearch}
+                    defaultSortBy={storeSortBy}
+                    defaultSortDirection={storeSortDirection as 'asc' | 'desc'}
+                    onChange={({ search, sortBy, sortDirection }) => {
+                      setStoreSearch(search);
+                      setStoreSortBy(sortBy);
+                      setStoreSortDirection(sortDirection);
+                    }}
+                  />
                   <Button
-                    onClick={() => { fetchStores(0, 12, "") }}
+                    onClick={() => { fetchStores(0, 12, storeSearch, storeSortBy, storeSortDirection) }}
                     className="bg-blue-600 hover:bg-blue-700"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -221,29 +245,20 @@ export default function AdminDashboardPage() {
           <TabsContent value='users'>
             {/* Actions Bar */}
             <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-8">
-              <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                <div>
+              <div className="flex md:flex-col flex-row justify-between items-center gap-4">
+                <div className='w-full'>
                   <h2 className="text-lg font-semibold text-gray-900">Users</h2>
                   <p className="text-sm text-gray-600">
                     Manage your store network and monitor performance
                   </p>
                 </div>
                 <div className="flex gap-3 items-center w-full sm:w-auto">
-                  <div className="w-full sm:w-60">
-                    <Select value={selectedRole} onValueChange={(v) => setSelectedRole(v as '' | 'CUSTOMER' | 'MANAGER' | 'ADMIN')}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Filter by role" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectLabel>Role</SelectLabel>
-                          <SelectItem value="all">All</SelectItem>
-                          <SelectItem value="MANAGER">Manager</SelectItem>
-                          <SelectItem value="CUSTOMER">Customer</SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <UserSearchFilter
+                    defaultRole={selectedRole || 'all'}
+                    defaultSortBy={'createdAt'}
+                    defaultSortDirection={'desc'}
+                    onChange={handleUserFilterChange}
+                  />
                   <RegisterStoreAdmin />
                   <Button
                     onClick={() => fetchUsers({ page: 0, size: 12, role: selectedRole })}

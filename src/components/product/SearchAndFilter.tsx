@@ -1,7 +1,7 @@
 'use client';
 
 import { useProductStore } from '@/store/productStore';
-import { FC, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 
 interface SearchAndFilterProps {
   onSearch: (searchTerm: string, category: string, sortBy?: string, sortDirection?: string) => void;
@@ -16,14 +16,16 @@ const SearchAndFilter: FC<SearchAndFilterProps> = ({
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const { categories } = useProductStore();
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSearch(searchTerm, selectedCategory, sortField || '', sortOrder || 'asc');
-  };
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onSearch(searchTerm, selectedCategory, sortField || '', sortOrder || 'asc');
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchTerm, selectedCategory, sortField, sortOrder, onSearch]);
 
   return (
     <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-      <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-4">
+      <form className="flex flex-col sm:flex-row gap-4">
         <div className="flex-1">
           <input
             type="text"
@@ -69,12 +71,7 @@ const SearchAndFilter: FC<SearchAndFilterProps> = ({
             <option value="desc">Descending</option>
           </select>
         </div>
-        <button
-          type="submit"
-          className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200"
-        >
-          Search
-        </button>
+        
       </form>
     </div>
   );

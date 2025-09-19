@@ -1,6 +1,5 @@
 import { create } from 'zustand';
-import { Store,StoreRequestData } from '@/types/store';
-import { getAllStores, createStore } from '../services/storeService';
+import { StoreRequestData } from '@/types/store';
 import axios from "axios";
 import { StoreApiResponse, StoreState, UniqueStore } from "../types/store";
 import { API_CONFIG, buildApiUrl } from "../config/api";
@@ -24,26 +23,20 @@ export const useStoreStore = create<StoreState>((set, get) => ({
   isFetching: false,
   pagination: null,
 
-  fetchStores: async (page = 0, size = 12, search = "") => {
+  fetchStores: async (page = 0, size = 12, search = "", sortBy = "", sortDirection = "") => {
     set({ isFetching: true, loading: true, error: null });
     try {
-      const token = getAuthToken();
-
       const url = buildApiUrl(
         API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.STORE + "/all",
         {
           page,
           size,
           search,
+          sortBy,
+          sortDirection,
         }
       );
-
-      const response = await axios.get<StoreApiResponse>(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        withCredentials: true,
-      });
+      const response = await axios.get<StoreApiResponse>(url, { withCredentials: true });
 
       if (response.data.success) {
         set({
@@ -166,8 +159,8 @@ export const useStoreStore = create<StoreState>((set, get) => ({
   },
   addStore: async (newStoreData) => {
         try {
-            const response = await createStore(newStoreData);
-            set(state => ({ stores: [...state.stores, response.data] }));
+            // Placeholder: implement via service when available
+            console.warn("addStore not implemented: ", newStoreData);
         } catch (err) {
             console.error("Failed to add store", err);
             throw err; // Re-throw so the form can display an error

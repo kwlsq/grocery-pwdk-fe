@@ -2,7 +2,7 @@
 
 import { FC } from 'react';
 import ProductCard from './ProductCard';
-import SearchAndFilter from './SearchAndFilter';
+import ProductSearchFilter from './ProductSearchFilter';
 import { Product } from '@/types/product';
 import {
   Pagination,
@@ -64,7 +64,9 @@ const ProductGrid: FC<ProductGridProps> = ({
     <div className="space-y-6">
       {/* Search and Filter Section - Only show when showSearchAndFilter is true */}
       {showSearchAndFilter && onSearch && (
-        <SearchAndFilter onSearch={onSearch}/>
+        <ProductSearchFilter
+          onChange={({ search, category, sortBy, sortDirection }) => onSearch(search, category, sortBy, sortDirection)}
+        />
       )}
 
       {/* Products Grid */}

@@ -6,6 +6,7 @@ import { useStoreStore } from '../../../../store/storeStore';
 import { useWarehouseStore } from '../../../../store/warehouseStore';
 import WarehouseGrid from '../../../../components/warehouse/WarehouseGrid';
 import AddWarehouseDialog from '../../../../components/warehouse/AddWarehouseDialog';
+import WarehouseSearchFilter from '../../../../components/warehouse/WarehouseSearchFilter';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsContent, TabsTrigger } from '@/components/ui/tabs';
 import { useProductStore } from '@/store/productStore';
@@ -24,6 +25,9 @@ export default function StoreDetailsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [mounted, setMounted] = useState(false);
+  const [warehouseSearch, setWarehouseSearch] = useState("");
+  const [warehouseSortBy, setWarehouseSortBy] = useState("id");
+  const [warehouseSortDirection, setWarehouseSortDirection] = useState("asc");
 
   const { stores, fetchStores } = useStoreStore();
   const { warehouses, loading: warehouseLoading, error: warehouseError, fetchWarehouses, pagination: warehousePagination } = useWarehouseStore();
@@ -62,16 +66,16 @@ export default function StoreDetailsPage() {
   };
 
   // Handle search from ProductGrid
-  const handleSearch = (searchTerm: string, category: string) => {
+  const handleSearch = (searchTerm: string, category: string, sortBy?: string, sortDirection?: string) => {
     setSearchTerm(searchTerm);
     setSelectedCategory(category);
     setCurrentPage(0);
-    fetchProductByStoreID(storeId, 0, pagination?.size || 12, searchTerm, category);
+    fetchProductByStoreID(storeId, 0, pagination?.size || 12, searchTerm, category, undefined);
   };
 
   // Handle page change for warehouses
   const handleWarehousePageChange = (newPage: number) => {
-    fetchWarehouses(storeId, newPage, warehousePagination?.size || 12);
+    fetchWarehouses(storeId, newPage, warehousePagination?.size || 12, warehouseSearch, warehouseSortBy, warehouseSortDirection);
   };
 
   // Refresh products data
@@ -110,11 +114,11 @@ export default function StoreDetailsPage() {
 
     // Fetch warehouses for this store
     if (storeId) {
-      fetchWarehouses(storeId);
+      fetchWarehouses(storeId, 0, 12, warehouseSearch, warehouseSortBy, warehouseSortDirection);
       fetchProductByStoreID(storeId, 0, 12);
     }
 
-  }, [mounted, storeId, stores.length, fetchStores, fetchWarehouses, fetchProductByStoreID]);
+  }, [mounted, storeId, stores.length, fetchStores, fetchWarehouses, fetchProductByStoreID, warehouseSearch, warehouseSortBy, warehouseSortDirection]);
 
   // Update currentPage when pagination data changes
   useEffect(() => {
@@ -318,7 +322,17 @@ export default function StoreDetailsPage() {
                 </div>
                 <div className="flex gap-3">
                   <AddWarehouseDialog />
-                  <Button onClick={() => fetchWarehouses(storeId)} variant={"secondary"}>
+                  <WarehouseSearchFilter
+                    defaultSearch={warehouseSearch}
+                    defaultSortBy={warehouseSortBy}
+                    defaultSortDirection={warehouseSortDirection as 'asc' | 'desc'}
+                    onChange={({ search, sortBy, sortDirection }) => {
+                      setWarehouseSearch(search);
+                      setWarehouseSortBy(sortBy);
+                      setWarehouseSortDirection(sortDirection);
+                    }}
+                  />
+                  <Button onClick={() => fetchWarehouses(storeId, 0, 12, warehouseSearch, warehouseSortBy, warehouseSortDirection)} variant={"secondary"}>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
