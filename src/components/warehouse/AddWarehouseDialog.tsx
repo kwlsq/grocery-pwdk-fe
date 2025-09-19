@@ -28,7 +28,6 @@ type WarehouseFormValues = z.infer<typeof warehouseSchema>;
 
 export default function AddWarehouseDialog() {
   const [open, setOpen] = React.useState(false);
-  const [selectedAdmin, setSelectedAdmin] = React.useState<string | null>(null);
   const params = useParams();
   const storeId = params.id as string;
   const { stores } = useStoreStore();
@@ -67,8 +66,7 @@ export default function AddWarehouseDialog() {
         address: data.address,
         latitude: Number(data.latitude),
         longitude: Number(data.longitude),
-        isActive: true,
-        storeAdminID: selectedAdmin
+        isActive: true
       }
 
       await createWarehouse(newWarehouse);
@@ -147,43 +145,6 @@ export default function AddWarehouseDialog() {
             />
             {errors.longitude && <p className="text-red-500 text-sm">{errors.longitude.message}</p>}
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {users.map((user) => {
-              const isSelected = selectedAdmin === user.id;
-              return (
-                <button
-                  type="button"
-                  key={user.id}
-                  onClick={() => setSelectedAdmin(user.id)}
-                  className={`rounded-lg shadow-sm border p-4 flex items-center gap-4 w-full text-left transition
-          ${isSelected ? "border-blue-500 ring-2 ring-blue-300" : "border-gray-200"}`}
-                >
-                  <div className="h-12 w-12 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center text-gray-500">
-                    {user.photoUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={user.photoUrl}
-                        alt={user.fullName ?? user.email}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <span className="font-semibold">
-                        {(user.fullName || user.email).charAt(0).toUpperCase()}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0 w-full">
-                    <p className="text-sm text-gray-600 truncate">{user.fullName || user.email}</p>
-                    <span className="inline-block mt-2 text-xs px-2 py-0.5 rounded bg-gray-100">
-                      {user.role}
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
 
           <div className="flex justify-end gap-2 pt-4">
             <Button variant="outline" onClick={() => setOpen(false)} type="button">

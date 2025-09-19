@@ -126,7 +126,7 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
   useEffect(() => {
     if (storeID === null) return;
     fetchUniqueWarehouse(storeID)
-  },[fetchUniqueWarehouse, storeID])
+  }, [fetchUniqueWarehouse, storeID])
 
 
   // Update stocks when warehouses are loaded
@@ -231,6 +231,7 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
 
       const productID = await createProduct(newProduct);
 
+      // Only proceed with image uploads and dialog closing if product creation was successful
       if (thumbnail) {
         uploadSingleImage(thumbnail, String(productID), true);
       }
@@ -240,12 +241,19 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
       }
 
       reset();
-      setOpen(false); // only close if no error thrown
+      setSelectedPromotions([]);
+      setThumbnail(null);
+      setThumbnailPreview("");
+      setFiles(null);
+      setMediaPreviews([]);
+      setImageErrors({});
+      setOpen(false); // Only close if everything succeeded
 
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Failed to create product";
-      setError("name", { message }); // show under the Name field
+      // Error is already set in the store, just display it under the name field
+      const message = err instanceof Error ? err.message : "Failed to create product";
+      setError("name", { message });
+      // Dialog stays open so user can see the error and try again
     }
   };
 
@@ -284,7 +292,7 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
               <Input type="text" {...register('name')} placeholder='Input your product name' />
             </div>
             {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name.message}</p>}
-            {error !== null && <p className="mt-1 text-xs text-red-600">{error}</p>}
+            {!errors.name && error && <p className="mt-1 text-xs text-red-600">{error}</p>}
           </div>
 
           {/* Description */}
