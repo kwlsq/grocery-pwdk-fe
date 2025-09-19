@@ -117,7 +117,7 @@ export default function AdminDashboardPage() {
             Manage your stores and monitor their status
           </p>
         </div>
-
+        
         <Tabs defaultValue={tabsData[0]?.value} onValueChange={setActiveTab}>
           <TabsList>
             {tabsData.map((tab) => (
