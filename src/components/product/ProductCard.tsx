@@ -18,6 +18,14 @@ const ProductCard = ({ product }: ProductCardProps) => {
   const { setSelectedProduct } = useProductStore();
   const { price, weight } = product.productVersionResponse;
 
+  const formattedPrice = price.toLocaleString('id-ID');
+  const weightKg = weight / 1000;
+
+const formattedWeight = weightKg.toLocaleString('id-ID', {
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 2,
+});
+
   // Get the primary image or first image available
   const primaryImage = product.productImages.find(img => img.primary) || product.productImages[0];
 
@@ -62,29 +70,23 @@ const ProductCard = ({ product }: ProductCardProps) => {
         </div>
 
         <div className="p-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-gray-500">
-              {weight}kg
-            </span>
-          </div>
-
           <h3 className="font-semibold text-gray-800 mb-2 line-clamp-2">
             {product.name}
           </h3>
 
-          <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+          <p className="text-gray-600 text-sm mb-3 line-clamp-1 md:line-clamp-2">
             {product.description}
           </p>
 
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-2">
-              <span className="text-lg font-bold text-green-600">
-                Rp. {price.toFixed(2)}
+              <span className="text-base md:text-lg font-bold text-green-600">
+                Rp. {formattedPrice}
               </span>
-              <span className="text-xs text-gray-500">/kg</span>
+              <span className="text-[10px] md:text-xs text-gray-500">/{formattedWeight}kg</span>
             </div>
 
-            <span className="text-xs text-gray-500">
+            <span className="hidden md:flex text-xs text-gray-500">
               {totalStock} in stock
             </span>
           </div>

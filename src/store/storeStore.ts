@@ -134,7 +134,7 @@ export const useStoreStore = create<StoreState>((set) => ({
     } catch (error) {
       set({
         error:
-          error instanceof Error ? error.message : "Failed to create warehouse",
+          error instanceof Error ? error.message : "Failed to fetch store for this users",
         loading: false,
       });
     }

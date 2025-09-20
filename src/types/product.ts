@@ -121,7 +121,8 @@ export interface ProductState {
     size?: number,
     search?: string,
     category?: string,
-    sort?: string
+    sortBy?: string,
+    sortDirection?: string
   ) => Promise<void>;
   fetchCategories: () => Promise<void>;
   createCategory: (data: CreateCategoryRequest) => Promise<void>;
