@@ -64,8 +64,6 @@ export default function CreateDiscountDialog() {
   });
 
   const onSubmit = async (data: DiscountFormValue) => {
-    console.log(data);
-    
     try {
 
       await createDiscount({
