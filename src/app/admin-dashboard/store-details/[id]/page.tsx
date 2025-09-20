@@ -91,11 +91,11 @@ export default function StoreDetailsPage() {
   // Count out of stock products
   const outOfStockProducts = productsThisStore.filter(product => {
     const inventories = product.productVersionResponse?.inventories;
-  
+
     if (!Array.isArray(inventories) || inventories.length === 0) {
       return true;
     }
-  
+
     const totalStock = inventories.reduce((sum, inv) => sum + (inv?.stock || 0), 0);
     return totalStock === 0;
   });
@@ -148,7 +148,7 @@ export default function StoreDetailsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar/>
+      <Navbar />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
         {/* Enhanced Store Header with Manager Info */}
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8">
@@ -156,7 +156,7 @@ export default function StoreDetailsPage() {
             <div className="flex-1">
               <h1 className="text-3xl font-bold text-gray-900">{currentStore.name}</h1>
               <p className="text-gray-600 mt-2">{currentStore.description}</p>
-              
+
               {/* Store Manager Section */}
               {currentStore.storeManager ? (
                 <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
@@ -188,7 +188,7 @@ export default function StoreDetailsPage() {
                   </div>
                 </div>
               )}
-              
+
               <div className="flex items-center gap-2 mt-4">
                 <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -196,7 +196,7 @@ export default function StoreDetailsPage() {
                 </svg>
                 <span className="text-gray-600">{currentStore.address}</span>
               </div>
-              
+
               <div className="flex items-center gap-2 mt-2">
                 <span className={`px-2 py-1 rounded-full text-xs font-semibold ${currentStore.isActive
                   ? 'bg-green-500 text-white'
@@ -210,20 +210,85 @@ export default function StoreDetailsPage() {
 
             <div className="flex flex-col gap-3">
               <CreateProduct storeID={storeId} />
-              
+
               {/* Manager Assignment Button */}
-              <AssignManagerDialog 
+              <AssignManagerDialog
                 store={currentStore}
                 allStores={stores}
                 onSuccess={handleManagerAssignmentSuccess}
               />
-              
-             <EditStoreDialog 
-  store={currentStore}
-  onSuccess={() => {
-    fetchStores(); // Refresh stores to show updated data
-  }}
-/>
+
+              <EditStoreDialog
+                store={currentStore}
+                onSuccess={() => {
+                  fetchStores(); // Refresh stores to show updated data
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
+
+        {/* Enhanced Store Statistics with Manager Status */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-5">
+          {/* Manager Status Card */}
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <div className="flex items-center">
+              <div className={`p-2 rounded-lg ${currentStore.storeManager ? 'bg-green-100' : 'bg-red-100'}`}>
+                <svg className={`w-6 h-6 ${currentStore.storeManager ? 'text-green-600' : 'text-red-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Manager Status</p>
+                <p className={`text-lg font-semibold ${currentStore.storeManager ? 'text-green-600' : 'text-red-600'}`}>
+                  {currentStore.storeManager ? 'Assigned' : 'Not Assigned'}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <div className="flex items-center">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+                </svg>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Warehouses</p>
+                <p className="text-2xl font-semibold text-gray-900">{warehouses.length}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <div className="flex items-center">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Active Warehouses</p>
+                <p className="text-2xl font-semibold text-gray-900">
+                  {warehouses.filter(warehouse => warehouse.active).length}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <div className="flex items-center">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Products</p>
+                <p className="text-2xl font-semibold text-gray-900">{pagination?.totalElements || 0}</p>
+              </div>
             </div>
           </div>
         </div>
@@ -247,69 +312,6 @@ export default function StoreDetailsPage() {
           </TabsList>
 
           <TabsContent value='warehouses' className='flex flex-col gap-4 pt-2'>
-            {/* Enhanced Store Statistics with Manager Status */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              {/* Manager Status Card */}
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                <div className="flex items-center">
-                  <div className={`p-2 rounded-lg ${currentStore.storeManager ? 'bg-green-100' : 'bg-red-100'}`}>
-                    <svg className={`w-6 h-6 ${currentStore.storeManager ? 'text-green-600' : 'text-red-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Manager Status</p>
-                    <p className={`text-lg font-semibold ${currentStore.storeManager ? 'text-green-600' : 'text-red-600'}`}>
-                      {currentStore.storeManager ? 'Assigned' : 'Not Assigned'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                <div className="flex items-center">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
-                    </svg>
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Total Warehouses</p>
-                    <p className="text-2xl font-semibold text-gray-900">{warehouses.length}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                <div className="flex items-center">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Active Warehouses</p>
-                    <p className="text-2xl font-semibold text-gray-900">
-                      {warehouses.filter(warehouse => warehouse.active).length}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                <div className="flex items-center">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                    </svg>
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Total Products</p>
-                    <p className="text-2xl font-semibold text-gray-900">{pagination?.totalElements || 0}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
 
             {/* Warehouses Section */}
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8">
@@ -351,71 +353,6 @@ export default function StoreDetailsPage() {
           </TabsContent>
 
           <TabsContent value='products' className='flex flex-col gap-4 pt-2'>
-            {/* Store Statistics for Products Tab */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              {/* Manager Status Card */}
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                <div className="flex items-center">
-                  <div className={`p-2 rounded-lg ${currentStore.storeManager ? 'bg-green-100' : 'bg-red-100'}`}>
-                    <svg className={`w-6 h-6 ${currentStore.storeManager ? 'text-green-600' : 'text-red-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Manager Status</p>
-                    <p className={`text-lg font-semibold ${currentStore.storeManager ? 'text-green-600' : 'text-red-600'}`}>
-                      {currentStore.storeManager ? 'Assigned' : 'Not Assigned'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                <div className="flex items-center">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
-                    </svg>
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Total Products</p>
-                    <p className="text-2xl font-semibold text-gray-900">{pagination?.totalElements || 0}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                <div className="flex items-center">
-                  <div className="p-2 bg-red-100 rounded-lg">
-                    <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z" />
-                    </svg>
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Out of Stock</p>
-                    <p className="text-2xl font-semibold text-gray-900">
-                      {outOfStockProducts.length}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                <div className="flex items-center">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v2h4a1 1 0 0 1 0 2h-1v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6H3a1 1 0 0 1 0-2h4zM9 3v1h6V3H9zM6 6v14h12V6H6z" />
-                    </svg>
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Pages</p>
-                    <p className="text-2xl font-semibold text-gray-900">
-                      {pagination ? `${(pagination.page || 0) + 1} of ${pagination.totalPages || 0}` : '0 of 0'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
 
             {/* Products Section */}
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8">
