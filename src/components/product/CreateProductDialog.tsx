@@ -319,7 +319,7 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
 
             <div className="flex flex-col">
               <div className='flex flex-col gap-2'>
-                <Label className="block text-sm font-medium text-gray-700">Weight</Label>
+                <Label className="block text-sm font-medium text-gray-700">Weight (gram)</Label>
                 <Input type="number" step="0.01" {...register('weight')} />
               </div>
               {errors.weight && <p className="mt-1 text-xs text-red-600">{errors.weight.message}</p>}

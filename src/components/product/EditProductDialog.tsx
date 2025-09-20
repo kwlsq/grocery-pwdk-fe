@@ -409,7 +409,7 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
 
             <div className="flex flex-col">
               <div className='flex flex-col gap-2'>
-                <Label className="block text-sm font-medium text-gray-700">Weight (kg)</Label>
+                <Label className="block text-sm font-medium text-gray-700">Weight (gram)</Label>
                 <Input
                   type="number"
                   step="0.01"
