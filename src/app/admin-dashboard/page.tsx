@@ -366,6 +366,42 @@ export default function AdminDashboardPage() {
               </p>
             }
 
+            {(storeForUser.length > 0 && user?.role ==='MANAGER') || user?.role === 'ADMIN'
+              ?
+              <Tabs defaultValue={reportTabsData[0]?.value} onValueChange={setReportTab}>
+                <TabsList>
+                  {reportTabsData.map((tab) => (
+                    <TabsTrigger
+                      key={tab.value}
+                      value={tab.value}
+                      className={cn(
+                        "rounded-none h-full border-b-2 data-[state=active]:shadow-none",
+                        reportTab === tab.value
+                          ? "border-green-600 text-green-600"
+                          : "border-transparent"
+                      )}
+                    >
+                      {tab.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+                <TabsContent value='summary'>
+                  <StockReportTableDyn />
+                </TabsContent>
+                <TabsContent value='product'>
+                  <ProductStockReportTableDyn />
+                </TabsContent>
+                <TabsContent value='sales'>
+                  <SalesReportChart />
+                  <SalesReportTableDyn />
+                </TabsContent>
+              </Tabs>
+              :
+              <p className='w-full text-center pt-20'>
+                Need to be assigned to a store first
+              </p>
+            }
+
           </TabsContent>
           <TabsContent value='categories'>
             <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-8">

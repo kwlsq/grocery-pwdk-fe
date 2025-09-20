@@ -288,6 +288,7 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
           />
 
           {/* Promotions (optional, multi-select) */}
+            
           <PromotionSelector
             discounts={discounts}
             selectedPromotions={selectedPromotions}
