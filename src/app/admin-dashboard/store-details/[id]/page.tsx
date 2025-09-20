@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useStoreStore } from '../../../../store/storeStore';
 import { useWarehouseStore } from '../../../../store/warehouseStore';
@@ -65,12 +65,46 @@ export default function StoreDetailsPage() {
     fetchProductByStoreID(storeId, newPage, pagination?.size || 12, searchTerm, selectedCategory);
   };
 
-  // Handle search from ProductGrid
+  const prevSearchRef = useRef({
+    searchTerm: '',
+    category: '',
+    sortBy: '',
+    sortDirection: ''
+  });
+
+  // Replace your handleSearch function with this:
   const handleSearch = (searchTerm: string, category: string, sortBy?: string, sortDirection?: string) => {
+    console.log("handleSearch called with:", { searchTerm, category, sortBy, sortDirection });
+
+    const prev = prevSearchRef.current;
+
+    // Check if any values have actually changed
+    const hasChanged =
+      prev.searchTerm !== searchTerm ||
+      prev.category !== category ||
+      prev.sortBy !== (sortBy || '') ||
+      prev.sortDirection !== (sortDirection || '');
+
+    if (!hasChanged) {
+      console.log("Search values unchanged, skipping fetch");
+      return;
+    }
+
+    // Update the ref with new values
+    prevSearchRef.current = {
+      searchTerm,
+      category,
+      sortBy: sortBy || '',
+      sortDirection: sortDirection || ''
+    };
+
+    // Update local state
     setSearchTerm(searchTerm);
     setSelectedCategory(category);
     setCurrentPage(0);
-    fetchProductByStoreID(storeId, 0, pagination?.size || 12, searchTerm, category, undefined);
+
+    // Fetch with new parameters
+    fetchProductByStoreID(storeId, 0, pagination?.size || 12, searchTerm, category, sortBy, sortDirection);
   };
 
   // Handle page change for warehouses
@@ -88,18 +122,6 @@ export default function StoreDetailsPage() {
     fetchStores(); // Refresh stores to update manager info
   };
 
-  // Count out of stock products
-  const outOfStockProducts = productsThisStore.filter(product => {
-    const inventories = product.productVersionResponse?.inventories;
-
-    if (!Array.isArray(inventories) || inventories.length === 0) {
-      return true;
-    }
-
-    const totalStock = inventories.reduce((sum, inv) => sum + (inv?.stock || 0), 0);
-    return totalStock === 0;
-  });
-
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -107,12 +129,10 @@ export default function StoreDetailsPage() {
   useEffect(() => {
     if (!mounted) return;
 
-    // Fetch stores if not already loaded
     if (stores.length === 0) {
       fetchStores();
     }
 
-    // Fetch warehouses for this store
     if (storeId) {
       fetchWarehouses(storeId, 0, 12, warehouseSearch, warehouseSortBy, warehouseSortDirection);
       fetchProductByStoreID(storeId, 0, 12);

@@ -98,7 +98,8 @@ export const useProductStore = create<ProductState>((set) => ({
     size = 12,
     search = "",
     category = "",
-    sort = ""
+    sortBy = "",
+    sortDirection = ""
   ) => {
     set({ loading: true, error: null });
     try {
@@ -111,7 +112,8 @@ export const useProductStore = create<ProductState>((set) => ({
           size,
           search,
           category,
-          sort,
+          sortBy,
+          sortDirection
         }
       );
 
