@@ -13,17 +13,36 @@ import { useAuthStore } from "@/store/authStore";
 
 export default function SalesReportTable() {
   const { sales, loading, error, pagination, page, size, filters, fetchSales, setPage, setFilters } = useSalesReportStore();
-  const { uniqueStores, fetchUniqueStores } = useStoreStore();
+  const { uniqueStores, fetchUniqueStores, store, fetchStoreByUser } = useStoreStore();
   const { categories, fetchCategories, uniqueProducts, fetchUniqueProduct } = useProductStore();
   const { user } = useAuthStore();
 
+  // Initial data fetches based on role
   useEffect(() => {
-    fetchUniqueStores();
+    if (user?.role === 'ADMIN') {
+      fetchUniqueStores();
+      // Admin can fetch immediately with current filters
+      fetchSales({ page: 0, size });
+    } else if (user?.role === 'MANAGER') {
+      // Manager: fetch the store assigned to this user
+      fetchStoreByUser();
+    }
+
     fetchCategories();
     fetchUniqueProduct();
-    fetchSales({ page: 0, size });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [user?.role]);
+
+  // When manager's store is available, lock filter and fetch
+  useEffect(() => {
+    if (user?.role === 'MANAGER' && store?.id) {
+      if (filters.storeId !== store.id) {
+        setFilters({ ...filters, storeId: store.id });
+      }
+      fetchSales({ page: 0, size, filters: { storeId: store.id } });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.role, store?.id]);
 
   const handlePrev = () => {
     if (pagination?.hasPrevious) {
@@ -41,21 +60,32 @@ export default function SalesReportTable() {
     }
   };
 
+  // Ensure admin has stores loaded if missing
+  useEffect(() => {
+    if (user?.role === 'ADMIN' && uniqueStores.length === 0) {
+      fetchUniqueStores();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.role]);
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row gap-2 items-end">
         <div className="flex justify-between w-full">
           <div className="flex gap-2 w-full">
-            <Select value={filters.storeId || ""} onValueChange={(v) => setFilters({ ...filters, storeId: v })}>
+            <Select value={filters.storeId || (user?.role === 'MANAGER' ? (store?.id || "") : "")} onValueChange={(v) => setFilters({ ...filters, storeId: v })}>
               <SelectTrigger disabled={user?.role !== 'ADMIN'}>
                 <SelectValue placeholder="Select Store" />
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
                   <SelectLabel>Stores</SelectLabel>
-                  {uniqueStores.map((s) => (
+                  {user?.role === 'ADMIN' && uniqueStores.map((s) => (
                     <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                   ))}
+                  {user?.role === 'MANAGER' && store?.id && (
+                    <SelectItem key={store.id} value={store.id}>{store.name}</SelectItem>
+                  )}
                 </SelectGroup>
               </SelectContent>
             </Select>

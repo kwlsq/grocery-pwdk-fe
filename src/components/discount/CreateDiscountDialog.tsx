@@ -25,7 +25,7 @@ const discountSchema = z
     startAt: z.date({ message: 'Start date is required' }),
     endAt: z.date({ message: 'End date is required' }),
     type: z.enum(['PRODUCT_DISCOUNT', 'TRANSACTION_DISCOUNT', 'SHIPPING_DISCOUNT', 'REFERRAL']),
-    unit: z.enum(['PERCENTAGE', 'CURRENCY', 'PRODUCT'])
+    unit: z.enum(['PERCENTAGE', 'NOMINAL', 'PRODUCT'])
   })
   .refine((data) => data.endAt > data.startAt, {
     message: 'End date must be after start date',
@@ -64,6 +64,8 @@ export default function CreateDiscountDialog() {
   });
 
   const onSubmit = async (data: DiscountFormValue) => {
+    console.log(data);
+    
     try {
 
       await createDiscount({
@@ -157,7 +159,7 @@ export default function CreateDiscountDialog() {
                     <SelectGroup>
                       <SelectLabel>Unit</SelectLabel>
                       <SelectItem value="PERCENTAGE">Percentage</SelectItem>
-                      <SelectItem value="CURRENCY">Currency</SelectItem>
+                      <SelectItem value="NOMINAL">Nominal</SelectItem>
                       <SelectItem value="PRODUCT">Product</SelectItem>
                     </SelectGroup>
                   </SelectContent>

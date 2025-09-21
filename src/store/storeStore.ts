@@ -1,6 +1,4 @@
 import { create } from 'zustand';
-import { Store,StoreRequestData } from '@/types/store';
-import { getAllStores, createStore } from '../services/storeService';
 import axios from "axios";
 import { StoreApiResponse, StoreState, UniqueStore } from "../types/store";
 import { API_CONFIG, buildApiUrl } from "../config/api";
@@ -14,7 +12,7 @@ const getAuthToken = (): string => {
   return token;
 };
 
-export const useStoreStore = create<StoreState>((set, get) => ({
+export const useStoreStore = create<StoreState>((set) => ({
   stores: [],
   uniqueStores: [],
   store: null,
@@ -24,26 +22,20 @@ export const useStoreStore = create<StoreState>((set, get) => ({
   isFetching: false,
   pagination: null,
 
-  fetchStores: async (page = 0, size = 12, search = "") => {
+  fetchStores: async (page = 0, size = 12, search = "", sortBy = "", sortDirection = "") => {
     set({ isFetching: true, loading: true, error: null });
     try {
-      const token = getAuthToken();
-
       const url = buildApiUrl(
         API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.STORE + "/all",
         {
           page,
           size,
           search,
+          sortBy,
+          sortDirection,
         }
       );
-
-      const response = await axios.get<StoreApiResponse>(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        withCredentials: true,
-      });
+      const response = await axios.get<StoreApiResponse>(url, { withCredentials: true });
 
       if (response.data.success) {
         set({
@@ -77,24 +69,6 @@ export const useStoreStore = create<StoreState>((set, get) => ({
   },
 
   fetchUniqueStores: async () => {
-    const state = get();
-    const now = Date.now();
-    const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-
-    // Return cached data if recent and available
-    if (
-      state.stores.length > 0 &&
-      state.lastFetched &&
-      now - state.lastFetched < CACHE_DURATION
-    ) {
-      return;
-    }
-
-    // Prevent duplicate requests
-    if (state.isFetching) {
-      return;
-    }
-
     set({ isFetching: true, loading: true, error: null });
     try {
       const token = getAuthToken();
@@ -116,10 +90,11 @@ export const useStoreStore = create<StoreState>((set, get) => ({
         set({ uniqueStores, loading: false });
       } else {
         set({
-          error: response.data.message || "Failed to fetch warehouse",
+          error: response.data.message || "Failed to fetch stores",
           loading: false,
         });
       }
+      
     } catch (error) {
       console.error("Error fetching stores:", error);
       set({
@@ -159,15 +134,15 @@ export const useStoreStore = create<StoreState>((set, get) => ({
     } catch (error) {
       set({
         error:
-          error instanceof Error ? error.message : "Failed to create warehouse",
+          error instanceof Error ? error.message : "Failed to fetch store for this users",
         loading: false,
       });
     }
   },
   addStore: async (newStoreData) => {
         try {
-            const response = await createStore(newStoreData);
-            set(state => ({ stores: [...state.stores, response.data] }));
+            // Placeholder: implement via service when available
+            console.warn("addStore not implemented: ", newStoreData);
         } catch (err) {
             console.error("Failed to add store", err);
             throw err; // Re-throw so the form can display an error

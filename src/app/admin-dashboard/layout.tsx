@@ -27,6 +27,7 @@ export default function AdminDashboardLayout({
         setCheckingAuth(false);
       } catch (error) {
         setCheckingAuth(false);
+        console.error(error);
       }
     };
 

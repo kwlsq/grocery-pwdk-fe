@@ -1,19 +1,12 @@
 'use client';
 
-import { useAuthStore } from '@/store/authStore';
 import { Warehouse } from '../../types/warehouse';
-import EditWarehouseDialog from './EditWarehouseDialog';
-import { cn } from '@/lib/utils';
 
 interface WarehouseCardProps {
   warehouse: Warehouse;
 }
 
 const WarehouseCard = ({ warehouse }: WarehouseCardProps) => {
-
-  const { user } = useAuthStore();
-
-
   return (
     <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden border border-gray-100">
       <div className="relative h-48 w-full bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
@@ -59,10 +52,6 @@ const WarehouseCard = ({ warehouse }: WarehouseCardProps) => {
               Long: {warehouse.longitude.toFixed(4)}
             </span>
           </div>
-        </div>
-
-        <div className={cn(!(user?.role === 'ADMIN') && "hidden")}>
-          <EditWarehouseDialog id={warehouse.id} warehouse={warehouse} />
         </div>
       </div>
     </div>

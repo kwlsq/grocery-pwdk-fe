@@ -2,7 +2,7 @@
 
 import { FC } from 'react';
 import ProductCard from './ProductCard';
-import SearchAndFilter from './SearchAndFilter';
+import ProductSearchFilter from './ProductSearchFilter';
 import { Product } from '@/types/product';
 import {
   Pagination,
@@ -25,7 +25,7 @@ interface ProductGridProps {
     hasPrevious: boolean;
   };
   onPageChange?: (newPage: number) => void;
-  onSearch?: (searchTerm: string, category: string) => void;
+  onSearch?: (searchTerm: string, category: string, sortBy?: string, sortDirection?: string) => void;
   showSearchAndFilter?: boolean;
 }
 
@@ -64,7 +64,9 @@ const ProductGrid: FC<ProductGridProps> = ({
     <div className="space-y-6">
       {/* Search and Filter Section - Only show when showSearchAndFilter is true */}
       {showSearchAndFilter && onSearch && (
-        <SearchAndFilter onSearch={onSearch}/>
+        <ProductSearchFilter
+          onChange={({ search, category, sortBy, sortDirection }) => onSearch(search, category, sortBy, sortDirection)}
+        />
       )}
 
       {/* Products Grid */}
@@ -80,7 +82,7 @@ const ProductGrid: FC<ProductGridProps> = ({
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid md:grid-cols-1 grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

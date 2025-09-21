@@ -26,7 +26,7 @@ export const useWarehouseStore = create<WarehouseState>((set) => ({
   lastFetched: null,
   isFetching: false,
 
-  fetchWarehouses: async (storeId: string, page = 0, size = 12) => {
+  fetchWarehouses: async (storeId: string, page = 0, size = 12, search = "", sortBy = "", sortDirection = "") => {
     set({ loading: true, error: null });
     try {
       const token = getAuthToken();
@@ -39,6 +39,9 @@ export const useWarehouseStore = create<WarehouseState>((set) => ({
         {
           page,
           size,
+          search,
+          sortBy,
+          sortDirection,
         }
       );
 

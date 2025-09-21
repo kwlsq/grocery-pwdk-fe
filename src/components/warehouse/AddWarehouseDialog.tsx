@@ -34,7 +34,7 @@ export default function AddWarehouseDialog() {
   const { stores } = useStoreStore();
   const currentStore = stores.find(store => store.id === storeId);
   const { createWarehouse } = useWarehouseStore();
-  const { users, fetchUsers } = useUsersStore();
+  const { fetchUsers } = useUsersStore();
   const { user } = useAuthStore();
 
 

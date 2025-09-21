@@ -4,21 +4,22 @@ import { useEffect, useState } from 'react';
 import { useProductStore } from '../../store/productStore';
 import { useWarehouseStore } from '@/store/warehouseStore';
 import { z } from 'zod';
-import { Controller, useFieldArray, useForm } from 'react-hook-form';
+import { Controller, useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectTrigger, SelectContent, SelectGroup, SelectLabel, SelectItem, SelectValue } from '../ui/select';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { CreateProductDTO } from '@/types/product';
 import { useImageStore } from '@/store/imageStore';
 import { useDiscountStore } from '@/store/discountStore';
 import { useAuthStore } from '@/store/authStore';
+import WarehouseStockSelector from './WarehouseStockSelector';
+import ProductImageUpload from './ProductImageUpload';
+import PromotionSelector from './PromotionSelector';
 
 const productSchema = z.object({
   name: z.string().min(1, 'Name cannot be blank'),
@@ -44,26 +45,6 @@ const productSchema = z.object({
 
 type ProductFormValues = z.infer<typeof productSchema>;
 
-// File validation function
-const validateImageFile = (file: File): string | null => {
-  const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
-  const maxSizeInBytes = 1 * 1024 * 1024; // 1MB in bytes
-
-  // Get file extension
-  const fileExtension = file.name.split('.').pop()?.toLowerCase();
-
-  // Check if extension is allowed
-  if (!fileExtension || !allowedExtensions.includes(fileExtension)) {
-    return `File format not supported. Only .jpg, .jpeg, .png, and .gif files are allowed.`;
-  }
-
-  // Check file size
-  if (file.size > maxSizeInBytes) {
-    return `File size too large. Maximum file size is 1MB.`;
-  }
-
-  return null; // No error
-};
 
 export default function CreateProduct({ storeID }: { storeID: string }) {
   const { categories, fetchCategories, createProduct, error } = useProductStore();
@@ -74,7 +55,7 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
   const [files, setFiles] = useState<File[] | null>(null);
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
-  const [mediaPreviews, setMediaPreviews] = useState<string[]>();
+  const [mediaPreviews, setMediaPreviews] = useState<string[]>([]);
   const [imageErrors, setImageErrors] = useState<{
     thumbnail?: string;
     media?: string;
@@ -83,23 +64,7 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
   const [isMounted, setMounted] = useState(false);
   const { user } = useAuthStore();
 
-  const now = new Date();
-
-  const filteredDiscount = discounts.filter((discount) => {
-    const end = new Date(discount.endAt);
-    return end >= now;
-  });
-
-  const {
-    register,
-    control,
-    handleSubmit,
-    reset,
-    watch,
-    setValue,
-    formState: { errors, isSubmitting },
-    setError,
-  } = useForm<ProductFormValues>({
+  const methods = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
     defaultValues: {
       name: '',
@@ -111,6 +76,16 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
     },
     mode: 'onBlur',
   });
+
+  const {
+    register,
+    control,
+    handleSubmit,
+    reset,
+    setValue,
+    formState: { errors, isSubmitting },
+    setError,
+  } = methods;
 
   useEffect(() => {
     setMounted(true)
@@ -141,66 +116,6 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
     }
   }, [uniqueWarehouses, setValue]);
 
-  const { fields } = useFieldArray({
-    control,
-    name: 'stocks',
-  });
-
-  const handleMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = e.target.files;
-    if (selectedFiles) {
-      const fileArray = Array.from(selectedFiles);
-
-      // Clear previous media error
-      setImageErrors(prev => ({ ...prev, media: undefined }));
-
-      // Validate each file
-      const validFiles: File[] = [];
-      let hasError = false;
-
-      for (const file of fileArray) {
-        const validationError = validateImageFile(file);
-        if (validationError) {
-          setImageErrors(prev => ({
-            ...prev,
-            media: validationError
-          }));
-          hasError = true;
-          break;
-        }
-        validFiles.push(file);
-      }
-
-      if (!hasError) {
-        setFiles(validFiles);
-        const mediaUrls = validFiles.map((file) => URL.createObjectURL(file));
-        setMediaPreviews(mediaUrls);
-      }
-    }
-  }
-
-  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = e.target.files;
-    if (selectedFiles && selectedFiles.length > 0) {
-      const file = selectedFiles[0];
-
-      // Clear previous thumbnail error
-      setImageErrors(prev => ({ ...prev, thumbnail: undefined }));
-
-      // Validate thumbnail file
-      const validationError = validateImageFile(file);
-      if (validationError) {
-        setImageErrors(prev => ({
-          ...prev,
-          thumbnail: validationError
-        }));
-        return;
-      }
-
-      setThumbnail(file);
-      setThumbnailPreview(URL.createObjectURL(file));
-    }
-  }
 
   const onSubmit = async (data: ProductFormValues) => {
     try {
@@ -284,7 +199,8 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
           <DialogTitle>Create New Product</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-4">
+        <FormProvider {...methods}>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-4">
           {/* Name */}
           <div className="flex flex-col">
             <div className="flex flex-col gap-2">
@@ -319,7 +235,7 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
 
             <div className="flex flex-col">
               <div className='flex flex-col gap-2'>
-                <Label className="block text-sm font-medium text-gray-700">Weight</Label>
+                <Label className="block text-sm font-medium text-gray-700">Weight (gram)</Label>
                 <Input type="number" step="0.01" {...register('weight')} />
               </div>
               {errors.weight && <p className="mt-1 text-xs text-red-600">{errors.weight.message}</p>}
@@ -355,149 +271,29 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
           </div>
 
           {/* Stock per warehouse */}
-          <div className="flex flex-col gap-2">
-            <Label className="block text-sm font-medium text-gray-700">Stock in warehouse</Label>
-            {fields.map((field, index) => {
-              const isChecked = watch(`stocks.${index}.selected`);
-
-              return (
-                <div key={field.id} className="flex items-center">
-                  <div className='w-2/3 flex items-center gap-2'>
-                    <Checkbox
-                      checked={isChecked}
-                      onCheckedChange={(checked) =>
-                        setValue(`stocks.${index}.selected`, !!checked, {
-                          shouldValidate: true,
-                        })
-                      }
-                    />
-
-                    {/* Warehouse name */}
-                    <p className="w-full">{uniqueWarehouses[index].name}</p>
-                  </div>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    {...register(`stocks.${index}.quantity` as const)}
-                    disabled={!isChecked}
-                    className='w-1/3'
-                  />
-
-                  {/* Error message */}
-                  {errors.stocks?.[index]?.quantity && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {errors.stocks[index]?.quantity?.message}
-                    </p>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+          <WarehouseStockSelector warehouses={uniqueWarehouses} control={control} />
 
           {/* Upload Image */}
-          <div className="flex flex-col">
-            <div className="flex flex-col gap-2">
-              <Label className="block text-sm font-medium text-gray-700">Product Image</Label>
-              <p className="text-xs text-gray-500">Allowed formats: .jpg, .jpeg, .png, .gif | Max size: 1MB per file</p>
-
-              {/* Upload event image */}
-              <div className="flex flex-col gap-4 p-6 border border-neutral-300 rounded-xl">
-                <div className="flex flex-col gap-2">
-                  <Label>Thumbnail</Label>
-                  {thumbnail && thumbnailPreview && (
-                    <div className={cn("relative w-32 aspect-square border-[1px] border-gray-100 rounded-2xl", !thumbnail && "hidden")}>
-                      <Image
-                        src={thumbnailPreview}
-                        fill
-                        alt="image of event"
-                        className="object-contain"
-                      />
-                    </div>
-                  )}
-                  <div>
-                    <input
-                      type="file"
-                      name="thumbnailFile"
-                      accept=".jpg,.jpeg,.png,.gif"
-                      onChange={handleThumbnailChange}
-                      className={cn("p-4 border-neutral-200 border-dashed border-[1px] rounded-md w-full hover:bg-neutral-100", thumbnail && "hidden")}
-                    />
-                  </div>
-                  {imageErrors.thumbnail && (
-                    <p className="text-xs text-red-600">{imageErrors.thumbnail}</p>
-                  )}
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Label>Product carousel</Label>
-                  {mediaPreviews && mediaPreviews.length > 0 && (
-                    <div className="flex gap-2 w-full flex-wrap">
-                      {mediaPreviews?.map((media, index) => (
-                        <div key={index} className="relative w-32 aspect-square border-[1px] border-gray-100 rounded-2xl">
-                          <Image
-                            src={media}
-                            fill
-                            alt="image of event"
-                            className="object-contain"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  <div>
-                    <input
-                      type="file"
-                      name="multipartFiles"
-                      accept=".jpg,.jpeg,.png,.gif"
-                      multiple
-                      onChange={handleMediaChange}
-                      className={cn("p-4 border-neutral-200 border-dashed border-[1px] rounded-md w-full hover:bg-neutral-100", files?.length === 5 && "hidden")}
-                    />
-                  </div>
-                  {imageErrors.media && (
-                    <p className="text-xs text-red-600">{imageErrors.media}</p>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
+          <ProductImageUpload
+            thumbnail={thumbnail}
+            setThumbnail={setThumbnail}
+            thumbnailPreview={thumbnailPreview}
+            setThumbnailPreview={setThumbnailPreview}
+            files={files}
+            setFiles={setFiles}
+            mediaPreviews={mediaPreviews}
+            setMediaPreviews={setMediaPreviews}
+            imageErrors={imageErrors}
+            setImageErrors={setImageErrors}
+          />
 
           {/* Promotions (optional, multi-select) */}
-          <div className={cn("flex flex-col gap-2", filteredDiscount.length <= 0 && "hidden")}>
-            <Label className="block text-sm font-medium text-gray-700">Promotions</Label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {filteredDiscount.map((discount) => {
-                const isSelected = selectedPromotions.includes(discount.id);
-                return (
-                  <button
-                    type="button"
-                    key={discount.id}
-                    onClick={() => {
-                      setSelectedPromotions((prev) =>
-                        prev.includes(discount.id)
-                          ? prev.filter((id) => id !== discount.id)
-                          : [...prev, discount.id]
-                      );
-                    }}
-                    className={cn(
-                      "text-left p-4 border rounded-xl transition-colors",
-                      isSelected ? "border-green-500 bg-green-50" : "border-gray-200 hover:border-gray-300"
-                    )}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-medium">{discount.name}</span>
-                      <span className="text-xs text-gray-500">min Rp {discount.minPurchase.toLocaleString()}</span>
-                    </div>
-                    <p className="text-xs text-gray-600 mb-2 line-clamp-2">{discount.description}</p>
-                    <span className="text-sm font-semibold text-green-700">
-                      {discount.unit === 'percentage'
-                        ? `${discount.value}%`
-                        : (discount.unit === 'currency' ? `Rp ${discount.value.toLocaleString()}` : `B1G1`)}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+            
+          <PromotionSelector
+            discounts={discounts}
+            selectedPromotions={selectedPromotions}
+            setSelectedPromotions={setSelectedPromotions}
+          />
 
           <div className="flex justify-end gap-2 pt-4">
             <Button variant="outline" onClick={() => setOpen(false)} type="button">
@@ -507,7 +303,8 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
               {isSubmitting && isUploading ? "Creating new product..." : "Create Product"}
             </Button>
           </div>
-        </form>
+          </form>
+        </FormProvider>
       </DialogContent>
     </Dialog>
   );

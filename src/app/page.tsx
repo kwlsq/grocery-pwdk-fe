@@ -21,6 +21,9 @@ export default function Home() {
   const [currentPage, setCurrentPage] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [sortBy, setSortBy] = useState('');
+  const [sortDirection, setSortDirection] = useState('');
+
 
   useEffect(() => {
     setMounted(true);
@@ -44,7 +47,8 @@ export default function Home() {
         12,
         searchTerm,
         selectedCategory,
-        '',
+        sortBy,
+        sortDirection,
         coords.userLatitude,
         coords.userLongitude,
         300
@@ -58,7 +62,9 @@ export default function Home() {
     currentPage,
     searchTerm,
     selectedCategory,
-    fetchProducts
+    fetchProducts,
+    sortBy,
+    sortDirection
   ]);
 
   return (
@@ -87,9 +93,11 @@ export default function Home() {
             hasPrevious: pagination?.hasPrevious ?? false,
           }}
           onPageChange={(page) => setCurrentPage(page)}
-          onSearch={(term, category) => {
+          onSearch={(term, category, sortByParam, sortDirParam) => {
             setSearchTerm(term);
             setSelectedCategory(category);
+            setSortBy(sortByParam || '');
+            setSortDirection(sortDirParam || '');
             setCurrentPage(0);
           }}
           showSearchAndFilter={true}

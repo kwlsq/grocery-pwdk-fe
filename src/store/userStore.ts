@@ -16,6 +16,9 @@ export const useUsersStore = create<UsersState>((set, get) => ({
     const page = params?.page ?? 0;
     const size = params?.size ?? 12;
     const role = params?.role ?? get().selectedRole ?? "";
+    const search = params?.search ?? "";
+    const sortBy = params?.sortBy ?? "";
+    const sortDirection = params?.sortDirection ?? "";
 
     set({ loading: true, error: null });
     try {
@@ -31,6 +34,9 @@ export const useUsersStore = create<UsersState>((set, get) => ({
           page,
           size,
           role,
+          search,
+          sortBy,
+          sortDirection,
         }
       );
 

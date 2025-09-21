@@ -349,7 +349,7 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
             <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
             <path d="M16 5l3 3" />
           </svg>
-          Edit Product
+          <span className='hidden md:flex'>Edit Product</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto">
@@ -409,7 +409,7 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
 
             <div className="flex flex-col">
               <div className='flex flex-col gap-2'>
-                <Label className="block text-sm font-medium text-gray-700">Weight (kg)</Label>
+                <Label className="block text-sm font-medium text-gray-700">Weight (gram)</Label>
                 <Input
                   type="number"
                   step="0.01"
@@ -604,7 +604,7 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
                         <span className="text-base font-bold text-green-600">
-                          {discount.unit === 'percentage' ? `${discount.value}%` :
+                          {discount.unit === 'PERCENTAGE' ? `${discount.value}%` :
                             discount.unit === 'currency' ? `Rp ${discount.value.toLocaleString()}` :
                               'B1G1'}
                         </span>
