@@ -1,17 +1,22 @@
+// src/app/product-details/[id]/page.tsx
 "use client"
 
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { notFound } from 'next/navigation';
 import { useProductStore } from '@/store/productStore';
 import { useUserVerification } from '@/hooks/useUserVerification';
+import { useAuthStore } from '@/store/authStore';
 import DiscountCard from '@/components/discount/DiscountCard';
 import Navbar from '../../../components/Navbar/Index';
+import RedirectService from '@/services/redirectService';
 
 export default function ProductDetailsPage() {
   const router = useRouter();
+  const pathname = usePathname();
   const { selectedProduct } = useProductStore();
   const { canAccessFeature } = useUserVerification();
+  const { isAuthenticated, user } = useAuthStore();
 
   if (!selectedProduct) return notFound();
 
@@ -19,8 +24,11 @@ export default function ProductDetailsPage() {
   const { price, weight, inventories } = selectedProduct.productVersionResponse;
   const totalStock = inventories.reduce((sum, inv) => sum + inv.stock, 0);
 
-  const canAddToCart = canAccessFeature(true, false);
-  const canAddToCartVerified = canAccessFeature(true, true);
+  const handleAuthRequired = () => {
+    // Store current product page for redirect after login
+    RedirectService.setIntendedRedirect(pathname);
+    router.push('/auth');
+  };
 
   const renderAddToCartButton = () => {
     if (totalStock === 0) {
@@ -31,11 +39,11 @@ export default function ProductDetailsPage() {
       );
     }
 
-    if (!canAddToCart) {
+    if (!isAuthenticated) {
       return (
         <button
-          onClick={() => router.push('/auth')}
-          className="w-full bg-gray-400 hover:bg-gray-500 text-white py-3 px-4 rounded-lg font-medium flex items-center justify-center gap-2"
+          onClick={handleAuthRequired}
+          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-4 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -45,7 +53,7 @@ export default function ProductDetailsPage() {
       );
     }
 
-    if (!canAddToCartVerified) {
+    if (!user?.verified) {
       return (
         <button
           disabled
