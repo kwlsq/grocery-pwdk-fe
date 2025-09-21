@@ -163,7 +163,7 @@ export const WarehouseLocationInput: React.FC<WarehouseLocationInputProps> = ({
       {/* Address Input Section */}
       <div className="space-y-2">
         <Label htmlFor="address" className="text-sm font-medium text-gray-700">
-          Store Address
+          Warehouse Address
         </Label>
 
         <div className="relative">
@@ -172,7 +172,7 @@ export const WarehouseLocationInput: React.FC<WarehouseLocationInputProps> = ({
             value={inputValue}
             onChange={handleInputChange}
             onKeyDown={handleAddressSubmit}
-            placeholder="Start typing store address or press Enter to search..."
+            placeholder="Start typing warehouse address or press Enter to search..."
             autoComplete="off"
             className="w-full pr-10"
           />
@@ -215,7 +215,7 @@ export const WarehouseLocationInput: React.FC<WarehouseLocationInputProps> = ({
           <div className="flex items-start">
             <div className="mr-3 text-green-600">✅</div>
             <div className="flex-1">
-              <p className="text-sm font-medium text-green-900">Selected Store Location</p>
+              <p className="text-sm font-medium text-green-900">Selected Warehouse Location</p>
               <p className="text-sm text-green-700 mt-1">{selectedLocation.address}</p>
               <p className="text-xs text-green-600 mt-1">
                 Coordinates: {selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}

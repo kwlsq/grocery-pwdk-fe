@@ -1,6 +1,7 @@
 'use client';
 
 import { FC, useEffect, useState } from 'react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 interface WarehouseSearchFilterProps {
   defaultSearch?: string;
@@ -37,23 +38,26 @@ const WarehouseSearchFilter: FC<WarehouseSearchFilterProps> = ({
         placeholder="Search warehouses..."
         className="px-3 py-2 border border-gray-300 rounded-md"
       />
-      <select
-        value={sortBy}
-        onChange={(e) => setSortBy(e.target.value)}
-        className="px-3 py-2 border border-gray-300 rounded-md"
-      >
-        <option value="id">ID</option>
-        <option value="name">Name</option>
-        <option value="createdAt">Created At</option>
-      </select>
-      <select
-        value={sortDirection}
-        onChange={(e) => setSortDirection(e.target.value as 'asc' | 'desc')}
-        className="px-3 py-2 border border-gray-300 rounded-md"
-      >
-        <option value="asc">Asc</option>
-        <option value="desc">Desc</option>
-      </select>
+      <Select value={sortBy} onValueChange={setSortBy}>
+        <SelectTrigger className="w-[120px]">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="id">ID</SelectItem>
+          <SelectItem value="name">Name</SelectItem>
+          <SelectItem value="createdAt">Newest</SelectItem>
+        </SelectContent>
+      </Select>
+
+      <Select value={sortDirection} onValueChange={(value) => setSortDirection(value as 'asc' | 'desc')}>
+        <SelectTrigger className="w-[80px]">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="asc">Asc</SelectItem>
+          <SelectItem value="desc">Desc</SelectItem>
+        </SelectContent>
+      </Select>
     </div>
   );
 };

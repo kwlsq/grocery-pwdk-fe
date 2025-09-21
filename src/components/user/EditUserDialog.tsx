@@ -185,7 +185,7 @@ const EditUserDialog: FC<UserProps> = ({ user }) => {
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting && isUploading ? "Creating new product..." : "Create Product"}
+                {isSubmitting && isUploading ? "Registering new user..." : "Register User"}
               </Button>
             </div>
           </div>

@@ -2,6 +2,7 @@
 
 import { FC, useEffect, useState } from 'react';
 import { useProductStore } from '@/store/productStore';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 interface ProductSearchFilterProps {
   defaultSearch?: string;
@@ -50,41 +51,55 @@ const ProductSearchFilter: FC<ProductSearchFilterProps> = ({
           />
         </div>
         <div className="flex-1">
-          <select
+          <Select
             value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            onValueChange={setCategory}
           >
-            <option value="">All Categories</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="All Categories" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {categories.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
+
         <div className="flex-1">
-          <select
+          <Select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            onValueChange={setSortBy}
           >
-            <option value="">Sort by</option>
-            <option value="name">Name</option>
-            <option value="price">Price</option>
-            <option value="weight">Weight</option>
-            <option value="createdAt">Created At</option>
-          </select>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="default">Sort by</SelectItem>
+              <SelectItem value="name">Name</SelectItem>
+              <SelectItem value="price">Price</SelectItem>
+              <SelectItem value="weight">Weight</SelectItem>
+              <SelectItem value="createdAt">Newest</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
+
         <div className="flex-1">
-          <select
+          <Select
             value={sortDirection}
-            onChange={(e) => setSortDirection(e.target.value as 'asc' | 'desc')}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            onValueChange={(value) => setSortDirection(value as 'asc' | 'desc')}
           >
-            <option value="asc">Ascending</option>
-            <option value="desc">Descending</option>
-          </select>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Sort direction" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="asc">Ascending</SelectItem>
+              <SelectItem value="desc">Descending</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
     </div>

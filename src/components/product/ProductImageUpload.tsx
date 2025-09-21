@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { Label } from "@/components/ui/label";
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -23,7 +22,7 @@ const validateImageFile = (file: File): string | null => {
     return `File size too large. Maximum file size is 1MB.`;
   }
 
-  return null; // No error
+  return null;
 };
 
 interface ProductImageUploadProps {

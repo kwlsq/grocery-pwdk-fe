@@ -7,7 +7,6 @@ import { useProductStore } from '@/store/productStore';
 import { useDiscountStore } from '@/store/discountStore';
 import { useUsersStore } from '../../store/userStore';
 import { useStoreStore } from '../../store/storeStore';
-// removed unused Select imports
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import UserGrid from '@/components/user/UserGrid';
@@ -16,7 +15,7 @@ import DiscountGrid from '@/components/discount/DiscountGrid';
 import dynamic from 'next/dynamic';
 const StockReportTableDyn = dynamic(() => import('@/components/report/StockReportTable'), { ssr: false });
 import CreateDiscountDialog from '@/components/discount/CreateDiscountDialog';
-import {AddStoreDialog} from '@/components/store/AddStoreDialog';
+import { AddStoreDialog } from '@/components/store/AddStoreDialog';
 import StoreSearchFilter from '@/components/store/StoreSearchFilter';
 import StoreGrid from '../../components/store/StoreGrid';
 import UserSearchFilter from '@/components/user/UserSearchFilter';
@@ -25,6 +24,7 @@ import CreateCategoryDialog from '@/components/category/CreateCategoryDialog';
 import CategoryGrid from '@/components/category/CategoryGrid';
 import { SalesReportChart } from '../../components/report/SalesReportChart';
 import { Store } from '@/types/store';
+import DiscountSearchFilter from '@/components/discount/DiscountSearchFilter';
 
 const ProductStockReportTableDyn = dynamic(() => import('@/components/report/ProductStockReportTable'), { ssr: false });
 const SalesReportTableDyn = dynamic(() => import('@/components/report/SalesReportTable'), { ssr: false });
@@ -38,6 +38,15 @@ export default function AdminDashboardPage() {
   const { discounts, loading: discountsLoading, error: discountsError, pagination: discountPagination, fetchDiscount } = useDiscountStore();
   const { user } = useAuthStore();
   const { categories, fetchCategories, deleteCategory } = useProductStore();
+  const [discountUnit, setDiscountUnit] = useState<'' | 'PERCENTAGE' | 'NOMINAL' | 'PRODUCT' | 'all'>('all');
+
+  const [storeSearch, setStoreSearch] = useState("");
+  const [storeSortBy, setStoreSortBy] = useState("id");
+  const [storeSortDirection, setStoreSortDirection] = useState("asc");
+  const [usersLoadedOnce, setUsersLoadedOnce] = useState(false);
+  const [discountSearch, setDiscountSearch] = useState("");
+  const [discountSortBy, setDiscountSortBy] = useState("createdAt");
+  const [discountSortDirection, setDiscountSortDirection] = useState("desc");
 
   const storeForUser: Store[] = store ? [store] : [];
 
@@ -71,11 +80,6 @@ export default function AdminDashboardPage() {
     setMounted(true);
   }, []);
 
-  const [storeSearch, setStoreSearch] = useState("");
-  const [storeSortBy, setStoreSortBy] = useState("id");
-  const [storeSortDirection, setStoreSortDirection] = useState("asc");
-  const [usersLoadedOnce, setUsersLoadedOnce] = useState(false);
-
   const handleUserFilterChange = useCallback(({ role, search, sortBy, sortDirection }: { role: '' | 'CUSTOMER' | 'MANAGER' | 'ADMIN' | 'all'; search: string; sortBy: string; sortDirection: 'asc' | 'desc' }) => {
     const normalizedRole = role === 'all' ? '' : (role as '' | 'CUSTOMER' | 'MANAGER' | 'ADMIN');
     setSelectedRole(normalizedRole);
@@ -95,15 +99,26 @@ export default function AdminDashboardPage() {
     }
   }, [mounted, user?.role, usersLoadedOnce, fetchUsers]);
 
+  const handleDiscountFilterChange = useCallback(({ unit, search, sortBy, sortDirection }: { unit: '' | 'PERCENTAGE' | 'NOMINAL' | 'PRODUCT' | 'all'; search: string; sortBy: string; sortDirection: 'asc' | 'desc' }) => {
+    setDiscountSearch(search);
+    setDiscountSortBy(sortBy);
+    setDiscountSortDirection(sortDirection);
+    setDiscountUnit(unit);
+    
+    // Convert 'all' to empty string for the API call
+    const normalizedUnit = unit === 'all' ? '' : (unit as '' | 'PERCENTAGE' | 'NOMINAL' | 'PRODUCT');
+    fetchDiscount(0, 12, search, sortBy, sortDirection, normalizedUnit);
+  }, [fetchDiscount]);
+
   useEffect(() => {
     if (!mounted) return;
-    fetchDiscount();
-  }, [mounted, fetchDiscount]);
+    const normalizedUnit = discountUnit === 'all' ? '' : (discountUnit as '' | 'PERCENTAGE' | 'NOMINAL' | 'PRODUCT');
+    fetchDiscount(0, 12, discountSearch, discountSortBy, discountSortDirection, normalizedUnit);
+  }, [mounted, fetchDiscount, discountSearch, discountSortBy, discountSortDirection, discountUnit]);
 
   useEffect(() => {
     if (!mounted) return;
     if (user?.role !== 'MANAGER') return;
-
     fetchStoreByUser();
   }, [mounted, fetchStoreByUser, user])
 
@@ -118,7 +133,6 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     setActiveTab(tabsData[0].value);
   }, [])
-
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -161,7 +175,7 @@ export default function AdminDashboardPage() {
                   </p>
                 </div>
                 <div className="flex gap-3">
-                  <AddStoreDialog/>
+                  <AddStoreDialog />
 
                   <StoreSearchFilter
                     defaultSearch={storeSearch}
@@ -288,9 +302,15 @@ export default function AdminDashboardPage() {
                   </p>
                 </div>
                 <div className="flex gap-3 items-center w-full sm:w-auto">
+                  <DiscountSearchFilter
+                    defaultSearch={discountSearch}
+                    defaultSortBy={discountSortBy}
+                    defaultSortDirection={discountSortDirection as 'asc' | 'desc'}
+                    onChange={handleDiscountFilterChange}
+                  />
                   <CreateDiscountDialog />
                   <Button
-                    onClick={() => fetchDiscount()}
+                    onClick={() => fetchDiscount(0, 12, discountSearch, discountSortBy, discountSortDirection)}
                     className="bg-blue-600 hover:bg-blue-700"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -313,9 +333,8 @@ export default function AdminDashboardPage() {
                 hasNext: discountPagination.hasNext,
                 hasPrevious: discountPagination.hasPrevious,
               } : undefined}
-              onPageChange={() => {
-                // If backend supports pagination params later, wire here
-                fetchDiscount();
+              onPageChange={(page) => {
+                fetchDiscount(page, 12, discountSearch, discountSortBy, discountSortDirection);
               }}
             />
           </TabsContent>
@@ -330,7 +349,7 @@ export default function AdminDashboardPage() {
               </div>
             </div>
             {/** Lazy load to avoid SSR issues with client store hooks */}
-            {(storeForUser.length > 0 && user?.role ==='MANAGER') || user?.role === 'ADMIN'
+            {(storeForUser.length > 0 && user?.role === 'MANAGER') || user?.role === 'ADMIN'
               ?
               <Tabs defaultValue={reportTabsData[0]?.value} onValueChange={setReportTab}>
                 <TabsList>
@@ -366,7 +385,7 @@ export default function AdminDashboardPage() {
               </p>
             }
 
-            {(storeForUser.length > 0 && user?.role ==='MANAGER') || user?.role === 'ADMIN'
+            {(storeForUser.length > 0 && user?.role === 'MANAGER') || user?.role === 'ADMIN'
               ?
               <Tabs defaultValue={reportTabsData[0]?.value} onValueChange={setReportTab}>
                 <TabsList>

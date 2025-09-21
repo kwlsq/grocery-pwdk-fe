@@ -44,7 +44,6 @@ export default function AdminDashboardLayout({
     }
   }, [mounted, checkingAuth, user, isAuthenticated, router]);
 
-  // Show loading while checking auth
   if (!mounted || checkingAuth) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -56,7 +55,6 @@ export default function AdminDashboardLayout({
     );
   }
 
-  // Don't render children if not authenticated or not admin
   if (!isAuthenticated || user?.role === 'CUSTOMER') {
     return null;
   }

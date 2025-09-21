@@ -91,7 +91,6 @@ export default function ProductStock({ id, product }: { id: string, product: Pro
     );
   };
 
-
   const onSubmit = async (data: StockFormValues) => {
     try {
       // Only prepare inventories data for items that have changed
