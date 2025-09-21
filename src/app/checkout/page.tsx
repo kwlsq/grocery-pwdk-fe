@@ -1,17 +1,34 @@
+// src/app/checkout/page.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useProtectedRoute } from '@/hooks/useProtectedRoute'; // Use our security hook
+import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 import { Address } from '@/types/address';
 import { ShippingOption } from '@/types/shipping';
 import { getCheckoutAddresses, calculateShippingOptions } from '@/services/shippingService';
+import { AuthRequiredModal } from '@/components/auth/AuthRequiredModal';
+import { VerificationRequiredModal } from '@/components/auth/VerificationRequiredModal';
 
 // --- Reusable Icon Components ---
 const TruckIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg> );
 const MapPinIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg> );
 
 export default function CheckoutPage() {
-    const { isLoading: isAuthLoading, isAuthenticated } = useProtectedRoute();
+    // Checkout page: requires auth + CUSTOMER role + verification
+    const { 
+        isLoading: authLoading, 
+        isAuthenticated, 
+        showAuthModal, 
+        showVerificationModal,
+        handleGoToAuth, 
+        handleGoHome,
+        handleGoToVerification,
+        accessDenied 
+    } = useProtectedRoute({
+        requireAuth: true,
+        requireVerification: true, // Checkout requires verification
+        allowedRoles: ['CUSTOMER']
+    });
     
     const [addresses, setAddresses] = useState<Address[]>([]);
     const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
@@ -20,7 +37,7 @@ export default function CheckoutPage() {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (isAuthenticated) {
+        if (isAuthenticated && !authLoading && !showVerificationModal) {
             const fetchAddresses = async () => {
                 try {
                     console.log('Fetching addresses...'); 
@@ -42,14 +59,14 @@ export default function CheckoutPage() {
                         setAddresses([]);
                     }
                 } catch (err) {
-                    console.error('Address fetch error:', err); // Debug log
+                    console.error('Address fetch error:', err);
                     setError('Failed to load your addresses. Please try again.');
                     setAddresses([]);
                 }
             };
             fetchAddresses();
         }
-    }, [isAuthenticated]);
+    }, [isAuthenticated, authLoading, showVerificationModal]);
 
     // Calculate shipping costs whenever the selected address changes
     useEffect(() => {
@@ -57,17 +74,14 @@ export default function CheckoutPage() {
             const calculateShipping = async () => {
                 setIsShippingLoading(true);
                 setShippingOptions([]);
-                setError(null); // Clear previous errors
+                setError(null);
                 try {
-                    // NOTE: The storeId and totalWeight are hardcoded for now.
-                    // In a real app, you would get these from your cart state.
                     const requestData = {
-                        storeId: '288705db-7fff-48d1-b4dd-e0a87136bdc6', // <-- Replace with a real Store ID from your DB
+                        storeId: '288705db-7fff-48d1-b4dd-e0a87136bdc6',
                         addressId: selectedAddress.id,
-                        totalWeight: 1000 // 1kg in grams
+                        totalWeight: 1000
                     };
                     
-
                     const response = await calculateShippingOptions(requestData);                    
                     let shippingData = null;
                     if (response && response.data) {
@@ -100,17 +114,49 @@ export default function CheckoutPage() {
         }
     }, [selectedAddress]);
 
-    if (isAuthLoading) {
-        return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    // Show loading while checking authentication
+    if (authLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
+                    <p className="mt-4 text-gray-600">Loading...</p>
+                </div>
+            </div>
+        );
     }
 
+    // Don't render if access denied (will redirect automatically)
+    if (accessDenied) {
+        return null;
+    }
+
+    // Show verification modal if needed
+    if (showVerificationModal) {
+        return (
+            <VerificationRequiredModal 
+                isOpen={showVerificationModal}
+                onResendVerification={handleGoToVerification}
+                onGoHome={handleGoHome}
+                featureName="checkout"
+            />
+        );
+    }
+
+    // Don't render if not authenticated
     if (!isAuthenticated) {
-        return null; // The hook will handle the redirect
+        return (
+            <AuthRequiredModal 
+                isOpen={showAuthModal}
+                onGoToAuth={handleGoToAuth}
+                onGoHome={handleGoHome}
+                pageName="checkout"
+            />
+        );
     }
 
     return (
         <div className="min-h-screen bg-gray-50">
-            {/* ... (You can add your Navbar component here) ... */}
             <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
                 <h1 className="text-3xl font-bold text-gray-900 mb-8">Checkout</h1>
                 
@@ -149,20 +195,11 @@ export default function CheckoutPage() {
                                 {isShippingLoading ? (
                                     <p>Calculating shipping options...</p>
                                 ) : (() => {
-                                    // Debug logging in render
-                                    console.log('Rendering shipping options:', shippingOptions);
-                                    console.log('Shipping options type:', typeof shippingOptions);
-                                    console.log('Is array:', Array.isArray(shippingOptions));
-                                    console.log('Length:', shippingOptions?.length);
-                                    
-                                    // Extremely defensive rendering
                                     if (!shippingOptions) {
-                                        console.warn('shippingOptions is null/undefined');
                                         return <p>No shipping options available (data is null).</p>;
                                     }
                                     
                                     if (!Array.isArray(shippingOptions)) {
-                                        console.warn('shippingOptions is not an array:', shippingOptions);
                                         return <p>No shipping options available (data format error).</p>;
                                     }
                                     
@@ -171,9 +208,7 @@ export default function CheckoutPage() {
                                     }
                                     
                                     return shippingOptions.map((option, index) => {
-                                        // Defensive check for each option
                                         if (!option) {
-                                            console.warn('Null option at index:', index);
                                             return null;
                                         }
                                         
@@ -197,8 +232,9 @@ export default function CheckoutPage() {
                     <div className="lg:col-span-1">
                         <div className="bg-white p-6 rounded-lg shadow-sm sticky top-28">
                             <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
-                            {/* ... (Order summary details would go here) ... */}
-                            <button className="w-full mt-6">Place Order</button>
+                            <button className="w-full mt-6 bg-emerald-600 text-white py-3 px-4 rounded-lg hover:bg-emerald-700 transition-colors">
+                                Place Order
+                            </button>
                         </div>
                     </div>
                 </div>

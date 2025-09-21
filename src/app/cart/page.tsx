@@ -1,16 +1,37 @@
+// src/app/cart/page.tsx
 "use client";
 
 import { useEffect } from "react";
+import { useProtectedRoute } from "@/hooks/useProtectedRoute";
 import { useCartStore } from "../../store/cartStore";
 import { CartItem as CartItemType } from "../../types/cart";
 import CartItem from "../../components/cart/CartItem";
+import { AuthRequiredModal } from "@/components/auth/AuthRequiredModal";
+import { VerificationRequiredModal } from "@/components/auth/VerificationRequiredModal";
 
 const CartPage = () => {
+  const { 
+    isLoading: authLoading, 
+    isAuthenticated, 
+    showAuthModal, 
+    showVerificationModal,
+    handleGoToAuth, 
+    handleGoHome,
+    handleGoToVerification,
+    accessDenied 
+  } = useProtectedRoute({
+    requireAuth: true,
+    requireVerification: true, // Cart requires verification
+    allowedRoles: ['CUSTOMER']
+  });
+
   const { items, loading, error, fetchCartItems, updateItemQuantity, removeItem, clearCart } = useCartStore();
 
   useEffect(() => {
-    fetchCartItems();
-  }, [fetchCartItems]);
+    if (isAuthenticated && !authLoading && !showVerificationModal) {
+      fetchCartItems();
+    }
+  }, [isAuthenticated, authLoading, showVerificationModal, fetchCartItems]);
 
   const handleQuantityChange = async (itemId: string, newQuantity: number) => {
     if (newQuantity > 0) {
@@ -29,6 +50,47 @@ const CartPage = () => {
   const calculateTotal = () => {
     return items.reduce((total, item) => total + (item.price * item.quantity), 0);
   };
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if access denied (will redirect automatically)
+  if (accessDenied) {
+    return null;
+  }
+
+  // Show verification modal if needed
+  if (showVerificationModal) {
+    return (
+      <VerificationRequiredModal 
+        isOpen={showVerificationModal}
+        onResendVerification={handleGoToVerification}
+        onGoHome={handleGoHome}
+        featureName="your shopping cart"
+      />
+    );
+  }
+
+  // Don't render if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <AuthRequiredModal 
+        isOpen={showAuthModal}
+        onGoToAuth={handleGoToAuth}
+        onGoHome={handleGoHome}
+        pageName="your shopping cart"
+      />
+    );
+  }
 
   if (loading) {
     return (
