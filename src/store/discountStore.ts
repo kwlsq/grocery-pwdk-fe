@@ -13,7 +13,14 @@ export const useDiscountStore = create<DiscountState>((set, get) => ({
   error: null,
   pagination: null,
 
-  fetchDiscount: async () => {
+  fetchDiscount: async (
+    page = 0,
+    size = 12,
+    search = "",
+    sortBy = "",
+    sortDirection = "",
+    unit = ""
+  ) => {
     set({ loading: true, error: null });
     try {
       const token =
@@ -24,7 +31,15 @@ export const useDiscountStore = create<DiscountState>((set, get) => ({
         "";
 
       const url = buildApiUrl(
-        API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.DISCOUNT
+        API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.DISCOUNT, 
+        {
+          page,
+          size,
+          search,
+          sortBy,
+          sortDirection,
+          unit
+        }
       );
 
       const response = await axios.get<DiscountsApiResponse>(url, {

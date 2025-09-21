@@ -26,7 +26,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-// Helper function to generate all months for the current year
+// Generate all months for the current year
 const generateMonthsForYear = (year: number) => {
   const months = []
   for (let i = 0; i < 12; i++) {
@@ -47,7 +47,7 @@ export function SalesReportChart() {
   const { monthlySales, fetchMonthlySales } = useSalesReportStore();
 
   useEffect(() => {
-    // Add a small delay to prevent race condition with table component
+    // Delay to prevent race condition with table component
     const timer = setTimeout(() => {
       console.log('Chart: Fetching monthly sales...')
       fetchMonthlySales();
@@ -56,25 +56,18 @@ export function SalesReportChart() {
     return () => clearTimeout(timer);
   }, [fetchMonthlySales])
 
-  // Process the data to fill missing months
   const processedData = useMemo(() => {
     if (!monthlySales || monthlySales.length === 0) {
-      // If no data, return current year with all zeros
       return generateMonthsForYear(new Date().getFullYear())
     }
 
-    // Get the year from the first data point (assuming all data is from the same year)
     const firstDataYear = new Date(monthlySales[0].month + '-01').getFullYear()
-
-    // Generate all months for the year
     const allMonths = generateMonthsForYear(firstDataYear)
 
-    // Create a map for quick lookup of existing data
     const dataMap = new Map(
       monthlySales.map(item => [item.month, item.orderCount])
     )
 
-    // Fill in the actual data
     return allMonths.map(month => ({
       month: month.month,
       monthKey: month.monthKey,
