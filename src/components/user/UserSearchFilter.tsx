@@ -1,6 +1,7 @@
 'use client';
 
 import { FC, useEffect, useState } from 'react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 type Role = '' | 'CUSTOMER' | 'MANAGER' | 'ADMIN' | 'all';
 
@@ -36,17 +37,22 @@ const UserSearchFilter: FC<UserSearchFilterProps> = ({
   return (
     <div className="flex gap-3 items-center w-full sm:w-auto">
       <div className="w-full sm:w-60">
-        <select
+        <Select
           value={role}
-          onChange={(e) => setRole(e.target.value as Role)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+          onValueChange={(value) => setRole(value as Role)}
         >
-          <option value="all">All</option>
-          <option value="MANAGER">Manager</option>
-          <option value="CUSTOMER">Customer</option>
-          <option value="ADMIN">Admin</option>
-        </select>
+          <SelectTrigger className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All</SelectItem>
+            <SelectItem value="MANAGER">Manager</SelectItem>
+            <SelectItem value="CUSTOMER">Customer</SelectItem>
+            <SelectItem value="ADMIN">Admin</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
+
       <input
         type="text"
         value={search}
@@ -54,23 +60,33 @@ const UserSearchFilter: FC<UserSearchFilterProps> = ({
         placeholder="Search users..."
         className="w-full sm:w-60 px-3 py-2 border border-gray-300 rounded-md"
       />
-      <select
+
+      <Select
         value={sortBy}
-        onChange={(e) => setSortBy(e.target.value)}
-        className="px-3 py-2 border border-gray-300 rounded-md"
+        onValueChange={setSortBy}
       >
-        <option value="createdAt">Newest</option>
-        <option value="fullName">Name</option>
-        <option value="email">Email</option>
-      </select>
-      <select
+        <SelectTrigger className="w-[140px]">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="createdAt">Newest</SelectItem>
+          <SelectItem value="fullName">Name</SelectItem>
+          <SelectItem value="email">Email</SelectItem>
+        </SelectContent>
+      </Select>
+
+      <Select
         value={sortDirection}
-        onChange={(e) => setSortDirection(e.target.value as 'asc' | 'desc')}
-        className="px-3 py-2 border border-gray-300 rounded-md"
+        onValueChange={(value) => setSortDirection(value as 'asc' | 'desc')}
       >
-        <option value="asc">Asc</option>
-        <option value="desc">Desc</option>
-      </select>
+        <SelectTrigger className="w-[80px]">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="asc">Asc</SelectItem>
+          <SelectItem value="desc">Desc</SelectItem>
+        </SelectContent>
+      </Select>
     </div>
   );
 };
