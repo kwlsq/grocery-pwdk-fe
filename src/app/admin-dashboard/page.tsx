@@ -103,8 +103,8 @@ export default function AdminDashboardPage() {
     setDiscountSearch(search);
     setDiscountSortBy(sortBy);
     setDiscountSortDirection(sortDirection);
-    setDiscountUnit(unit); // Add this line
-
+    setDiscountUnit(unit);
+    
     // Convert 'all' to empty string for the API call
     const normalizedUnit = unit === 'all' ? '' : (unit as '' | 'PERCENTAGE' | 'NOMINAL' | 'PRODUCT');
     fetchDiscount(0, 12, search, sortBy, sortDirection, normalizedUnit);
@@ -119,7 +119,6 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     if (!mounted) return;
     if (user?.role !== 'MANAGER') return;
-
     fetchStoreByUser();
   }, [mounted, fetchStoreByUser, user])
 
@@ -134,7 +133,6 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     setActiveTab(tabsData[0].value);
   }, [])
-
 
   return (
     <div className="min-h-screen bg-gray-50">

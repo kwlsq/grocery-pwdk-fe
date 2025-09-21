@@ -47,11 +47,10 @@ export function SalesReportChart() {
   const { monthlySales, fetchMonthlySales } = useSalesReportStore();
 
   useEffect(() => {
-    // Delay to prevent race condition with table component
     const timer = setTimeout(() => {
       console.log('Chart: Fetching monthly sales...')
       fetchMonthlySales();
-    }, 100); // 100ms delay
+    }, 100);
 
     return () => clearTimeout(timer);
   }, [fetchMonthlySales])

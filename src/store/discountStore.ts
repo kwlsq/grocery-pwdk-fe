@@ -7,7 +7,7 @@ import {
 import axios from "axios";
 import { API_CONFIG, buildApiUrl } from "@/config/api";
 
-export const useDiscountStore = create<DiscountState>((set, get) => ({
+export const useDiscountStore = create<DiscountState>((set) => ({
   discounts: [],
   loading: false,
   error: null,

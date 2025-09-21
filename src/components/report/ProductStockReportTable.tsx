@@ -35,7 +35,7 @@ export default function ProductStockReportTable() {
   const [warehouseId, setWarehouseId] = useState<string>("");
 
   useEffect(() => {
-    // Load stores and products; set manager's store if applicable
+    // Load stores and products
     fetchStores();
     if (isManager) {
       fetchStoreByUser();
@@ -44,7 +44,7 @@ export default function ProductStockReportTable() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Initialize fixed store for manager and load its warehouses
+  // Load fixed store for manager
   useEffect(() => {
     if (isManager && store) {
       setStoreId(store.id);
@@ -54,7 +54,6 @@ export default function ProductStockReportTable() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store, isManager]);
 
-  // When non-manager selects a store, load its warehouses and reset selected warehouse
   useEffect(() => {
     if (!isManager) {
       if (storeId) {
@@ -81,7 +80,6 @@ export default function ProductStockReportTable() {
 
   useEffect(() => {
     if (!selectedProductId) return;
-    // reset to first page on month change
     setProductPage(0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [month]);

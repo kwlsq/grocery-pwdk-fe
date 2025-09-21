@@ -28,13 +28,12 @@ export default function StoreDetailsPage() {
   const [warehouseSearch, setWarehouseSearch] = useState("");
   const [warehouseSortBy, setWarehouseSortBy] = useState("id");
   const [warehouseSortDirection, setWarehouseSortDirection] = useState("asc");
+  const [activeTab, setActiveTab] = useState('warehouses');
 
   const { stores, fetchStores } = useStoreStore();
   const { warehouses, loading: warehouseLoading, error: warehouseError, fetchWarehouses, pagination: warehousePagination } = useWarehouseStore();
   const { productsThisStore, error: productError, loading: productLoading, fetchProductByStoreID, pagination } = useProductStore();
-  const [activeTab, setActiveTab] = useState('warehouses');
 
-  // Find the current store
   const currentStore = stores.find(store => store.id === storeId);
 
   // Tab configuration data
@@ -43,7 +42,6 @@ export default function StoreDetailsPage() {
     { value: 'products', label: 'Products' }
   ];
 
-  // Transform pagination data for ProductGrid component
   const paginationData = pagination ? {
     currentPage: pagination.page || 0,
     totalPages: pagination.totalPages || 0,
@@ -51,7 +49,6 @@ export default function StoreDetailsPage() {
     hasPrevious: pagination.hasPrevious || false
   } : undefined;
 
-  // Transform pagination data for WarehouseGrid component
   const warehousePaginationData = warehousePagination ? {
     currentPage: warehousePagination.page || 0,
     totalPages: warehousePagination.totalPages || 0,
@@ -72,7 +69,6 @@ export default function StoreDetailsPage() {
     sortDirection: ''
   });
 
-  // Replace your handleSearch function with this:
   const handleSearch = (searchTerm: string, category: string, sortBy?: string, sortDirection?: string) => {
     console.log("handleSearch called with:", { searchTerm, category, sortBy, sortDirection });
 
@@ -90,7 +86,6 @@ export default function StoreDetailsPage() {
       return;
     }
 
-    // Update the ref with new values
     prevSearchRef.current = {
       searchTerm,
       category,
@@ -98,12 +93,10 @@ export default function StoreDetailsPage() {
       sortDirection: sortDirection || ''
     };
 
-    // Update local state
     setSearchTerm(searchTerm);
     setSelectedCategory(category);
     setCurrentPage(0);
 
-    // Fetch with new parameters
     fetchProductByStoreID(storeId, 0, pagination?.size || 12, searchTerm, category, sortBy, sortDirection);
   };
 
@@ -112,14 +105,14 @@ export default function StoreDetailsPage() {
     fetchWarehouses(storeId, newPage, warehousePagination?.size || 12, warehouseSearch, warehouseSortBy, warehouseSortDirection);
   };
 
-  // Refresh products data
+  // Handle refresh products data
   const refreshProducts = () => {
     fetchProductByStoreID(storeId, currentPage, pagination?.size || 12, searchTerm, selectedCategory);
   };
 
   // Handle successful manager assignment
   const handleManagerAssignmentSuccess = () => {
-    fetchStores(); // Refresh stores to update manager info
+    fetchStores();
   };
 
   useEffect(() => {
@@ -140,7 +133,6 @@ export default function StoreDetailsPage() {
 
   }, [mounted, storeId, stores.length, fetchStores, fetchWarehouses, fetchProductByStoreID, warehouseSearch, warehouseSortBy, warehouseSortDirection]);
 
-  // Update currentPage when pagination data changes
   useEffect(() => {
     if (pagination?.page !== undefined) {
       setCurrentPage(pagination.page);
@@ -241,7 +233,7 @@ export default function StoreDetailsPage() {
               <EditStoreDialog
                 store={currentStore}
                 onSuccess={() => {
-                  fetchStores(); // Refresh stores to show updated data
+                  fetchStores();
                 }}
               />
             </div>

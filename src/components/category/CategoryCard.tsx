@@ -8,7 +8,6 @@ export default function CategoryCard({ category, onDelete }: { category: Product
 
   const { user } = useAuthStore();
 
-
   return (
     <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex items-center justify-between">
       <span className="font-medium text-gray-900">{category.name}</span>
