@@ -34,7 +34,7 @@ export default function AdminDashboardPage() {
   const [activeTab, setActiveTab] = useState('stores');
   const [reportTab, setReportTab] = useState('summary');
   const { stores, loading, error, fetchStores, fetchStoreByUser, pagination: storePagination, store } = useStoreStore();
-  const { users, loading: usersLoading, error: usersError, fetchUsers, selectedRole, setSelectedRole } = useUsersStore();
+  const { users, loading: usersLoading, error: usersError, fetchUsers, selectedRole, setSelectedRole, pagination: userPagination } = useUsersStore();
   const { discounts, loading: discountsLoading, error: discountsError, pagination: discountPagination, fetchDiscount } = useDiscountStore();
   const { user } = useAuthStore();
   const { categories, fetchCategories, deleteCategory } = useProductStore();
@@ -104,7 +104,7 @@ export default function AdminDashboardPage() {
     setDiscountSortBy(sortBy);
     setDiscountSortDirection(sortDirection);
     setDiscountUnit(unit);
-    
+
     // Convert 'all' to empty string for the API call
     const normalizedUnit = unit === 'all' ? '' : (unit as '' | 'PERCENTAGE' | 'NOMINAL' | 'PRODUCT');
     fetchDiscount(0, 12, search, sortBy, sortDirection, normalizedUnit);
@@ -288,7 +288,20 @@ export default function AdminDashboardPage() {
             </div>
 
             {/* Users Grid */}
-            <UserGrid users={users} loading={usersLoading} error={usersError} />
+            <UserGrid
+              users={users}
+              loading={usersLoading}
+              error={usersError}
+              pagination={userPagination ? {
+                currentPage: userPagination.page,
+                totalPages: userPagination.totalPages,
+                hasNext: userPagination.hasNext,
+                hasPrevious: userPagination.hasPrevious,
+              } : undefined}
+              onPageChange={(page) => {
+                fetchUsers({ page, size: 12, role: selectedRole });
+              }}
+            />
           </TabsContent>
 
           <TabsContent value='discounts'>
@@ -306,11 +319,15 @@ export default function AdminDashboardPage() {
                     defaultSearch={discountSearch}
                     defaultSortBy={discountSortBy}
                     defaultSortDirection={discountSortDirection as 'asc' | 'desc'}
+                    defaultUnit={discountUnit}
                     onChange={handleDiscountFilterChange}
                   />
                   <CreateDiscountDialog />
                   <Button
-                    onClick={() => fetchDiscount(0, 12, discountSearch, discountSortBy, discountSortDirection)}
+                    onClick={() => {
+                      const normalizedUnit = discountUnit === 'all' ? '' : (discountUnit as '' | 'PERCENTAGE' | 'NOMINAL' | 'PRODUCT');
+                      fetchDiscount(0, 12, discountSearch, discountSortBy, discountSortDirection, normalizedUnit);
+                    }}
                     className="bg-blue-600 hover:bg-blue-700"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -334,7 +351,8 @@ export default function AdminDashboardPage() {
                 hasPrevious: discountPagination.hasPrevious,
               } : undefined}
               onPageChange={(page) => {
-                fetchDiscount(page, 12, discountSearch, discountSortBy, discountSortDirection);
+                const normalizedUnit = discountUnit === 'all' ? '' : (discountUnit as '' | 'PERCENTAGE' | 'NOMINAL' | 'PRODUCT');
+                fetchDiscount(page, 12, discountSearch, discountSortBy, discountSortDirection, normalizedUnit);
               }}
             />
           </TabsContent>

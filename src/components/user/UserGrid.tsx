@@ -3,14 +3,35 @@
 import { FC } from 'react';
 import { User } from '@/types/user';
 import UserCard from './UserCard';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationPrevious,
+  PaginationNext,
+} from "@/components/ui/pagination";
+import { cn } from '@/lib/utils';
 
 interface UserGridProps {
   users: User[];
   loading: boolean;
   error?: string | null;
+  pagination?: {
+    currentPage: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrevious: boolean;
+  };
+  onPageChange?: (newPage: number) => void;
 }
 
-const UserGrid: FC<UserGridProps> = ({ users, loading, error }) => {
+const UserGrid: FC<UserGridProps> = ({
+  users,
+  loading,
+  error,
+  pagination,
+  onPageChange, }) => {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-48">
@@ -39,10 +60,45 @@ const UserGrid: FC<UserGridProps> = ({ users, loading, error }) => {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {users.map((user) => (
-        <UserCard key={user.id} user={user} />
-      ))}
+    <div className="space-y-6">
+      {/* Users Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {users.map((user) => (
+          <UserCard key={user.id} user={user} />
+        ))}
+      </div>
+
+      {/* Pagination */}
+      {pagination && onPageChange && (
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => onPageChange(pagination.currentPage - 1)}
+                className={cn(!pagination.hasPrevious && "pointer-events-none opacity-50")}
+              />
+            </PaginationItem>
+
+            {Array.from({ length: pagination.totalPages }, (_, i) => (
+              <PaginationItem key={i}>
+                <PaginationLink
+                  onClick={() => onPageChange(i)}
+                  isActive={pagination.currentPage === i}
+                >
+                  {i + 1}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+
+            <PaginationItem>
+              <PaginationNext
+                onClick={() => onPageChange(pagination.currentPage + 1)}
+                className={cn(!pagination.hasNext && "pointer-events-none opacity-50")}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
     </div>
   );
 };
