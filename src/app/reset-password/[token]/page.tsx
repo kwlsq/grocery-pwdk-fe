@@ -13,7 +13,6 @@ export default function ResetPasswordPage() {
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow-xl sm:rounded-2xl sm:px-10">
           <Suspense fallback={<div>Loading...</div>}>
-            {/* The token from the URL is now passed as a prop */}
             <ResetPasswordForm token={token} />
           </Suspense>
         </div>

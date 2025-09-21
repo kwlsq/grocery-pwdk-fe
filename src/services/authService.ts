@@ -31,4 +31,10 @@ export const resetPassword = (data: ResetPasswordData) => {
 export const confirmEmailChange = (token: string) => {
   return apiClient.post(`/auth/confirm-email-change?token=${token}`);
 };
+export const resendVerificationEmail = (email: string) => {
+  return apiClient.post('/auth/resend-verification', { email });
+};
+export const checkVerificationToken = (token: string) => {
+  return apiClient.get(`/auth/verify/check-token?token=${token}`);
+};
 
