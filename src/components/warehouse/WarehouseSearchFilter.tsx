@@ -44,7 +44,7 @@ const WarehouseSearchFilter: FC<WarehouseSearchFilterProps> = ({
       >
         <option value="id">ID</option>
         <option value="name">Name</option>
-        <option value="createdAt">Created At</option>
+        <option value="createdAt">Newest</option>
       </select>
       <select
         value={sortDirection}

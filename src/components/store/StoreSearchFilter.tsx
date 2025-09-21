@@ -43,8 +43,8 @@ const StoreSearchFilter: FC<StoreSearchFilterProps> = ({
         className="px-3 py-2 border border-gray-300 rounded-md"
       >
         <option value="id">ID</option>
-        <option value="name">Name</option>
-        <option value="createdAt">Created At</option>
+        <option value="storeName">Name</option>
+        <option value="createdAt">Newest</option>
       </select>
       <select
         value={sortDirection}

@@ -73,7 +73,7 @@ const ProductSearchFilter: FC<ProductSearchFilterProps> = ({
             <option value="name">Name</option>
             <option value="price">Price</option>
             <option value="weight">Weight</option>
-            <option value="createdAt">Created At</option>
+            <option value="createdAt">Newest</option>
           </select>
         </div>
         <div className="flex-1">

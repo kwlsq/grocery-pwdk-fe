@@ -59,7 +59,7 @@ const UserSearchFilter: FC<UserSearchFilterProps> = ({
         onChange={(e) => setSortBy(e.target.value)}
         className="px-3 py-2 border border-gray-300 rounded-md"
       >
-        <option value="createdAt">Created At</option>
+        <option value="createdAt">Newest</option>
         <option value="fullName">Name</option>
         <option value="email">Email</option>
       </select>

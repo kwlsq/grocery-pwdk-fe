@@ -628,8 +628,10 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
                 >Delete</Button>
               </DialogTrigger>
               <DialogContent>
-                <div className='space-y-4'>
+                <DialogTitle>
                   <div>Are you sure you want to delete product <span className='font-bold'>{product.name}</span>?</div>
+                </DialogTitle>
+                <div className='space-y-4'>
                   <div className='flex justify-end gap-2'>
                     <Button type='button' variant={"secondary"} onClick={() => setConfirmOpen(false)}>
                       Cancel

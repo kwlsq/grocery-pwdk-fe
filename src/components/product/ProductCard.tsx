@@ -134,7 +134,6 @@ const formattedWeight = weightKg.toLocaleString('id-ID', {
         </div>
 
         <div className="p-4">
-<
           <h3 className="font-semibold text-gray-800 mb-2 line-clamp-2">
             {product.name}
           </h3>
