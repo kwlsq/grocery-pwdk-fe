@@ -20,7 +20,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
 
  checkAuthStatus: async () => {
-  // Prevent multiple simultaneous calls
   if (get().isLoading) return;
   
   set({ isLoading: true });

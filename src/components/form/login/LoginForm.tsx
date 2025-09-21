@@ -1,6 +1,7 @@
+// src/components/form/login/LoginForm.tsx
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
@@ -34,9 +35,7 @@ export const LoginForm = ({ setView }: { setView: (view: 'login' | 'register') =
   const router = useRouter();
   const { login } = useAuthStore();
 
-  useEffect(() => {
-    RedirectService.clearIntendedRedirect();
-  }, []);
+  // Don't clear the redirect here! We want to keep it until after successful login
 
   return (
     <div className="w-full">
@@ -52,14 +51,19 @@ export const LoginForm = ({ setView }: { setView: (view: 'login' | 'register') =
         onSubmit={async (values, { setSubmitting }) => {
           setServerError('');
           try {
+            console.log('Starting login process...');
+            
             const response = await loginUser(values);
+            console.log('Login successful, user data:', response.data.user);
+            
+            // Update auth state - this will trigger the redirect in AuthPage
             login(response.data.user);
             
-            const redirectTo = RedirectService.handlePostLoginRedirect();
-            router.push(redirectTo);
+            // Don't handle redirect here - let AuthPage handle it
             
           } catch (err: any) {
-             if (err.response && err.response.data) {
+            console.error('Login failed:', err);
+            if (err.response && err.response.data) {
                 if (typeof err.response.data === 'string') {
                     setServerError(err.response.data);
                 } else if (err.response.data.message) {
