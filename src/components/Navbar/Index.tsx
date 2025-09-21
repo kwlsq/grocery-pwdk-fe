@@ -1,11 +1,14 @@
+// src/components/Navbar/Index.tsx
 'use client';
 
 import React from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import { useUserVerification } from '@/hooks/useUserVerification';
 import { VerificationBanner } from '../user/EmailVerificationBanner';
+import { SmartLoginButton } from '../auth/LoginButton';
+import RedirectService from '@/services/redirectService';
 
 const UserIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -23,20 +26,38 @@ export default function Navbar(){
     const { isAuthenticated, user, logout } = useAuthStore();
     const { isRegistered, isVerified, canAccessFeature } = useUserVerification();
     const router = useRouter();
+    const pathname = usePathname();
 
     const handleLogout = async () => {
+        RedirectService.clearIntendedRedirect();
         await logout();
         router.push('/');
     };
 
-    const canAccessCart = canAccessFeature(true, false);
+    const handleCartClick = () => {
+        if (!isAuthenticated) {
+            // Store current page and redirect to auth
+            RedirectService.setIntendedRedirect(pathname);
+            router.push('/auth');
+            return;
+        }
+
+        if (!isVerified) {
+            // Show some feedback that verification is needed
+            alert('Please verify your email to access the cart');
+            return;
+        }
+
+        // Navigate to cart
+        router.push('/cart');
+    };
 
     const renderCartButton = () => {
-        if (!isRegistered) {
+        if (!isAuthenticated) {
             return (
                 <button 
-                    onClick={() => router.push('/auth')}
-                    className="p-2 rounded-full hover:bg-gray-100 relative"
+                    onClick={handleCartClick}
+                    className="p-2 rounded-full hover:bg-gray-100 relative transition-colors"
                     title="Login to access cart"
                 >
                     <ShoppingCartIcon className="h-6 w-6 text-gray-400"/>
@@ -47,8 +68,8 @@ export default function Navbar(){
         if (!isVerified) {
             return (
                 <button 
-                    disabled
-                    className="p-2 rounded-full cursor-not-allowed relative"
+                    onClick={handleCartClick}
+                    className="p-2 rounded-full hover:bg-gray-100 relative transition-colors"
                     title="Verify account to access cart"
                 >
                     <ShoppingCartIcon className="h-6 w-6 text-gray-400"/>
@@ -60,12 +81,53 @@ export default function Navbar(){
         }
 
         return (
-            <Link href="/cart" className="p-2 rounded-full hover:bg-gray-100 relative">
+            <Link href="/cart" className="p-2 rounded-full hover:bg-gray-100 relative transition-colors">
                 <ShoppingCartIcon className="h-6 w-6 text-gray-600"/>
                 <div className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-500 text-white text-xs rounded-full flex items-center justify-center">
                     3
                 </div>
             </Link>
+        );
+    };
+
+    const renderProfileSection = () => {
+        if (!isAuthenticated) {
+            return (
+                <SmartLoginButton variant="primary" size="sm">
+                    Login / Sign Up
+                </SmartLoginButton>
+            );
+        }
+
+        return (
+            <div className="flex items-center space-x-4">
+                <Link href="/profile" className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                    <div className="relative">
+                        <img 
+                            src={user?.photoUrl || `https://ui-avatars.com/api/?name=${user?.fullName}&background=random`} 
+                            alt="Profile"
+                            className="h-8 w-8 rounded-full object-cover"
+                        />
+                        {!isVerified && (
+                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-500 rounded-full"></div>
+                        )}
+                    </div>
+                    <div className="hidden sm:block">
+                        <span className="text-gray-700">Hello, {user?.fullName?.split(' ')[0]}</span>
+                        {!isVerified && (
+                            <div className="text-xs text-yellow-600">Not Verified</div>
+                        )}
+                    </div>
+                </Link>
+                
+                <button 
+                    onClick={handleLogout} 
+                    className="flex items-center space-x-2 p-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
+                    title="Logout"
+                >
+                    <LogOutIcon className="h-5 w-5"/>
+                </button>
+            </div>
         );
     };
 
@@ -82,45 +144,19 @@ export default function Navbar(){
                         {renderCartButton()}
                         
                         {(user?.role === 'ADMIN' || user?.role === 'MANAGER') && (
-                            <Link href="/admin-dashboard" className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700">
+                            <Link 
+                                href="/admin-dashboard" 
+                                className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
+                            >
                                 Admin Dashboard
                             </Link>
                         )}
 
-                        {isAuthenticated ? (
-                            <div className="flex items-center space-x-4">
-                                <Link href="/profile" className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 transition-colors">
-                                    <div className="relative">
-                                        <img 
-                                            src={user?.photoUrl || `https://ui-avatars.com/api/?name=${user?.fullName}&background=random`} 
-                                            alt="Profile"
-                                            className="h-8 w-8 rounded-full object-cover"
-                                        />
-                                        {!isVerified && (
-                                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-500 rounded-full"></div>
-                                        )}
-                                    </div>
-                                    <div className="hidden sm:block">
-                                        <span className="text-gray-700">Hello, {user?.fullName?.split(' ')[0]}</span>
-                                        {!isVerified && (
-                                            <div className="text-xs text-yellow-600">Not Verified</div>
-                                        )}
-                                    </div>
-                                </Link>
-                                
-                                <button onClick={handleLogout} className="flex items-center space-x-2 p-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-full hover:bg-gray-200">
-                                    <LogOutIcon className="h-5 w-5"/>
-                                </button>
-                            </div>
-                        ) : (
-                            <Link href="/auth" className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700">
-                                Login / Sign Up
-                            </Link>
-                        )}
+                        {renderProfileSection()}
                     </div>
                 </div>
             </nav>
             <VerificationBanner/>
         </header>
     );
-};
+}

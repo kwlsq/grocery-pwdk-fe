@@ -1,13 +1,14 @@
+// src/app/addresses/page.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useAuthStore } from '../../store/authStore';
-import { useUserVerification } from '../../hooks/useUserVerification';
+import { useProtectedRoute } from '../../hooks/useProtectedRoute';
 import { Address } from '@/types/address';
 import { getAddresses, deleteAddress } from '@/services/addressService';
 import { ProfileSidebar } from '@/components/profile/ProfileSidebar';
 import { AddressCard } from '@/components/address/AddressCard';
 import { AddressModal } from '@/components/address/AddressModal';
+import { AuthRequiredModal } from '@/components/auth/AuthRequiredModal';
 
 const PlusIcon = (props: React.SVGProps<SVGSVGElement>) => ( 
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
@@ -16,11 +17,24 @@ const PlusIcon = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 export default function UserAddressesPage() {
-    const { isAuthenticated, checkAuthStatus } = useAuthStore();
-    const { isVerified } = useUserVerification();
-    const [isLoading, setIsLoading] = useState(true);
+    // Addresses page: requires auth + CUSTOMER role, but NOT verification
+    const { 
+        isLoading: authLoading, 
+        isAuthenticated, 
+        isVerified,
+        showAuthModal, 
+        handleGoToAuth, 
+        handleGoHome,
+        accessDenied 
+    } = useProtectedRoute({
+        requireAuth: true,
+        requireVerification: false, // Addresses can be viewed without verification
+        allowedRoles: ['CUSTOMER']
+    });
+    
     const [addresses, setAddresses] = useState<Address[]>([]);
     const [editingAddress, setEditingAddress] = useState<Partial<Address> | null>(null);
+    const [isDataLoading, setIsDataLoading] = useState(true);
 
     const fetchAndSetAddresses = async () => {
         try {
@@ -28,19 +42,16 @@ export default function UserAddressesPage() {
             setAddresses(response.data);
         } catch (error) {
             console.error("Failed to fetch addresses", error);
+        } finally {
+            setIsDataLoading(false);
         }
     };
 
     useEffect(() => {
-        const loadPageData = async () => {
-            await checkAuthStatus();
-            if (useAuthStore.getState().isAuthenticated) {
-                await fetchAndSetAddresses();
-            }
-            setIsLoading(false);
-        };
-        loadPageData();
-    }, [checkAuthStatus]);
+        if (isAuthenticated && !authLoading) {
+            fetchAndSetAddresses();
+        }
+    }, [isAuthenticated, authLoading]);
 
     const handleSave = () => {
         if (!isVerified) return;
@@ -59,12 +70,33 @@ export default function UserAddressesPage() {
         }
     };
 
-    if (isLoading) {
-        return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    // Show loading while checking authentication
+    if (authLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
+                    <p className="mt-4 text-gray-600">Loading...</p>
+                </div>
+            </div>
+        );
     }
 
-    if (!isAuthenticated) {
+    // Don't render if access denied (will redirect automatically)
+    if (accessDenied) {
         return null;
+    }
+
+    // Don't render if not authenticated
+    if (!isAuthenticated) {
+        return (
+            <AuthRequiredModal 
+                isOpen={showAuthModal}
+                onGoToAuth={handleGoToAuth}
+                onGoHome={handleGoHome}
+                pageName="your addresses"
+            />
+        );
     }
 
     return (
@@ -106,29 +138,36 @@ export default function UserAddressesPage() {
                                         <div>
                                             <h3 className="text-sm font-medium text-yellow-800">Account Not Verified</h3>
                                             <p className="text-sm text-yellow-700 mt-1">
-                                                Please verify your account to add, edit, or delete addresses.
+                                                Please verify your account to add, edit, or delete addresses. You can view your existing addresses but cannot modify them.
                                             </p>
                                         </div>
                                     </div>
                                 </div>
                             )}
 
-                            <div className="space-y-4">
-                                {addresses.map(address => (
-                                    <div key={address.id} className={!isVerified ? 'opacity-50 pointer-events-none' : ''}>
-                                        <AddressCard 
-                                            address={address} 
-                                            onEdit={() => isVerified && setEditingAddress(address)}
-                                            onDelete={() => isVerified && handleDelete(address.id)}
-                                        />
-                                    </div>
-                                ))}
-                                {addresses.length === 0 && (
-                                    <p className="text-gray-500 text-center py-8">
-                                        {isVerified ? 'You have no saved addresses.' : 'No addresses to display.'}
-                                    </p>
-                                )}
-                            </div>
+                            {isDataLoading ? (
+                                <div className="text-center py-8">
+                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto"></div>
+                                    <p className="mt-2 text-gray-600">Loading addresses...</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {addresses.map(address => (
+                                        <div key={address.id} className={!isVerified ? 'opacity-50 pointer-events-none' : ''}>
+                                            <AddressCard 
+                                                address={address} 
+                                                onEdit={() => isVerified && setEditingAddress(address)}
+                                                onDelete={() => isVerified && handleDelete(address.id)}
+                                            />
+                                        </div>
+                                    ))}
+                                    {addresses.length === 0 && (
+                                        <p className="text-gray-500 text-center py-8">
+                                            {isVerified ? 'You have no saved addresses.' : 'No addresses to display.'}
+                                        </p>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
