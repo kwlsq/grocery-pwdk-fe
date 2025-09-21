@@ -4,12 +4,13 @@ import { useEffect } from 'react';
 import { useAuthStore } from '../../store/authStore'; 
 
 export function AuthInitializer() {
-  const { checkAuthStatus } = useAuthStore();
+  const { checkAuthStatus, authChecked } = useAuthStore();
 
   useEffect(() => {
-    checkAuthStatus();
-  }, [checkAuthStatus]);
+    if (!authChecked) {
+      checkAuthStatus();
+    }
+  }, [checkAuthStatus, authChecked]);
 
   return null; 
 }
-

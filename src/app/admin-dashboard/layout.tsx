@@ -37,7 +37,6 @@ export default function AdminDashboardLayout({
   useEffect(() => {
     if (!mounted || checkingAuth) return;
 
-    // Check if user is authenticated and has ADMIN role
     const allowed = isAuthenticated && user?.role !== 'CUSTOMER';
     
     if (!allowed) {

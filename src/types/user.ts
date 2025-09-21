@@ -93,3 +93,7 @@ export interface APIWrapper<T> {
     data: T;
 }
 
+export interface ChangePasswordData {
+  currentPassword: string;
+  newPassword: string;
+}

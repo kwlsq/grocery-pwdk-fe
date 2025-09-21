@@ -14,3 +14,9 @@ export const getManagerUsers = () => {
   
 return apiClient.get<APIWrapper<PaginatedUserResponse>>('/users?role=MANAGER');
 };
+export const changeUserPassword = (currentPassword: string, newPassword: string) => {
+  return apiClient.post('/users/change-password', {
+    currentPassword,
+    newPassword,
+  });
+};
