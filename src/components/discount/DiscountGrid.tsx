@@ -79,7 +79,7 @@ const DiscountGrid: FC<DiscountGridProps> = ({
       )}
 
       {/* Pagination */}
-      {pagination && pagination.totalPages > 1 && onPageChange && (
+      {pagination && onPageChange && (
         <Pagination>
           <PaginationContent>
             <PaginationItem>

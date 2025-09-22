@@ -21,10 +21,8 @@ export default function SalesReportTable() {
   useEffect(() => {
     if (user?.role === 'ADMIN') {
       fetchUniqueStores();
-      // Admin can fetch immediately with current filters
       fetchSales({ page: 0, size });
     } else if (user?.role === 'MANAGER') {
-      // Manager: fetch the store assigned to this user
       fetchStoreByUser();
     }
 
@@ -33,7 +31,6 @@ export default function SalesReportTable() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.role]);
 
-  // When manager's store is available, lock filter and fetch
   useEffect(() => {
     if (user?.role === 'MANAGER' && store?.id) {
       if (filters.storeId !== store.id) {
@@ -60,7 +57,7 @@ export default function SalesReportTable() {
     }
   };
 
-  // Ensure admin has stores loaded if missing
+  // Load unique store if empty
   useEffect(() => {
     if (user?.role === 'ADMIN' && uniqueStores.length === 0) {
       fetchUniqueStores();

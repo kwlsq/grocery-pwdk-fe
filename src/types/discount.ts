@@ -43,6 +43,13 @@ export interface DiscountState {
   discounts: Discount[];
   loading: boolean;
   error: string | null;
-  fetchDiscount: () => Promise<void>;
+  fetchDiscount: (
+    page?: number,
+    size?: number,
+    search?: string,
+    sortBy?: string,
+    sortDirection?: string,
+    unit?: '' | 'PERCENTAGE' | 'NOMINAL' | 'PRODUCT' | 'all'
+  ) => Promise<void>;
   createDiscount: (data: CreateDiscountDTO) => Promise<void>;
 }

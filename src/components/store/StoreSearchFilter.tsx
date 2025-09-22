@@ -1,6 +1,8 @@
 'use client';
 
 import { FC, useEffect, useMemo, useState } from 'react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+
 
 interface StoreSearchFilterProps {
   defaultSearch?: string;
@@ -37,23 +39,31 @@ const StoreSearchFilter: FC<StoreSearchFilterProps> = ({
         placeholder="Search stores..."
         className="px-3 py-2 border border-gray-300 rounded-md"
       />
-      <select
+      <Select
         value={sortBy}
-        onChange={(e) => setSortBy(e.target.value)}
-        className="px-3 py-2 border border-gray-300 rounded-md"
+        onValueChange={setSortBy}
       >
-        <option value="id">ID</option>
-        <option value="name">Name</option>
-        <option value="createdAt">Created At</option>
-      </select>
-      <select
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder="Sort By" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="id">ID</SelectItem>
+          <SelectItem value="storeName">Name</SelectItem>
+          <SelectItem value="createdAt">Newest</SelectItem>
+        </SelectContent>
+      </Select>
+      <Select
         value={sortDirection}
-        onChange={(e) => setSortDirection(e.target.value as 'asc' | 'desc')}
-        className="px-3 py-2 border border-gray-300 rounded-md"
+        onValueChange={(value) => setSortDirection(value as 'asc' | 'desc')}
       >
-        <option value="asc">Asc</option>
-        <option value="desc">Desc</option>
-      </select>
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder="Sort Direction" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="asc">Asc</SelectItem>
+          <SelectItem value="desc">Desc</SelectItem>
+        </SelectContent>
+      </Select>
     </div>
   );
 };

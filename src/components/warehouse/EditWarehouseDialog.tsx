@@ -52,7 +52,7 @@ export default function EditWarehouseDialog({ id, warehouse }: { id: string; war
     mode: "onBlur",
   });
 
-  // 👉 when dialog opens, set default admin
+  // Set default admin
   React.useEffect(() => {
 
     if (user?.role !== 'ADMIN') return;
@@ -77,7 +77,7 @@ export default function EditWarehouseDialog({ id, warehouse }: { id: string; war
         latitude: Number(data.latitude),
         longitude: Number(data.longitude),
         isActive: true,
-        storeAdminID: selectedAdmin ?? null, // allow null
+        storeAdminID: selectedAdmin ?? null,
       };
 
       await createWarehouse(updatedWarehouse);
@@ -165,7 +165,7 @@ export default function EditWarehouseDialog({ id, warehouse }: { id: string; war
           {/* Store Admins */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {users.map((user) => {
-              const isCurrentAdmin = warehouse?.warehouseAdmin?.userID === user.id; // safe check
+              const isCurrentAdmin = warehouse?.warehouseAdmin?.userID === user.id;
               const isSelected = selectedAdmin === user.id;
 
               return (
