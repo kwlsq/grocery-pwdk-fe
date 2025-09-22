@@ -5,7 +5,6 @@ import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { notFound } from 'next/navigation';
 import { useProductStore } from '@/store/productStore';
-import { useUserVerification } from '@/hooks/useUserVerification';
 import { useAuthStore } from '@/store/authStore';
 import DiscountCard from '@/components/discount/DiscountCard';
 import Navbar from '../../../components/Navbar/Index';
@@ -15,7 +14,6 @@ export default function ProductDetailsPage() {
   const router = useRouter();
   const pathname = usePathname();
   const { selectedProduct } = useProductStore();
-  const { canAccessFeature } = useUserVerification();
   const { isAuthenticated, user } = useAuthStore();
 
   if (!selectedProduct) return notFound();
@@ -23,6 +21,14 @@ export default function ProductDetailsPage() {
   const primaryImage = selectedProduct.productImages.find(img => img.primary) || selectedProduct.productImages[0];
   const { price, weight, inventories } = selectedProduct.productVersionResponse;
   const totalStock = inventories.reduce((sum, inv) => sum + inv.stock, 0);
+
+  const formattedPrice = price.toLocaleString('id-ID');
+  const weightKg = weight / 1000;
+
+  const formattedWeight = weightKg.toLocaleString('id-ID', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  });
 
   const handleAuthRequired = () => {
     RedirectService.setIntendedRedirect(pathname);
@@ -105,8 +111,8 @@ export default function ProductDetailsPage() {
               <h1 className="text-3xl font-bold text-gray-900">{selectedProduct.name}</h1>
               <p className="text-gray-600 text-lg">{selectedProduct.description}</p>
               <div className="flex items-center gap-4">
-                <span className="text-2xl font-bold text-green-600">${price.toFixed(2)}</span>
-                <span className="text-gray-500">/ {weight}kg</span>
+                <span className="text-2xl font-bold text-green-600">Rp {formattedPrice}</span>
+                <span className="text-gray-500">/ {formattedWeight}kg</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-700">Available stocks:</span>
