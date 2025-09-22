@@ -7,7 +7,7 @@ export interface Store {
   address: string;
   latitude: number;
   longitude: number;
-  isActive: boolean;
+  active: boolean;
   storeManager?: {
     id: string;
     name: string;
@@ -62,6 +62,8 @@ export interface StoreState {
   fetchStoreByUser: () => Promise<void>;
   fetchUniqueStores: () => Promise<void>;
   addStore: (newStoreData: StoreRequestData) => Promise<void>;
+  unassignManagerFromStore: (storeId: string) => Promise<any>;
+
 }
 export interface UpdateStoreData {
   name: string;

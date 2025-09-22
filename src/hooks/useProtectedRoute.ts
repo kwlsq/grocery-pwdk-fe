@@ -36,22 +36,18 @@ export function useProtectedRoute(options: ProtectedRouteOptions = {}) {
         const currentAuth = useAuthStore.getState().isAuthenticated;
         const currentUser = useAuthStore.getState().user;
         
-        // Check authentication
         if (requireAuth && !currentAuth) {
-          // Store current page for redirect after login
           RedirectService.setIntendedRedirect(pathname);
           setShowAuthModal(true);
           setIsLoading(false);
           return;
         }
 
-        // Check role permissions
         if (currentAuth && allowedRoles.length > 0) {
           const userRole = currentUser?.role;
           if (!userRole || !allowedRoles.includes(userRole)) {
             setAccessDenied(true);
             setIsLoading(false);
-            // Redirect to fallback page for role errors
             setTimeout(() => {
               router.push(redirectOnRoleError);
             }, 100);
@@ -59,7 +55,6 @@ export function useProtectedRoute(options: ProtectedRouteOptions = {}) {
           }
         }
 
-        // Check verification if required
         if (requireVerification && currentAuth && !currentUser?.verified) {
           setShowVerificationModal(true);
           setIsLoading(false);
@@ -70,7 +65,6 @@ export function useProtectedRoute(options: ProtectedRouteOptions = {}) {
       } catch (error) {
         console.error('Auth check failed:', error);
         if (requireAuth) {
-          // Store current page for redirect after login
           RedirectService.setIntendedRedirect(pathname);
           setShowAuthModal(true);
         }
@@ -88,14 +82,12 @@ export function useProtectedRoute(options: ProtectedRouteOptions = {}) {
 
   const handleGoHome = () => {
     setShowAuthModal(false);
-    // Clear any stored redirect since user chose to go home
     RedirectService.clearIntendedRedirect();
     router.push('/');
   };
 
   const handleGoToVerification = () => {
     setShowVerificationModal(false);
-    // You can implement resend verification logic here
     console.log('Resend verification email');
   };
 

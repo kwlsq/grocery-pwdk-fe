@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useStoreStore } from '../../../../store/storeStore';
 import { useWarehouseStore } from '../../../../store/warehouseStore';
+import { useAuthStore } from '@/store/authStore';
 import WarehouseGrid from '../../../../components/warehouse/WarehouseGrid';
 import AddWarehouseDialog from '../../../../components/warehouse/AddWarehouseDialog';
 import WarehouseSearchFilter from '../../../../components/warehouse/WarehouseSearchFilter';
@@ -16,10 +17,12 @@ import { cn } from '@/lib/utils';
 import Navbar from '../../../../components/Navbar/Index';
 import { AssignManagerDialog } from '@/components/store/AssignManagerDialog';
 import { EditStoreDialog } from '@/components/store/EditStoreDialog';
+import { UnassignManagerDialog } from '@/components/store/UnassignManagerDialog';
 
 export default function StoreDetailsPage() {
   const params = useParams();
   const storeId = params.id as string;
+  const { user } = useAuthStore();
 
   const [currentPage, setCurrentPage] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
@@ -34,9 +37,10 @@ export default function StoreDetailsPage() {
   const { warehouses, loading: warehouseLoading, error: warehouseError, fetchWarehouses, pagination: warehousePagination } = useWarehouseStore();
   const { productsThisStore, error: productError, loading: productLoading, fetchProductByStoreID, pagination } = useProductStore();
 
+  const isAdmin = user?.role === 'ADMIN';
+
   const currentStore = stores.find(store => store.id === storeId);
 
-  // Tab configuration data
   const tabsData = [
     { value: 'warehouses', label: 'Warehouses' },
     { value: 'products', label: 'Products' }
@@ -56,7 +60,6 @@ export default function StoreDetailsPage() {
     hasPrevious: warehousePagination.hasPrevious || false,
   } : undefined;
 
-  // Handle page change from ProductGrid
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
     fetchProductByStoreID(storeId, newPage, pagination?.size || 12, searchTerm, selectedCategory);
@@ -74,7 +77,6 @@ export default function StoreDetailsPage() {
 
     const prev = prevSearchRef.current;
 
-    // Check if any values have actually changed
     const hasChanged =
       prev.searchTerm !== searchTerm ||
       prev.category !== category ||
@@ -100,17 +102,15 @@ export default function StoreDetailsPage() {
     fetchProductByStoreID(storeId, 0, pagination?.size || 12, searchTerm, category, sortBy, sortDirection);
   };
 
-  // Handle page change for warehouses
   const handleWarehousePageChange = (newPage: number) => {
     fetchWarehouses(storeId, newPage, warehousePagination?.size || 12, warehouseSearch, warehouseSortBy, warehouseSortDirection);
   };
 
-  // Handle refresh products data
+
   const refreshProducts = () => {
     fetchProductByStoreID(storeId, currentPage, pagination?.size || 12, searchTerm, selectedCategory);
   };
 
-  // Handle successful manager assignment
   const handleManagerAssignmentSuccess = () => {
     fetchStores();
   };
@@ -162,14 +162,12 @@ export default function StoreDetailsPage() {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
-        {/* Enhanced Store Header with Manager Info */}
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8">
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
             <div className="flex-1">
               <h1 className="text-3xl font-bold text-gray-900">{currentStore.name}</h1>
               <p className="text-gray-600 mt-2">{currentStore.description}</p>
 
-              {/* Store Manager Section */}
               {currentStore.storeManager ? (
                 <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                   <div className="flex items-center gap-3">
@@ -210,11 +208,11 @@ export default function StoreDetailsPage() {
               </div>
 
               <div className="flex items-center gap-2 mt-2">
-                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${currentStore.isActive
+                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${currentStore.active
                   ? 'bg-green-500 text-white'
                   : 'bg-red-500 text-white'
                   }`}>
-                  {currentStore.isActive ? 'Active' : 'Inactive'}
+                  {currentStore.active ? 'Active' : 'Inactive'}
                 </span>
                 <span className="text-xs text-gray-500">Store ID: {currentStore.id}</span>
               </div>
@@ -223,27 +221,35 @@ export default function StoreDetailsPage() {
             <div className="flex flex-col gap-3">
               <CreateProduct storeID={storeId} />
 
-              {/* Manager Assignment Button */}
-              <AssignManagerDialog
-                store={currentStore}
-                allStores={stores}
-                onSuccess={handleManagerAssignmentSuccess}
-              />
+              {isAdmin && (
+                <>
+                  {currentStore.storeManager ? (
+                    <UnassignManagerDialog
+                      store={currentStore}
+                      onSuccess={handleManagerAssignmentSuccess}
+                    />
+                  ) : (
+                    <AssignManagerDialog
+                      store={currentStore}
+                      allStores={stores}
+                      onSuccess={handleManagerAssignmentSuccess}
+                    />
+                  )}
 
-              <EditStoreDialog
-                store={currentStore}
-                onSuccess={() => {
-                  fetchStores();
-                }}
-              />
+                  <EditStoreDialog
+                    store={currentStore}
+                    onSuccess={() => {
+                      fetchStores();
+                    }}
+                  />
+                </>
+              )}
+           
             </div>
           </div>
         </div>
 
-
-        {/* Enhanced Store Statistics with Manager Status */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-5">
-          {/* Manager Status Card */}
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <div className="flex items-center">
               <div className={`p-2 rounded-lg ${currentStore.storeManager ? 'bg-green-100' : 'bg-red-100'}`}>
@@ -324,8 +330,6 @@ export default function StoreDetailsPage() {
           </TabsList>
 
           <TabsContent value='warehouses' className='flex flex-col gap-4 pt-2'>
-
-            {/* Warehouses Section */}
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                 <div>
@@ -365,8 +369,6 @@ export default function StoreDetailsPage() {
           </TabsContent>
 
           <TabsContent value='products' className='flex flex-col gap-4 pt-2'>
-
-            {/* Products Section */}
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                 <div>

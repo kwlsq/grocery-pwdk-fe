@@ -31,7 +31,6 @@ export default function ProductDetailsPage() {
   });
 
   const handleAuthRequired = () => {
-    // Store current product page for redirect after login
     RedirectService.setIntendedRedirect(pathname);
     router.push('/auth');
   };
