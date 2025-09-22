@@ -1,11 +1,8 @@
 'use client';
 
-import RedirectService from "@/services/redirectService";
 
 export const GoogleOAuthButton = () => {
   const handleGoogleLogin = () => {
-    const currentPath = window.location.pathname + window.location.search;
-    RedirectService.saveIntendedRedirect(currentPath);
     
     window.location.href = "http://localhost:8080/oauth2/authorization/google";
   };

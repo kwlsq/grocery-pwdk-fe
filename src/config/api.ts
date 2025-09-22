@@ -23,7 +23,6 @@ export const API_CONFIG = {
   DEFAULT_PAGE_SIZE: 12,
 };
 
-// Helper function to build API URLs
 export const buildApiUrl = (endpoint: string, params?: Record<string, string | number | boolean>) => {
   const url = new URL(endpoint, API_CONFIG.BASE_URL);
   

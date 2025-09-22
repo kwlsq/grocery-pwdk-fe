@@ -68,7 +68,6 @@ export default function CheckoutPage() {
         }
     }, [isAuthenticated, authLoading, showVerificationModal]);
 
-    // Calculate shipping costs whenever the selected address changes
     useEffect(() => {
         if (selectedAddress) {
             const calculateShipping = async () => {
