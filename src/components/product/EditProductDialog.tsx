@@ -99,7 +99,6 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
     mode: 'onBlur',
   });
 
-  // Initialize promotions on mount
   useEffect(() => {
     setSelectedPromotions((product.promotions || []).map(p => p.id));
   }, [product.promotions]);
@@ -169,7 +168,6 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
       ...prev,
       thumbnail: file,
       thumbnailPreview: URL.createObjectURL(file),
-      // Preserve deletedThumbnail flag so we still delete existing primary before uploading new
       deletedThumbnail: prev.deletedThumbnail
     }));
   }, []);
@@ -238,7 +236,6 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
     if (mediaState.thumbnail) {
       await uploadSingleImage(mediaState.thumbnail, id, true);
     }
-
     // Upload new gallery images
     if (mediaState.files.length > 0) {
       await uploadMultiImage(mediaState.files, id, false);
@@ -249,7 +246,6 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
     try {
       setUpdateError('');
 
-      // Build minimal payload: include only fields that changed
       const payload: UpdateProductDTO = {};
 
       const trimmedName = data.name.trim();
@@ -289,7 +285,6 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
         await updateProduct(id, payload);
       }
 
-      // Handle image operations
       await handleImageOperations();
 
       resetForm();
@@ -314,7 +309,6 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
       setConfirmOpen(false);
       setOpen(false);
     } catch {
-      // Optionally surface error
       setUpdateError('Failed to delete product');
     }
   };
@@ -628,8 +622,10 @@ export default function EditProduct({ id, product }: { id: string, product: Prod
                 >Delete</Button>
               </DialogTrigger>
               <DialogContent>
-                <div className='space-y-4'>
+                <DialogTitle>
                   <div>Are you sure you want to delete product <span className='font-bold'>{product.name}</span>?</div>
+                </DialogTitle>
+                <div className='space-y-4'>
                   <div className='flex justify-end gap-2'>
                     <Button type='button' variant={"secondary"} onClick={() => setConfirmOpen(false)}>
                       Cancel

@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { Label } from "@/components/ui/label";
 import { cn } from '@/lib/utils';
 import { Discount } from '@/types/discount';

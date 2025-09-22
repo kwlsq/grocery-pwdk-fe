@@ -2,6 +2,7 @@
 
 import { useProductStore } from '@/store/productStore';
 import { FC, useEffect, useState } from 'react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 interface SearchAndFilterProps {
   onSearch: (searchTerm: string, category: string, sortBy?: string, sortDirection?: string) => void;
@@ -13,15 +14,15 @@ const SearchAndFilter: FC<SearchAndFilterProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [sortField, setSortField] = useState('');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const { categories } = useProductStore();
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      onSearch(searchTerm, selectedCategory, sortField || '', sortOrder || 'asc');
+      onSearch(searchTerm, selectedCategory, sortField || '', sortDirection || 'asc');
     }, 400);
     return () => clearTimeout(timer);
-  }, [searchTerm, selectedCategory, sortField, sortOrder, onSearch]);
+  }, [searchTerm, selectedCategory, sortField, sortDirection, onSearch]);
 
   return (
     <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
@@ -36,42 +37,54 @@ const SearchAndFilter: FC<SearchAndFilterProps> = ({
           />
         </div>
         <div className="flex-1">
-          <select
+          <Select
             value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            onValueChange={setSelectedCategory}
           >
-            <option value="">All Categories</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="All Categories" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">All Categories</SelectItem>
+              {categories.map((category) => (
+                <SelectItem key={category.id} value={category.id}>
+                  {category.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div className="flex-1">
-          <select
+          <Select
             value={sortField}
-            onChange={(e) => setSortField(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            onValueChange={setSortField}
           >
-            <option value="">Sort by</option>
-            <option value="name">Name</option>
-            <option value="price">Price</option>
-            <option value="weight">Weight</option>
-          </select>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="All Categories" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Sort by</SelectItem>
+              <SelectItem value="name">Name</SelectItem>
+              <SelectItem value="price">Price</SelectItem>
+              <SelectItem value="weight">Weight</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div className="flex-1">
-          <select
-            value={sortOrder}
-            onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          <Select
+            value={sortDirection}
+            onValueChange={(value) => setSortDirection(value as 'asc' | 'desc')}
           >
-            <option value="asc">Ascending</option>
-            <option value="desc">Descending</option>
-          </select>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="All Categories" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="asc">Ascending</SelectItem>
+              <SelectItem value="desc">Descending</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-        
+
       </form>
     </div>
   );

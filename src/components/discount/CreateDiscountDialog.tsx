@@ -40,8 +40,8 @@ type DiscountFormValue = z.infer<typeof discountSchema>;
 
 export default function CreateDiscountDialog() {
   const [open, setOpen] = useState(false);
-  const [openStart, setOpenStart] = useState(false); // separate state for Start Popover
-  const [openEnd, setOpenEnd] = useState(false); // separate state for End Popover
+  const [openStart, setOpenStart] = useState(false);
+  const [openEnd, setOpenEnd] = useState(false);
   const { createDiscount, loading } = useDiscountStore();
 
   const {

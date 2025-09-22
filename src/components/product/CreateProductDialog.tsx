@@ -146,11 +146,10 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
 
       const productID = await createProduct(newProduct);
 
-      // Only proceed with image uploads and dialog closing if product creation was successful
+      // Only proceed with image uploads
       if (thumbnail) {
         uploadSingleImage(thumbnail, String(productID), true);
       }
-
       if (files) {
         uploadMultiImage(files, String(productID), false);
       }
@@ -162,13 +161,11 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
       setFiles(null);
       setMediaPreviews([]);
       setImageErrors({});
-      setOpen(false); // Only close if everything succeeded
+      setOpen(false);
 
     } catch (err) {
-      // Error is already set in the store, just display it under the name field
       const message = err instanceof Error ? err.message : "Failed to create product";
       setError("name", { message });
-      // Dialog stays open so user can see the error and try again
     }
   };
 
@@ -201,6 +198,7 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
 
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-4">
+            
           {/* Name */}
           <div className="flex flex-col">
             <div className="flex flex-col gap-2">
@@ -288,7 +286,6 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
           />
 
           {/* Promotions (optional, multi-select) */}
-            
           <PromotionSelector
             discounts={discounts}
             selectedPromotions={selectedPromotions}

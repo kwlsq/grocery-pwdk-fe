@@ -162,7 +162,7 @@ export const useProductStore = create<ProductState>((set) => ({
 
       if (cachedCategories) {
         set({ categories: JSON.parse(cachedCategories), loading: false });
-        return; // ✅ Skip API call if cache exists
+        return;
       }
 
       //Fetch from API if no cache
@@ -267,7 +267,6 @@ export const useProductStore = create<ProductState>((set) => ({
       }
     } catch (e) {
       if (axios.isAxiosError(e) && e.response) {
-        // Backend sent an error response
         const errorMessage =
           e.response.data?.message ||
           `Request failed with status ${e.response.status}`;
@@ -277,7 +276,6 @@ export const useProductStore = create<ProductState>((set) => ({
         });
         throw new Error(errorMessage);
       } else {
-        // Network or unexpected error
         const errorMessage = "Unexpected error occurred";
         set({ loading: false, error: errorMessage });
         throw new Error(errorMessage);
@@ -332,7 +330,7 @@ export const useProductStore = create<ProductState>((set) => ({
         error: errorMessage,
         loading: false,
       });
-      throw error; // Re-throw for component error handling
+      throw error;
     }
   },
 

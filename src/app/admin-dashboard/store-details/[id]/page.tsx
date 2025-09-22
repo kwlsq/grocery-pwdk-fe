@@ -31,11 +31,11 @@ export default function StoreDetailsPage() {
   const [warehouseSearch, setWarehouseSearch] = useState("");
   const [warehouseSortBy, setWarehouseSortBy] = useState("id");
   const [warehouseSortDirection, setWarehouseSortDirection] = useState("asc");
+  const [activeTab, setActiveTab] = useState('warehouses');
 
   const { stores, fetchStores } = useStoreStore();
   const { warehouses, loading: warehouseLoading, error: warehouseError, fetchWarehouses, pagination: warehousePagination } = useWarehouseStore();
   const { productsThisStore, error: productError, loading: productLoading, fetchProductByStoreID, pagination } = useProductStore();
-  const [activeTab, setActiveTab] = useState('warehouses');
 
   const isAdmin = user?.role === 'ADMIN';
 
@@ -105,6 +105,7 @@ export default function StoreDetailsPage() {
   const handleWarehousePageChange = (newPage: number) => {
     fetchWarehouses(storeId, newPage, warehousePagination?.size || 12, warehouseSearch, warehouseSortBy, warehouseSortDirection);
   };
+
 
   const refreshProducts = () => {
     fetchProductByStoreID(storeId, currentPage, pagination?.size || 12, searchTerm, selectedCategory);
@@ -243,6 +244,7 @@ export default function StoreDetailsPage() {
                   />
                 </>
               )}
+           
             </div>
           </div>
         </div>
