@@ -51,7 +51,7 @@ export default function Home() {
         sortDirection,
         coords.userLatitude,
         coords.userLongitude,
-        300
+        100
       );
     }
   }, [

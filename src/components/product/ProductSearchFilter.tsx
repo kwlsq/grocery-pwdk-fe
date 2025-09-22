@@ -33,7 +33,8 @@ const ProductSearchFilter: FC<ProductSearchFilterProps> = ({
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      onChange({ search, category, sortBy, sortDirection });
+      const categoryValue = category === 'all' ? '' : category;
+      onChange({ search, category: categoryValue, sortBy, sortDirection });
     }, debounceMs);
     return () => clearTimeout(timer);
   }, [search, category, sortBy, sortDirection, onChange, debounceMs]);

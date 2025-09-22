@@ -9,7 +9,7 @@ export interface CheckoutAddressResponse {
 export interface ShippingCalculationRequest {
     storeId: string;
     addressId: string;
-    totalWeight: number; // in grams
+    totalWeight: number; 
 }
 
 export interface ShippingOption {
@@ -20,3 +20,9 @@ export interface ShippingOption {
     etd: string;
     description: string;
 }
+
+export type ShippingApiResponse = 
+  | ShippingOption[] 
+  | { data: ShippingOption[] }
+  | { shippingOptions: ShippingOption[] };
+

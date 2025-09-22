@@ -34,6 +34,11 @@ export interface RegisterUserDTO {
   email: string,
   fullName: string
 }
+
+export interface UpdateUserRequest {
+  name: string
+}
+
 export interface UsersState {
   users: User[];
   loading: boolean;
@@ -44,6 +49,7 @@ export interface UsersState {
   fetchUsers: (params?: { page?: number; size?: number; role?: '' | 'CUSTOMER' | 'MANAGER' | 'ADMIN'; search?: string; sortBy?: string; sortDirection?: string }) => Promise<void>;
   deleteUser: (userID: string ) => Promise<void>;
   registerStoreAdmin: (data: RegisterUserDTO) => Promise<void>;
+  updateStoreAdmin: (id: string, request: UpdateUserRequest) => Promise<void>;
 }
 export interface LoginCredentials {
   email: string;
