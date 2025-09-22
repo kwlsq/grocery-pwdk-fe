@@ -67,7 +67,6 @@ export default function VerifyPage() {
         <div className="bg-white py-8 px-4 shadow-xl sm:rounded-2xl sm:px-10">
           {isTokenValid ? (
             <>
-              {/* Valid Token - Show Password Form */}
               <div className="flex justify-center mb-4">
                 <div className="flex items-center text-green-600">
                   <CheckCircle className="h-5 w-5 mr-2" />
@@ -78,7 +77,6 @@ export default function VerifyPage() {
             </>
           ) : (
             <>
-              {/* Invalid/Expired Token - Show Resend Form */}
               <div className="flex justify-center mb-4">
                 <div className="flex items-center text-red-600">
                   <XCircle className="h-5 w-5 mr-2" />

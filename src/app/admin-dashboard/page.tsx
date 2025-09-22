@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Tabs, TabsList, TabsContent, TabsTrigger } from '@/components/ui/tabs';
 import { useAuthStore } from '@/store/authStore';
 import { useProductStore } from '@/store/productStore';
@@ -50,7 +50,6 @@ export default function AdminDashboardPage() {
 
   const storeForUser: Store[] = store ? [store] : [];
 
-  // Main tabs
   const tabsData =
 
     user?.role === 'ADMIN'
@@ -69,7 +68,6 @@ export default function AdminDashboardPage() {
         { value: 'categories', label: 'Category' }
       ];
 
-  // Report tabs
   const reportTabsData = [
     { value: 'summary', label: 'Summary' },
     { value: 'product', label: 'Product' },
@@ -175,7 +173,9 @@ export default function AdminDashboardPage() {
                   </p>
                 </div>
                 <div className="flex gap-3">
-                  <AddStoreDialog />
+                  {/* Conditionally render the AddStoreDialog for ADMIN role */}
+                  {user?.role === 'ADMIN' && <AddStoreDialog />}
+
 
                   <StoreSearchFilter
                     defaultSearch={storeSearch}
@@ -403,6 +403,7 @@ export default function AdminDashboardPage() {
               </p>
             }
 
+
             {(storeForUser.length > 0 && user?.role === 'MANAGER') || user?.role === 'ADMIN'
               ?
               <Tabs defaultValue={reportTabsData[0]?.value} onValueChange={setReportTab}>
@@ -439,7 +440,9 @@ export default function AdminDashboardPage() {
               </p>
             }
 
+>
           </TabsContent>
+
           <TabsContent value='categories'>
             <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-8">
               <div className="flex flex-col sm:flex-row justify-between items-center gap-4">

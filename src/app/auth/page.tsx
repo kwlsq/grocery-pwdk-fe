@@ -18,36 +18,28 @@ export default function AuthPage() {
   useEffect(() => {
     if (isAuthenticated && !hasRedirected) {
       setHasRedirected(true);
-      
-      // Check if there's a redirect parameter in URL (fallback)
-      const redirectParam = searchParams.get('redirect');
+            const redirectParam = searchParams.get('redirect');
       
       let redirectTo: string;
       
       if (redirectParam) {
-        // Use URL parameter if available
         redirectTo = decodeURIComponent(redirectParam);
         console.log('Using URL redirect parameter:', redirectTo);
       } else {
-        // Check if there's still a stored redirect (without clearing it first)
         const storedRedirect = RedirectService.getStoredRedirect();
         if (storedRedirect) {
           redirectTo = storedRedirect;
-          // Now clear it since we're using it
           RedirectService.clearIntendedRedirect();
           console.log('Using stored redirect:', redirectTo);
         } else {
           redirectTo = '/';
-          console.log('No stored redirect, using default:', redirectTo);
-        }
+      }
       }
       
-      console.log('Auth page redirecting to:', redirectTo);
-      router.push(redirectTo);
+     router.push(redirectTo);
     }
   }, [isAuthenticated, router, searchParams, hasRedirected]);
 
-  // Show loading or nothing if already authenticated
   if (isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
