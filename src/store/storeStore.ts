@@ -4,15 +4,17 @@ import { StoreApiResponse, StoreState, UniqueStore } from "../types/store";
 import { API_CONFIG, buildApiUrl } from "../config/api";
 
 const getAuthToken = (): string => {
-  const token =
-    (typeof window !== "undefined" && localStorage.getItem("accessToken")) ||
-    (typeof window !== "undefined" && sessionStorage.getItem("accessToken")) ||
-    "";
-
-  return token;
+  if (typeof window === "undefined") return "";
+  
+  const cookies = document.cookie.split(';');
+  const tokenCookie = cookies.find(cookie => 
+    cookie.trim().startsWith('accessToken=')
+  );
+  
+  return tokenCookie ? tokenCookie.split('=')[1].trim() : "";
 };
 
-export const useStoreStore = create<StoreState>((set) => ({
+export const useStoreStore = create<StoreState>((set, get) => ({
   stores: [],
   uniqueStores: [],
   store: null,
@@ -139,13 +141,59 @@ export const useStoreStore = create<StoreState>((set) => ({
       });
     }
   },
+
+  unassignManagerFromStore: async (storeId: string) => {
+    try {
+      const token = getAuthToken();
+      const url = buildApiUrl(
+        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.STORE}/${storeId}/unassign-manager`
+      );
+
+      const response = await axios.delete(url, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        withCredentials: true,
+      });
+
+      if (response.data.success) {
+        const updatedStore = response.data.data;
+        
+        const currentStores = get().stores;
+        const updatedStores = currentStores.map(store => 
+          store.id === storeId 
+            ? { ...store, storeManager: undefined }
+            : store
+        );
+        
+        set({ stores: updatedStores });
+
+        const currentStore = get().store;
+        if (currentStore && currentStore.id === storeId) {
+          set({ store: { ...currentStore, storeManager: undefined } });
+        }
+
+        return updatedStore;
+      } else {
+        throw new Error(response.data.message || "Failed to unassign manager");
+      }
+    } catch (error) {
+      console.error("Error unassigning manager:", error);
+      if (axios.isAxiosError(error)) {
+        const errorMessage = error.response?.data?.message || error.message;
+        throw new Error(errorMessage);
+      }
+      throw new Error(error instanceof Error ? error.message : "Failed to unassign manager");
+    }
+  },
+
   addStore: async (newStoreData) => {
         try {
-            // Placeholder: implement via service when available
             console.warn("addStore not implemented: ", newStoreData);
         } catch (err) {
             console.error("Failed to add store", err);
-            throw err; // Re-throw so the form can display an error
+            throw err;
         }
     },
 }));

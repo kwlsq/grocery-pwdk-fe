@@ -25,7 +25,6 @@ export default function ProductDetailsPage() {
   const totalStock = inventories.reduce((sum, inv) => sum + inv.stock, 0);
 
   const handleAuthRequired = () => {
-    // Store current product page for redirect after login
     RedirectService.setIntendedRedirect(pathname);
     router.push('/auth');
   };

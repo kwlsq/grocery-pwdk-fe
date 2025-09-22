@@ -1,13 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Tabs, TabsList, TabsContent, TabsTrigger } from '@/components/ui/tabs';
 import { useAuthStore } from '@/store/authStore';
 import { useProductStore } from '@/store/productStore';
 import { useDiscountStore } from '@/store/discountStore';
 import { useUsersStore } from '../../store/userStore';
 import { useStoreStore } from '../../store/storeStore';
-// removed unused Select imports
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import UserGrid from '@/components/user/UserGrid';
@@ -41,7 +40,6 @@ export default function AdminDashboardPage() {
 
   const storeForUser: Store[] = store ? [store] : [];
 
-  // Main tabs
   const tabsData =
 
     user?.role === 'ADMIN'
@@ -60,7 +58,6 @@ export default function AdminDashboardPage() {
         { value: 'categories', label: 'Category' }
       ];
 
-  // Report tabs
   const reportTabsData = [
     { value: 'summary', label: 'Summary' },
     { value: 'product', label: 'Product' },
@@ -161,7 +158,8 @@ export default function AdminDashboardPage() {
                   </p>
                 </div>
                 <div className="flex gap-3">
-                  <AddStoreDialog/>
+                  {/* Conditionally render the AddStoreDialog for ADMIN role */}
+                  {user?.role === 'ADMIN' && <AddStoreDialog />}
 
                   <StoreSearchFilter
                     defaultSearch={storeSearch}
@@ -365,44 +363,8 @@ export default function AdminDashboardPage() {
                 Need to be assigned to a store first
               </p>
             }
-
-            {(storeForUser.length > 0 && user?.role ==='MANAGER') || user?.role === 'ADMIN'
-              ?
-              <Tabs defaultValue={reportTabsData[0]?.value} onValueChange={setReportTab}>
-                <TabsList>
-                  {reportTabsData.map((tab) => (
-                    <TabsTrigger
-                      key={tab.value}
-                      value={tab.value}
-                      className={cn(
-                        "rounded-none h-full border-b-2 data-[state=active]:shadow-none",
-                        reportTab === tab.value
-                          ? "border-green-600 text-green-600"
-                          : "border-transparent"
-                      )}
-                    >
-                      {tab.label}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-                <TabsContent value='summary'>
-                  <StockReportTableDyn />
-                </TabsContent>
-                <TabsContent value='product'>
-                  <ProductStockReportTableDyn />
-                </TabsContent>
-                <TabsContent value='sales'>
-                  <SalesReportChart />
-                  <SalesReportTableDyn />
-                </TabsContent>
-              </Tabs>
-              :
-              <p className='w-full text-center pt-20'>
-                Need to be assigned to a store first
-              </p>
-            }
-
           </TabsContent>
+
           <TabsContent value='categories'>
             <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-8">
               <div className="flex flex-col sm:flex-row justify-between items-center gap-4">

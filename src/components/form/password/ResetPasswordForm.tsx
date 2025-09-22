@@ -2,10 +2,11 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Formik, Form, Field, ErrorMessage } from 'formik';
+import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
-import { resetPassword } from '@/services/authService'; // CORRECTED: Correct relative path
+import { resetPassword } from '@/services/authService'; 
 import { GrocereachLogo } from '@/components/GrocereachLogo';
+import { PasswordField } from '@/components/ui/PasswordField';
 
 interface ResetPasswordFormProps {
   token: string;
@@ -25,7 +26,7 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ token }) =
     const router = useRouter();
     const [serverError, setServerError] = useState('');
     const [success, setSuccess] = useState('');
-
+    
     return (
         <div className="w-full">
             <GrocereachLogo />
@@ -56,16 +57,21 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ token }) =
                     <Form className="mt-8 space-y-6">
                         {serverError && <p className="text-red-500 bg-red-100 p-3 rounded-md text-sm text-center">{serverError}</p>}
                         {success && <p className="text-green-600 bg-green-100 p-3 rounded-md text-sm text-center">{success}</p>}
-                        <div>
-                            <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">New Password</label>
-                            <Field type="password" name="newPassword" className={`mt-1 block w-full px-4 py-3 border rounded-md shadow-sm ${errors.newPassword && touched.newPassword ? 'border-red-500' : 'border-gray-300'}`} />
-                            <ErrorMessage name="newPassword" component="p" className="text-red-500 text-xs mt-1" />
-                        </div>
-                        <div>
-                            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">Confirm New Password</label>
-                            <Field type="password" name="confirmPassword" className={`mt-1 block w-full px-4 py-3 border rounded-md shadow-sm ${errors.confirmPassword && touched.confirmPassword ? 'border-red-500' : 'border-gray-300'}`} />
-                            <ErrorMessage name="confirmPassword" component="p" className="text-red-500 text-xs mt-1" />
-                        </div>
+                        
+                        <PasswordField 
+                            label="New Password"
+                            name="newPassword"
+                            error={errors.newPassword}
+                            touched={touched.newPassword}
+                        />
+
+                        <PasswordField 
+                            label="Confirm New Password"
+                            name="confirmPassword"
+                            error={errors.confirmPassword}
+                            touched={touched.confirmPassword}
+                        />
+
                         <button type="submit" disabled={isSubmitting || !!success} className="w-full flex justify-center py-3 px-4 border rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400">
                             {isSubmitting ? 'Resetting...' : 'Reset Password'}
                         </button>
@@ -75,4 +81,3 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ token }) =
         </div>
     );
 };
-

@@ -70,7 +70,6 @@ export default function UserAddressesPage() {
         }
     };
 
-    // Show loading while checking authentication
     if (authLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
@@ -81,13 +80,10 @@ export default function UserAddressesPage() {
             </div>
         );
     }
-
-    // Don't render if access denied (will redirect automatically)
     if (accessDenied) {
         return null;
     }
 
-    // Don't render if not authenticated
     if (!isAuthenticated) {
         return (
             <AuthRequiredModal 

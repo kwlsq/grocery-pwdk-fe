@@ -1,4 +1,3 @@
-// src/components/form/login/LoginForm.tsx
 'use client';
 
 import React, { useState } from 'react';
@@ -9,20 +8,7 @@ import { useAuthStore } from '../../../store/authStore';
 import { loginUser } from '../../../services/authService'; 
 import { GrocereachLogo } from '../../GrocereachLogo';
 import { GoogleOAuthButton } from '@/components/ui/GoogleOauthButton';
-import RedirectService from '@/services/redirectService';
-
-const EyeIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-  </svg>
-);
-
-const EyeOffIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
-  </svg>
-);
+import { PasswordField } from '@/components/ui/PasswordField';
 
 const loginSchema = Yup.object().shape({
   email: Yup.string().email('Invalid email address').required('Email is required'),
@@ -31,11 +17,8 @@ const loginSchema = Yup.object().shape({
 
 export const LoginForm = ({ setView }: { setView: (view: 'login' | 'register') => void }) => {
   const [serverError, setServerError] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const { login } = useAuthStore();
-
-  // Don't clear the redirect here! We want to keep it until after successful login
 
   return (
     <div className="w-full">
@@ -51,28 +34,20 @@ export const LoginForm = ({ setView }: { setView: (view: 'login' | 'register') =
         onSubmit={async (values, { setSubmitting }) => {
           setServerError('');
           try {
-            console.log('Starting login process...');
-            
             const response = await loginUser(values);
-            console.log('Login successful, user data:', response.data.user);
-            
-            // Update auth state - this will trigger the redirect in AuthPage
             login(response.data.user);
-            
-            // Don't handle redirect here - let AuthPage handle it
-            
           } catch (err: any) {
             console.error('Login failed:', err);
             if (err.response && err.response.data) {
-                if (typeof err.response.data === 'string') {
-                    setServerError(err.response.data);
-                } else if (err.response.data.message) {
-                    setServerError(err.response.data.message);
-                } else {
-                    setServerError('An unexpected error occurred.');
-                }
+              if (typeof err.response.data === 'string') {
+                  setServerError(err.response.data);
+              } else if (err.response.data.message) {
+                  setServerError(err.response.data.message);
+              } else {
+                  setServerError('An unexpected error occurred.');
+              }
             } else {
-                setServerError('Login failed. Unable to connect to the server.');
+              setServerError('Login failed. Unable to connect to the server.');
             }
           } finally {
             setSubmitting(false);
@@ -93,24 +68,12 @@ export const LoginForm = ({ setView }: { setView: (view: 'login' | 'register') =
               <ErrorMessage name="email" component="p" className="text-red-500 text-xs mt-1" />
             </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
-              <div className="relative mt-1">
-                <Field
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  className={`block w-full px-4 py-3 pr-12 border rounded-md shadow-sm focus:outline-none focus:ring-2 sm:text-sm ${errors.password && touched.password ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-emerald-500'}`}
-                />
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <EyeOffIcon /> : <EyeIcon />}
-                </button>
-              </div>
-              <ErrorMessage name="password" component="p" className="text-red-500 text-xs mt-1" />
-            </div>
+            <PasswordField 
+                label="Password"
+                name="password"
+                error={errors.password}
+                touched={touched.password}
+            />
 
             <div className="text-right">
               <a href="/forgot-password" className="text-sm font-medium text-emerald-600 hover:text-emerald-500">
@@ -153,3 +116,4 @@ export const LoginForm = ({ setView }: { setView: (view: 'login' | 'register') =
     </div>
   );
 };
+
