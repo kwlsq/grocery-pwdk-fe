@@ -12,7 +12,8 @@ export const API_CONFIG = {
     USERS: '/users',
     STORE_ADMIN : {
       DELETE: '/users/store-admin',
-      REGISTER: '/auth/store-admin'
+      REGISTER: '/auth/store-admin',
+      UPDATE: '/users/store-admin'
     },
     DISCOUNT: '/promotions',
     STOCK_REPORTS: '/stock-reports',

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import axios from "axios";
-import { UsersState, UsersApiResponse } from "@/types/user";
+import { UsersState, UsersApiResponse, UpdateUserRequest } from "@/types/user";
 import { API_CONFIG, buildApiUrl } from "@/config/api";
 import { RegisterUserDTO } from "../types/user";
 
@@ -22,10 +22,11 @@ export const useUsersStore = create<UsersState>((set, get) => ({
 
     set({ loading: true, error: null });
     try {
-
       const token =
-        (typeof window !== "undefined" && localStorage.getItem("accessToken")) ||
-        (typeof window !== "undefined" && sessionStorage.getItem("accessToken")) ||
+        (typeof window !== "undefined" &&
+          localStorage.getItem("accessToken")) ||
+        (typeof window !== "undefined" &&
+          sessionStorage.getItem("accessToken")) ||
         "";
 
       const url = buildApiUrl(
@@ -77,13 +78,18 @@ export const useUsersStore = create<UsersState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const token =
-        (typeof window !== "undefined" && localStorage.getItem("accessToken")) ||
-        (typeof window !== "undefined" && sessionStorage.getItem("accessToken")) ||
+        (typeof window !== "undefined" &&
+          localStorage.getItem("accessToken")) ||
+        (typeof window !== "undefined" &&
+          sessionStorage.getItem("accessToken")) ||
         "";
 
       await axios.delete(
         buildApiUrl(
-          API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.STORE_ADMIN.DELETE + "/" + userID
+          API_CONFIG.BASE_URL +
+            API_CONFIG.ENDPOINTS.STORE_ADMIN.DELETE +
+            "/" +
+            userID
         ),
         {
           withCredentials: true,
@@ -105,10 +111,11 @@ export const useUsersStore = create<UsersState>((set, get) => ({
   registerStoreAdmin: async (data: RegisterUserDTO) => {
     set({ loading: true, error: null });
     try {
-
       const token =
-        (typeof window !== "undefined" && localStorage.getItem("accessToken")) ||
-        (typeof window !== "undefined" && sessionStorage.getItem("accessToken")) ||
+        (typeof window !== "undefined" &&
+          localStorage.getItem("accessToken")) ||
+        (typeof window !== "undefined" &&
+          sessionStorage.getItem("accessToken")) ||
         "";
 
       const url = buildApiUrl(
@@ -120,7 +127,7 @@ export const useUsersStore = create<UsersState>((set, get) => ({
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        withCredentials: true
+        withCredentials: true,
       });
 
       set({ loading: false, error: null });
@@ -129,6 +136,45 @@ export const useUsersStore = create<UsersState>((set, get) => ({
       set({
         error:
           error instanceof Error ? error.message : "Failed to register users",
+        loading: false,
+      });
+    }
+  },
+  updateStoreAdmin: async (id: string, request: UpdateUserRequest) => {
+    set({ loading: true, error: null });
+
+    try {
+      const token =
+        (typeof window !== "undefined" &&
+          (localStorage.getItem("accessToken") ||
+            sessionStorage.getItem("accessToken"))) ||
+        "";
+
+      await axios.patch(
+        buildApiUrl(
+          API_CONFIG.BASE_URL +
+            API_CONFIG.ENDPOINTS.STORE_ADMIN.UPDATE +
+            "/" +
+            id
+        ),
+        request,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+          withCredentials: true,
+        }
+      );
+
+      set({ loading: false, error: null });
+    } catch (error) {
+      console.error("Error updating store admin:", error);
+      set({
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to update store admin",
         loading: false,
       });
     }
