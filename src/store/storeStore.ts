@@ -189,11 +189,35 @@ export const useStoreStore = create<StoreState>((set, get) => ({
   },
 
   addStore: async (newStoreData) => {
-        try {
-            console.warn("addStore not implemented: ", newStoreData);
-        } catch (err) {
-            console.error("Failed to add store", err);
-            throw err;
-        }
-    },
+    try {
+      const token = getAuthToken();
+      const url = buildApiUrl(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.STORE}`);
+
+      const response = await axios.post(url, newStoreData, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        withCredentials: true,
+      });
+
+      if (response.status === 201) {
+        const newStore = response.data;
+        
+        const currentStores = get().stores;
+        set({ stores: [...currentStores, newStore] });
+        
+        return newStore;
+      } else {
+        throw new Error("Failed to create store");
+      }
+    } catch (error) {
+      console.error("Failed to add store:", error);
+      if (axios.isAxiosError(error)) {
+        const errorMessage = error.response?.data?.message || error.message;
+        throw new Error(errorMessage);
+      }
+      throw new Error(error instanceof Error ? error.message : "Failed to create store");
+    }
+  },
 }));

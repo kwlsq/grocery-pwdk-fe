@@ -12,6 +12,7 @@ import { Switch } from '../ui/Switch';
 import { StoreLocationInput } from './StoreLocation';
 import { updateStore } from '@/services/storeService';
 import { Store } from '@/types/store';
+import { useStoreStore } from '@/store/storeStore';
 
 interface EditStoreDialogProps {
     store: Store;
@@ -39,6 +40,9 @@ const editStoreSchema = Yup.object().shape({
 
 export const EditStoreDialog: React.FC<EditStoreDialogProps> = ({ store, onSuccess }) => {
     const [open, setOpen] = useState(false);
+    const { stores } = useStoreStore();
+    
+    const currentStore = stores.find(s => s.id === store.id) || store;
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
@@ -63,19 +67,20 @@ export const EditStoreDialog: React.FC<EditStoreDialogProps> = ({ store, onSucce
                 </DialogHeader>
                 
                 <Formik
+                    key={currentStore.id}
                     initialValues={{
-                        name: store.name,
-                        description: store.description || '',
-                        address: store.address,
-                        latitude: store.latitude,
-                        longitude: store.longitude,
-                        isActive: store.isActive,
+                        name: currentStore.name,
+                        description: currentStore.description || '',
+                        address: currentStore.address,
+                        latitude: currentStore.latitude,
+                        longitude: currentStore.longitude,
+                        isActive: currentStore.active,
                     }}
                     validationSchema={editStoreSchema}
                     onSubmit={async (values, { setSubmitting, setStatus }) => {
                         try {
                             setStatus('');
-                            await updateStore(store.id, values);
+                            await updateStore(currentStore.id, values);
                             setOpen(false);
                             onSuccess?.();
                         } catch (error: any) {
@@ -88,7 +93,7 @@ export const EditStoreDialog: React.FC<EditStoreDialogProps> = ({ store, onSucce
                         }
                     }}
                 >
-                    {({ isSubmitting, status, setFieldValue, values }) => (
+                    {({ isSubmitting, status, setFieldValue, setFieldTouched, values }) => (
                         <Form className="space-y-4 py-4">
                             {status && (
                                 <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
@@ -119,7 +124,6 @@ export const EditStoreDialog: React.FC<EditStoreDialogProps> = ({ store, onSucce
                                 <ErrorMessage name="description" component="p" className="text-red-500 text-xs mt-1" />
                             </div>
 
-                            {/* Store Status Toggle */}
                             <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
                                 <div>
                                     <Label htmlFor="isActive" className="text-sm font-medium">
@@ -133,7 +137,10 @@ export const EditStoreDialog: React.FC<EditStoreDialogProps> = ({ store, onSucce
                                     {({ field }: any) => (
                                         <Switch
                                             checked={field.value}
-                                            onCheckedChange={(checked) => setFieldValue('isActive', checked)}
+                                            onCheckedChange={(checked) => {
+                                                setFieldValue('isActive', checked);
+                                                setFieldTouched('isActive', true);
+                                            }}
                                         />
                                     )}
                                 </Field>
@@ -145,10 +152,9 @@ export const EditStoreDialog: React.FC<EditStoreDialogProps> = ({ store, onSucce
                                     setFieldValue('latitude', lat);
                                     setFieldValue('longitude', lng);
                                 }}
-                                defaultLocation={{ lat: store.latitude, lng: store.longitude }}
+                                defaultLocation={{ lat: currentStore.latitude, lng: currentStore.longitude }}
                             />
                             
-                            {/* Location confirmation */}
                             {values.address && values.latitude !== 0 && values.longitude !== 0 && (
                                 <div className="text-green-600 text-sm flex items-center gap-2 p-2 bg-green-50 rounded-lg">
                                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -160,7 +166,6 @@ export const EditStoreDialog: React.FC<EditStoreDialogProps> = ({ store, onSucce
                             
                             <ErrorMessage name="address" component="p" className="text-red-500 text-xs mt-1" />
 
-                            {/* Hidden fields for coordinates */}
                             <Field type="hidden" name="latitude" />
                             <Field type="hidden" name="longitude" />
 

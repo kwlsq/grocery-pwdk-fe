@@ -7,7 +7,7 @@ export interface Store {
   address: string;
   latitude: number;
   longitude: number;
-  isActive: boolean;
+  active: boolean;
   storeManager?: {
     id: string;
     name: string;
