@@ -62,6 +62,8 @@ export interface StoreState {
   fetchStoreByUser: () => Promise<void>;
   fetchUniqueStores: () => Promise<void>;
   addStore: (newStoreData: StoreRequestData) => Promise<void>;
+  unassignManagerFromStore: (storeId: string) => Promise<any>;
+
 }
 export interface UpdateStoreData {
   name: string;

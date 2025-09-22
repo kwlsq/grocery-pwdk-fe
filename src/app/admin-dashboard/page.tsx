@@ -440,7 +440,7 @@ export default function AdminDashboardPage() {
               </p>
             }
 
->
+
           </TabsContent>
 
           <TabsContent value='categories'>
