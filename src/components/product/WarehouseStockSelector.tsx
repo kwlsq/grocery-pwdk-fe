@@ -1,6 +1,6 @@
 'use client';
 
-import { Control, useFieldArray, useFormContext, FieldValues, FieldErrors } from 'react-hook-form';
+import { Control, useFieldArray, useFormContext, FieldValues } from 'react-hook-form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from "@/components/ui/input";
 import { Label } from '../ui/label';
@@ -60,7 +60,7 @@ export default function WarehouseStockSelector({ warehouses, control }: Warehous
             {/* Error message */}
             {errors.stocks?.[index]?.quantity && (
               <p className="mt-1 text-sm text-red-600">
-                {(errors.stocks[index]?.quantity as any)?.message}
+                {(errors.stocks[index]?.quantity)?.message}
               </p>
             )}
           </div>

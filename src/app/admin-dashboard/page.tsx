@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Tabs, TabsList, TabsContent, TabsTrigger } from '@/components/ui/tabs';
 import { useAuthStore } from '@/store/authStore';
 import { useProductStore } from '@/store/productStore';
@@ -50,8 +50,7 @@ export default function AdminDashboardPage() {
 
   const storeForUser: Store[] = store ? [store] : [];
 
-  const tabsData =
-
+  const tabsData = useMemo(() =>
     user?.role === 'ADMIN'
       ? [
         { value: 'stores', label: 'Store' },
@@ -60,13 +59,14 @@ export default function AdminDashboardPage() {
         { value: 'chart', label: 'Report' },
         { value: 'categories', label: 'Category' }
       ]
-      :
-      [
+      : [
         { value: 'stores', label: 'Store' },
         { value: 'discounts', label: 'Discount' },
         { value: 'chart', label: 'Report' },
         { value: 'categories', label: 'Category' }
-      ];
+      ],
+    [user?.role]
+  );
 
   const reportTabsData = [
     { value: 'summary', label: 'Summary' },
@@ -95,6 +95,7 @@ export default function AdminDashboardPage() {
       fetchUsers({ page: 0, size: 12, role: selectedRole });
       setUsersLoadedOnce(true);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted, user?.role, usersLoadedOnce, fetchUsers]);
 
   const handleDiscountFilterChange = useCallback(({ unit, search, sortBy, sortDirection }: { unit: '' | 'PERCENTAGE' | 'NOMINAL' | 'PRODUCT' | 'all'; search: string; sortBy: string; sortDirection: 'asc' | 'desc' }) => {
@@ -126,11 +127,6 @@ export default function AdminDashboardPage() {
       fetchCategories();
     }
   }, [mounted, activeTab, fetchCategories]);
-
-
-  useEffect(() => {
-    setActiveTab(tabsData[0].value);
-  }, [])
 
   return (
     <div className="min-h-screen bg-gray-50">

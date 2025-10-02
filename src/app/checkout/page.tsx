@@ -45,7 +45,7 @@ export default function CheckoutPage() {
                     console.log('Addresses response:', response); 
                     console.log('Addresses data:', response?.data); 
                     
-                    const addressData = response?.data?.data || response?.data;
+                    const addressData = response?.data || response?.data;
                     
                     if (addressData?.addresses && Array.isArray(addressData.addresses)) {
                         setAddresses(addressData.addresses);
@@ -81,27 +81,22 @@ export default function CheckoutPage() {
                         totalWeight: 1000
                     };
                     
-                    const response = await calculateShippingOptions(requestData);                    
-                    let shippingData = null;
+                    const response = await calculateShippingOptions(requestData);            
                     if (response && response.data) {
                         if (Array.isArray(response.data)) {
-                            shippingData = response.data;
-                        } else if (response.data.data && Array.isArray(response.data.data)) {
-                            shippingData = response.data.data;
-                        } else if (response.data.shippingOptions && Array.isArray(response.data.shippingOptions)) {
-                            shippingData = response.data.shippingOptions;
+                        } else if (response.data && Array.isArray(response.data)) {
+                        } else if (response.data && Array.isArray(response.data)) {
                         } else {
                             console.warn('API returned unexpected structure:', response.data);
-                            shippingData = [];
                         }
                     } else {
                         console.warn('API returned no data');
-                        shippingData = [];
+                        
                     }
                     
-                    setShippingOptions(shippingData);
                 } catch (err) {
                     setError('Failed to calculate shipping costs.');
+                    console.error(err);
                     setShippingOptions([]);
                 } finally {
                     setIsShippingLoading(false);

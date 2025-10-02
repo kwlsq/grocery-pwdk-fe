@@ -10,7 +10,6 @@ import { Loader, CheckCircle, XCircle } from 'lucide-react';
 
 export default function VerifyPage() {
   const params = useParams();
-  const router = useRouter();
   const token = params.token as string;
   
   const [isTokenValid, setIsTokenValid] = useState<boolean | null>(null);

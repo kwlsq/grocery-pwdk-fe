@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import axios from "axios";
 import { ImageState } from "../types/image";
-import { API_CONFIG, buildApiUrl } from "@/config/api";
+import { API_CONFIG } from "@/config/api";
 import type { ProductImage } from "@/types/product";
 
 const getAuthToken = (): string => {

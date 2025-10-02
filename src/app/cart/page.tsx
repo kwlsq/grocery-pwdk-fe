@@ -8,6 +8,7 @@ import { CartItem as CartItemType } from "../../types/cart";
 import CartItem from "../../components/cart/CartItem";
 import { AuthRequiredModal } from "@/components/auth/AuthRequiredModal";
 import { VerificationRequiredModal } from "@/components/auth/VerificationRequiredModal";
+import Link from "next/link";
 
 const CartPage = () => {
   const { 
@@ -140,12 +141,12 @@ const CartPage = () => {
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">Your cart is empty</h3>
               <p className="text-gray-600 mb-6">Start shopping to add items to your cart</p>
-              <a
+              <Link
                 href="/"
                 className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors inline-block"
               >
                 Continue Shopping
-              </a>
+              </Link>
             </div>
           ) : (
             <>

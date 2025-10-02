@@ -78,6 +78,8 @@ export default function EditDiscountDialog({discount} : {discount: Discount}) {
 
   const onSubmit = async (data: DiscountFormValue) => {
     try {
+      console.log(data);
+      
       // await updateDiscount(discount.id, { // Pass discount ID for update
       //   name: data.name.trim(),
       //   description: data.description.trim(),
