@@ -363,7 +363,6 @@ export default function AdminDashboardPage() {
               </div>
             </div>
 
-            {/** Lazy load to avoid SSR issues with client store hooks */}
             {(storeForUser.length > 0 && user?.role === 'MANAGER') || user?.role === 'ADMIN'
               ?
               <Tabs defaultValue={reportTabsData[0]?.value} onValueChange={setReportTab}>
