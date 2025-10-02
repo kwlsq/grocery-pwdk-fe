@@ -25,7 +25,7 @@ const warehouseSchema = z.object({
 
 type WarehouseFormValues = z.infer<typeof warehouseSchema>;
 
-export default function EditWarehouseDialog({ id, warehouse }: { id: string; warehouse: Warehouse }) {
+export default function EditWarehouseDialog({ warehouse }: { id: string; warehouse: Warehouse }) {
   const [open, setOpen] = React.useState(false);
   const [selectedAdmin, setSelectedAdmin] = React.useState<string | null>(null);
   const params = useParams();

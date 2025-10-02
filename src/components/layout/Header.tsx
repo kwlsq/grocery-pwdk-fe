@@ -3,10 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useCartStore } from "../../store/cartStore";
 import { useEffect } from "react";
+import Image from "next/image";
 
 const Header = () => {
   const router = useRouter();
-  const { items, fetchCartItems, getItemCount } = useCartStore();
+  const { fetchCartItems, getItemCount } = useCartStore();
 
   useEffect(() => {
     fetchCartItems();
@@ -29,11 +30,17 @@ const Header = () => {
 
           <div className="flex items-center space-x-4">
             <div className="relative">
-              <button 
+              <button
                 onClick={handleCartClick}
                 className="p-2 text-gray-600 hover:text-green-600 cursor-pointer transition-colors duration-200"
               >
-                <img src="/cart.svg" alt="Cart" className="w-6 h-6" />
+                <Image
+                  src="/cart.svg"
+                  alt="Cart"
+                  width={24}
+                  height={24}
+                  className="w-6 h-6"
+                />
                 {getItemCount() > 0 && (
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                     {getItemCount()}

@@ -7,6 +7,7 @@ import * as Yup from 'yup';
 import { resendVerificationEmail } from '@/services/authService';
 import { GrocereachLogo } from '@/components/GrocereachLogo';
 import { RefreshCw, Mail } from 'lucide-react';
+import { AxiosError } from 'axios';
 
 interface ExpiredTokenFormProps {
   errorMessage: string;
@@ -30,19 +31,20 @@ export const ExpiredTokenForm: React.FC<ExpiredTokenFormProps> = ({ errorMessage
   const handleResendVerification = async (email: string) => {
     setIsResending(true);
     setResendMessage('');
-    
+
     try {
       await resendVerificationEmail(email);
       setResendMessage('New verification email sent! Please check your inbox.');
-    } catch (error: any) {
-      if (error.response?.data) {
-        setResendMessage(error.response.data);
+    } catch (err) {
+      const error = err as AxiosError<{ message?: string }>;
+      if (error.response?.data.message) {
+        setResendMessage(error.response.data.message);
       } else {
         setResendMessage('Failed to send verification email. Please try again.');
       }
     } finally {
       setIsResending(false);
-      
+
       // Clear message after 5 seconds
       setTimeout(() => setResendMessage(''), 5000);
     }
@@ -61,14 +63,12 @@ export const ExpiredTokenForm: React.FC<ExpiredTokenFormProps> = ({ errorMessage
         </div>
       )}
       {resendMessage && (
-        <div className={`mt-4 border rounded-md p-3 ${
-          resendMessage.includes('sent') 
-            ? 'bg-green-50 border-green-200' 
+        <div className={`mt-4 border rounded-md p-3 ${resendMessage.includes('sent')
+            ? 'bg-green-50 border-green-200'
             : 'bg-red-50 border-red-200'
-        }`}>
-          <p className={`text-sm text-center ${
-            resendMessage.includes('sent') ? 'text-green-600' : 'text-red-600'
           }`}>
+          <p className={`text-sm text-center ${resendMessage.includes('sent') ? 'text-green-600' : 'text-red-600'
+            }`}>
             {resendMessage}
           </p>
         </div>
@@ -88,19 +88,18 @@ export const ExpiredTokenForm: React.FC<ExpiredTokenFormProps> = ({ errorMessage
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email Address
               </label>
-              <Field 
-                type="email" 
-                name="email" 
-                className={`mt-1 block w-full px-4 py-3 border rounded-md shadow-sm focus:outline-none focus:ring-2 sm:text-sm ${
-                  errors.email && touched.email 
-                    ? 'border-red-500 focus:ring-red-500' 
+              <Field
+                type="email"
+                name="email"
+                className={`mt-1 block w-full px-4 py-3 border rounded-md shadow-sm focus:outline-none focus:ring-2 sm:text-sm ${errors.email && touched.email
+                    ? 'border-red-500 focus:ring-red-500'
                     : 'border-gray-300 focus:ring-emerald-500'
-                }`} 
+                  }`}
                 placeholder="Enter your email address"
-                disabled={!!emailFromUrl} 
+                disabled={!!emailFromUrl}
               />
               <ErrorMessage name="email" component="p" className="text-red-500 text-xs mt-1" />
-              
+
               {emailFromUrl && (
                 <p className="text-xs text-gray-500 mt-1">
                   Email address from your verification link
@@ -126,7 +125,7 @@ export const ExpiredTokenForm: React.FC<ExpiredTokenFormProps> = ({ errorMessage
                   </>
                 )}
               </button>
-              
+
               <button
                 type="button"
                 onClick={() => router.push('/auth')}

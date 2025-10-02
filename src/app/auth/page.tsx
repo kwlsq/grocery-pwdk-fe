@@ -1,44 +1,15 @@
 // src/app/auth/page.tsx
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import React, { useState, Suspense } from 'react';
 import { useAuthStore } from '../../store/authStore';
-import RedirectService from '@/services/redirectService';
 import { LoginForm } from '@/components/form/login/LoginForm';
 import { RegisterForm } from '@/components/form/register/RegisterForm';
+import { AuthRedirectHandler } from '@/components/auth/AuthRedirectHandler';
 
 export default function AuthPage() {
   const [view, setView] = useState<'login' | 'register'>('login');
   const { isAuthenticated } = useAuthStore();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [hasRedirected, setHasRedirected] = useState(false);
-   
-  useEffect(() => {
-    if (isAuthenticated && !hasRedirected) {
-      setHasRedirected(true);
-            const redirectParam = searchParams.get('redirect');
-      
-      let redirectTo: string;
-      
-      if (redirectParam) {
-        redirectTo = decodeURIComponent(redirectParam);
-        console.log('Using URL redirect parameter:', redirectTo);
-      } else {
-        const storedRedirect = RedirectService.getStoredRedirect();
-        if (storedRedirect) {
-          redirectTo = storedRedirect;
-          RedirectService.clearIntendedRedirect();
-          console.log('Using stored redirect:', redirectTo);
-        } else {
-          redirectTo = '/';
-      }
-      }
-      
-     router.push(redirectTo);
-    }
-  }, [isAuthenticated, router, searchParams, hasRedirected]);
 
   if (isAuthenticated) {
     return (
@@ -46,13 +17,19 @@ export default function AuthPage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Redirecting...</p>
+          <Suspense fallback={null}>
+            <AuthRedirectHandler />
+          </Suspense>
         </div>
       </div>
     );
   }
- 
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <Suspense fallback={null}>
+        <AuthRedirectHandler />
+      </Suspense>
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow-xl sm:rounded-2xl sm:px-10">
           {view === 'login' ? <LoginForm setView={setView} /> : <RegisterForm setView={setView} />}

@@ -9,6 +9,7 @@ import { ProfileSidebar } from '@/components/profile/ProfileSidebar';
 import { AddressCard } from '@/components/address/AddressCard';
 import { AddressModal } from '@/components/address/AddressModal';
 import { AuthRequiredModal } from '@/components/auth/AuthRequiredModal';
+import Link from 'next/link';
 
 const PlusIcon = (props: React.SVGProps<SVGSVGElement>) => ( 
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
@@ -100,7 +101,7 @@ export default function UserAddressesPage() {
             <header className="bg-white shadow-sm">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
-                        <a href="/" className="text-2xl font-bold text-emerald-600">Grocereach</a>
+                        <Link href="/" className="text-2xl font-bold text-emerald-600">Grocereach</Link>
                     </div>
                 </div>
             </header>

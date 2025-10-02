@@ -24,7 +24,6 @@ interface AddressModalProps {
 }
 
 export const AddressModal: React.FC<AddressModalProps> = ({ address, onClose, onSave }) => {
-    if (!address) return null;
 
     const [provinces, setProvinces] = useState<Province[]>([]);
     const [cities, setCities] = useState<City[]>([]);
@@ -32,17 +31,17 @@ export const AddressModal: React.FC<AddressModalProps> = ({ address, onClose, on
     const [isCitiesLoading, setIsCitiesLoading] = useState(false);
     const formikRef = useRef<FormikProps<AddressFormValues>>(null);
 
-    const isEditing = !!address.id;
+    const isEditing = !!address?.id;
 
     const initialValues: AddressFormValues = {
-        label: address.label || '',
-        recipientName: address.recipientName || '',
-        phone: address.phone || '',
-        fullAddress: address.fullAddress || '',
+        label: address?.label || '',
+        recipientName: address?.recipientName || '',
+        phone: address?.phone || '',
+        fullAddress: address?.fullAddress || '',
         provinceId: 0,
         cityId: 0,
-        postalCode: address.postalCode || '',
-        primary: address.primary || false,
+        postalCode: address?.postalCode || '',
+        primary: address?.primary || false,
     };
 
     useEffect(() => {
@@ -58,15 +57,15 @@ export const AddressModal: React.FC<AddressModalProps> = ({ address, onClose, on
     }, []);
 
     useEffect(() => {
-        if (isEditing && address.province && provinces.length > 0) {
-            const province = provinces.find(p => p.name === address.province);
+        if (isEditing && address?.province && provinces.length > 0) {
+            const province = provinces.find(p => p.name === address?.province);
             if (province) {
                 const provinceIdStr = String(province.id);
                 formikRef.current?.setFieldValue('provinceId', provinceIdStr);
                 setSelectedProvinceId(provinceIdStr);
             }
         }
-    }, [provinces, isEditing, address.province]);
+    }, [provinces, isEditing, address?.province]);
 
     useEffect(() => {
         if (selectedProvinceId) {
@@ -89,13 +88,15 @@ export const AddressModal: React.FC<AddressModalProps> = ({ address, onClose, on
     }, [selectedProvinceId]);
     
     useEffect(() => {
-        if (isEditing && address.city && cities.length > 0) {
-            const city = cities.find(c => c.name === address.city);
+        if (isEditing && address?.city && cities.length > 0) {
+            const city = cities.find(c => c.name === address?.city);
             if (city) {
                 formikRef.current?.setFieldValue('cityId', String(city.id));
             }
         }
-    }, [cities, isEditing, address.city]);
+    }, [cities, isEditing, address?.city]);
+
+    if (!address) return null;
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
@@ -128,7 +129,8 @@ export const AddressModal: React.FC<AddressModalProps> = ({ address, onClose, on
                             onSave(response.data);
                             onClose();
                         } catch (err) {
-                            setStatus('Failed to save address. Please try again.');
+                            setStatus('Failed to save address?. Please try again.');
+                            console.error(err);
                         } finally {
                             setSubmitting(false);
                         }

@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { verifyAccount } from '@/services/authService';
 import { GrocereachLogo } from '../../GrocereachLogo';
+import { AxiosError } from 'axios';
 
 interface VerifyFormProps {
   token: string;
@@ -59,8 +60,9 @@ export const VerifyForm: React.FC<VerifyFormProps> = ({ token }) => {
             setTimeout(() => {
               router.push('/auth');
             }, 2000);
-          } catch (err: any) {
-            const errorMessage = err.response?.data || 'Verification failed.';
+          } catch (err) {
+            const error = err as AxiosError<{ message?: string }>;
+            const errorMessage = error.response?.data?.message || 'Verification failed.';
             setServerError(errorMessage);
             if (errorMessage.toLowerCase().includes('expired')) {
               setIsExpired(true);
@@ -74,7 +76,7 @@ export const VerifyForm: React.FC<VerifyFormProps> = ({ token }) => {
           <Form className="mt-8 space-y-6">
             {serverError && <p className="text-red-500 bg-red-100 p-3 rounded-md text-sm text-center">{serverError}</p>}
             {success && <p className="text-green-600 bg-green-100 p-3 rounded-md text-sm text-center">{success}</p>}
-            
+
             {isExpired ? (
               <div className="text-center">
                 <p className="text-sm text-gray-600 mb-4">This verification link has expired.</p>

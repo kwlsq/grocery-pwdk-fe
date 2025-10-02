@@ -13,19 +13,8 @@ import {
 } from '@/components/ui/dialog';
 import { useStoreStore } from '@/store/storeStore';
 import { toast } from 'sonner';
-
-interface Store {
-  id: string;
-  name: string;
-  description: string;
-  address: string;
-  isActive: boolean;
-  storeManager?: {
-    id: string;
-    name: string;
-    email: string;
-  };
-}
+import { AxiosError } from 'axios';
+import { Store } from '@/types/store';
 
 interface UnassignManagerDialogProps {
   store: Store;
@@ -46,7 +35,8 @@ export function UnassignManagerDialog({ store, onSuccess }: UnassignManagerDialo
       toast.success('Manager unassigned successfully');
       setIsOpen(false);
       onSuccess();
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as AxiosError<{ message?: string }>;
       console.error('Error unassigning manager:', error);
       toast.error(error.message || 'Failed to unassign manager');
     } finally {

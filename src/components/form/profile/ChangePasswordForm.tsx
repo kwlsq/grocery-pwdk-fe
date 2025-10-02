@@ -5,6 +5,7 @@ import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import { changeUserPassword } from '../../../services/userService';
 import { PasswordField } from '@/components/ui/PasswordField';
+import { AxiosError } from 'axios';
 
 const changePasswordSchema = Yup.object().shape({
   currentPassword: Yup.string().required('Current password is required'),
@@ -48,9 +49,11 @@ export const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({ onSucces
             setSuccess('Password changed successfully!');
             resetForm();
             if (onSuccess) {
-              setTimeout(onSuccess, 1500); 
+              setTimeout(onSuccess, 1500);
             }
-          } catch (error: any) {
+          } catch (err) {
+            const error = err as AxiosError<{ message?: string }>;
+
             setServerError(error.response?.data?.message || error.message || 'Failed to change password');
           } finally {
             setSubmitting(false);
@@ -64,32 +67,32 @@ export const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({ onSucces
                 {serverError}
               </div>
             )}
-            
+
             {success && (
               <div className="text-green-600 bg-green-50 p-3 rounded-md text-sm border border-green-200">
                 {success}
               </div>
             )}
 
-            <PasswordField 
-                label="Current Password"
-                name="currentPassword"
-                error={errors.currentPassword}
-                touched={touched.currentPassword}
+            <PasswordField
+              label="Current Password"
+              name="currentPassword"
+              error={errors.currentPassword}
+              touched={touched.currentPassword}
             />
 
-            <PasswordField 
-                label="New Password"
-                name="newPassword"
-                error={errors.newPassword}
-                touched={touched.newPassword}
+            <PasswordField
+              label="New Password"
+              name="newPassword"
+              error={errors.newPassword}
+              touched={touched.newPassword}
             />
-            
-            <PasswordField 
-                label="Confirm New Password"
-                name="confirmPassword"
-                error={errors.confirmPassword}
-                touched={touched.confirmPassword}
+
+            <PasswordField
+              label="Confirm New Password"
+              name="confirmPassword"
+              error={errors.confirmPassword}
+              touched={touched.confirmPassword}
             />
 
             <div className="flex gap-3 pt-2">

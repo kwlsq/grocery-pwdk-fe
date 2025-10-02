@@ -4,6 +4,11 @@ import { Label } from "@/components/ui/label";
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 
+type ImageErrors = {
+  thumbnail?: string;
+  media?: string;
+};
+
 // File validation function
 const validateImageFile = (file: File): string | null => {
   const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
@@ -34,11 +39,8 @@ interface ProductImageUploadProps {
   setFiles: (files: File[] | null) => void;
   mediaPreviews: string[];
   setMediaPreviews: (previews: string[]) => void;
-  imageErrors: {
-    thumbnail?: string;
-    media?: string;
-  };
-  setImageErrors: (errors: { thumbnail?: string; media?: string }) => void;
+  imageErrors: ImageErrors;
+  setImageErrors: (errors: ImageErrors | ((prev: ImageErrors) => ImageErrors)) => void;
 }
 
 export default function ProductImageUpload({

@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Mail, AlertCircle, RefreshCw } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { resendVerificationEmail } from '@/services/authService';
+import { AxiosError } from 'axios';
 
 export const VerificationBanner = () => {
   const { user, isAuthenticated } = useAuthStore();
@@ -18,19 +19,20 @@ export const VerificationBanner = () => {
   const handleResendVerification = async () => {
     setIsResending(true);
     setResendMessage('');
-    
+
     try {
       await resendVerificationEmail(user.email);
       setResendMessage('Verification email sent! Please check your inbox.');
-    } catch (error: any) {
-      if (error.response?.data) {
-        setResendMessage(error.response.data);
+    } catch (err) {
+      const error = err as AxiosError<{ message?: string }>;
+      if (error.response?.data?.message) {
+        setResendMessage(error.response.data.message);
       } else {
         setResendMessage('Network error. Please try again.');
       }
     } finally {
       setIsResending(false);
-      
+
       // Clear message after 5 seconds
       setTimeout(() => setResendMessage(''), 5000);
     }
@@ -44,7 +46,7 @@ export const VerificationBanner = () => {
             <div className="flex-shrink-0">
               <AlertCircle className="h-5 w-5 text-amber-600" />
             </div>
-            
+
             <div className="flex-1 min-w-0">
               <div className="flex items-center space-x-2">
                 <Mail className="h-4 w-4 text-amber-600" />
@@ -55,11 +57,10 @@ export const VerificationBanner = () => {
               <p className="text-xs text-amber-700 mt-1">
                 We sent a verification link to <span className="font-medium">{user.email}</span>
               </p>
-              
+
               {resendMessage && (
-                <p className={`text-xs mt-1 font-medium ${
-                  resendMessage.includes('sent') ? 'text-green-600' : 'text-red-600'
-                }`}>
+                <p className={`text-xs mt-1 font-medium ${resendMessage.includes('sent') ? 'text-green-600' : 'text-red-600'
+                  }`}>
                   {resendMessage}
                 </p>
               )}

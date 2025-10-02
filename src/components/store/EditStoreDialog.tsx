@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Formik, Form, Field, ErrorMessage } from 'formik';
+import { Formik, Form, Field, ErrorMessage, FieldProps } from 'formik';
 import * as Yup from 'yup';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
@@ -13,6 +13,7 @@ import { StoreLocationInput } from './StoreLocation';
 import { updateStore } from '@/services/storeService';
 import { Store } from '@/types/store';
 import { useStoreStore } from '@/store/storeStore';
+import { AxiosError } from 'axios';
 
 interface EditStoreDialogProps {
     store: Store;
@@ -41,14 +42,14 @@ const editStoreSchema = Yup.object().shape({
 export const EditStoreDialog: React.FC<EditStoreDialogProps> = ({ store, onSuccess }) => {
     const [open, setOpen] = useState(false);
     const { stores } = useStoreStore();
-    
+
     const currentStore = stores.find(s => s.id === store.id) || store;
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button 
-                    variant="outline" 
+                <Button
+                    variant="outline"
                     size="sm"
                     className="gap-2"
                 >
@@ -65,7 +66,7 @@ export const EditStoreDialog: React.FC<EditStoreDialogProps> = ({ store, onSucce
                         Update store information and location
                     </p>
                 </DialogHeader>
-                
+
                 <Formik
                     key={currentStore.id}
                     initialValues={{
@@ -83,10 +84,11 @@ export const EditStoreDialog: React.FC<EditStoreDialogProps> = ({ store, onSucce
                             await updateStore(currentStore.id, values);
                             setOpen(false);
                             onSuccess?.();
-                        } catch (error: any) {
-                            const errorMessage = error?.response?.data?.message || 
-                                                error?.message || 
-                                                'Failed to update store. Please try again.';
+                        } catch (err) {
+                            const error = err as AxiosError<{ message?: string }>;
+                            const errorMessage = error?.response?.data?.message ||
+                                error?.message ||
+                                'Failed to update store. Please try again.';
                             setStatus(errorMessage);
                         } finally {
                             setSubmitting(false);
@@ -100,24 +102,24 @@ export const EditStoreDialog: React.FC<EditStoreDialogProps> = ({ store, onSucce
                                     <p className="text-red-600 text-sm">{status}</p>
                                 </div>
                             )}
-                            
+
                             <div>
                                 <Label htmlFor="name">Store Name *</Label>
-                                <Field 
-                                    as={Input} 
-                                    name="name" 
-                                    id="name" 
+                                <Field
+                                    as={Input}
+                                    name="name"
+                                    id="name"
                                     placeholder="Enter store name"
                                 />
                                 <ErrorMessage name="name" component="p" className="text-red-500 text-xs mt-1" />
                             </div>
-                            
+
                             <div>
                                 <Label htmlFor="description">Description</Label>
-                                <Field 
-                                    as={Textarea} 
-                                    name="description" 
-                                    id="description" 
+                                <Field
+                                    as={Textarea}
+                                    name="description"
+                                    id="description"
                                     placeholder="Store description (optional)"
                                     rows={3}
                                 />
@@ -134,7 +136,7 @@ export const EditStoreDialog: React.FC<EditStoreDialogProps> = ({ store, onSucce
                                     </p>
                                 </div>
                                 <Field name="isActive">
-                                    {({ field }: any) => (
+                                    {({ field }: FieldProps) => (
                                         <Switch
                                             checked={field.value}
                                             onCheckedChange={(checked) => {
@@ -146,7 +148,7 @@ export const EditStoreDialog: React.FC<EditStoreDialogProps> = ({ store, onSucce
                                 </Field>
                             </div>
 
-                            <StoreLocationInput 
+                            <StoreLocationInput
                                 onLocationSelect={(address, lat, lng) => {
                                     setFieldValue('address', address);
                                     setFieldValue('latitude', lat);
@@ -154,7 +156,7 @@ export const EditStoreDialog: React.FC<EditStoreDialogProps> = ({ store, onSucce
                                 }}
                                 defaultLocation={{ lat: currentStore.latitude, lng: currentStore.longitude }}
                             />
-                            
+
                             {values.address && values.latitude !== 0 && values.longitude !== 0 && (
                                 <div className="text-green-600 text-sm flex items-center gap-2 p-2 bg-green-50 rounded-lg">
                                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -163,7 +165,7 @@ export const EditStoreDialog: React.FC<EditStoreDialogProps> = ({ store, onSucce
                                     Location confirmed: {values.address}
                                 </div>
                             )}
-                            
+
                             <ErrorMessage name="address" component="p" className="text-red-500 text-xs mt-1" />
 
                             <Field type="hidden" name="latitude" />
@@ -175,8 +177,8 @@ export const EditStoreDialog: React.FC<EditStoreDialogProps> = ({ store, onSucce
                                         Cancel
                                     </Button>
                                 </DialogClose>
-                                <Button 
-                                    type="submit" 
+                                <Button
+                                    type="submit"
                                     disabled={isSubmitting || !values.address || values.latitude === 0}
                                     className="min-w-[100px]"
                                 >

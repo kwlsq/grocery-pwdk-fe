@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import axios from "axios";
 import { CartState, CartApiResponse } from "../types/cart";
-import { buildApiUrl, API_CONFIG } from "../config/api";
+import { API_CONFIG } from "../config/api";
 
 export const useCartStore = create<CartState>((set, get) => ({
   items: [],
@@ -42,7 +42,7 @@ export const useCartStore = create<CartState>((set, get) => ({
     }
   },
 
-  updateItemQuantity: async (itemId: string, quantity: number) => {
+  updateItemQuantity: async () => {
    
   },
 

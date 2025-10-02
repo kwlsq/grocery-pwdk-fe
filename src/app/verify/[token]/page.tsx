@@ -3,16 +3,16 @@
 import React, { useState, useEffect } from 'react';
 import { VerifyForm } from '@/components/form/verify/VerifyForm';
 import { ExpiredTokenForm } from '@/components/form/expired-token';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { checkVerificationToken } from '@/services/authService';
 import { GrocereachLogo } from '@/components/GrocereachLogo';
 import { Loader, CheckCircle, XCircle } from 'lucide-react';
+import { AxiosError } from 'axios';
 
 export default function VerifyPage() {
   const params = useParams();
-  const router = useRouter();
   const token = params.token as string;
-  
+
   const [isTokenValid, setIsTokenValid] = useState<boolean | null>(null);
   const [isCheckingToken, setIsCheckingToken] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
@@ -29,8 +29,9 @@ export default function VerifyPage() {
       try {
         await checkVerificationToken(token);
         setIsTokenValid(true);
-      } catch (err: any) {
-        const errorMessage = err.response?.data || 'Token validation failed.';
+      } catch (err) {
+        const error = err as AxiosError<{ message?: string }>;
+        const errorMessage = error.response?.data?.message || 'Token validation failed.';
         setIsTokenValid(false);
         setErrorMessage(errorMessage);
       } finally {

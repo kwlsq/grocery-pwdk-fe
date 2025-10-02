@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Formik, Form, ErrorMessage } from 'formik';
+import { Formik, Form, ErrorMessage, FormikHelpers } from 'formik';
 import * as Yup from 'yup';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
@@ -11,6 +11,7 @@ import { assignManager } from '@/services/storeService';
 import { getManagerUsers } from '@/services/userService';
 import { Store } from '@/types/store';
 import { User } from '@/types/user';
+import { AxiosError } from 'axios';
 
 interface AssignManagerDialogProps {
     store: Store;
@@ -18,80 +19,87 @@ interface AssignManagerDialogProps {
     onSuccess?: () => void;
 }
 
+interface AssignManagerValues {
+  userId: string;
+}
+
 const assignManagerSchema = Yup.object().shape({
     userId: Yup.string().required('Please select a manager'),
 });
 
-export const AssignManagerDialog: React.FC<AssignManagerDialogProps> = ({ 
-    store, 
-    allStores, 
-    onSuccess 
+export const AssignManagerDialog: React.FC<AssignManagerDialogProps> = ({
+    store,
+    allStores,
+    onSuccess
 }) => {
     const [open, setOpen] = useState(false);
     const [managers, setManagers] = useState<User[]>([]);
     const [loading, setLoading] = useState(false);
 
-   const fetchAvailableManagers = async () => {
-    try {
-        setLoading(true);
-        const response = await getManagerUsers();
-        
-        console.log('API Response:', response);
-        
-        // Handle your actual API response structure
-        let managers = [];
-        if (response?.data?.data?.content && Array.isArray(response.data.data.content)) {
-            managers = response.data.data.content; // Notice the extra .data
-        } else {
-            console.warn('Unexpected API response structure:', response);
+    const fetchAvailableManagers = async () => {
+        try {
+            setLoading(true);
+            const response = await getManagerUsers();
+
+            console.log('API Response:', response);
+
+            // Handle your actual API response structure
+            let managers = [];
+            if (response?.data?.data?.content && Array.isArray(response.data.data.content)) {
+                managers = response.data.data.content; // Notice the extra .data
+            } else {
+                console.warn('Unexpected API response structure:', response);
+                setManagers([]);
+                return;
+            }
+
+            console.log('All managers found:', managers);
+
+            // Filter out managers assigned to OTHER stores
+            const assignedManagerIds = allStores
+                .filter(s => s.storeManager && s.id !== store.id)
+                .map(s => s.storeManager!.id); // Use ! since we filtered out undefined values
+
+            console.log('Assigned manager IDs:', assignedManagerIds);
+
+            const availableManagers = managers.filter(manager =>
+                !assignedManagerIds.includes(manager.id)
+            );
+
+            console.log('Available managers:', availableManagers);
+
+            setManagers(availableManagers);
+        } catch (error) {
+            console.error('Failed to fetch managers:', error);
             setManagers([]);
-            return;
+        } finally {
+            setLoading(false);
         }
-        
-        console.log('All managers found:', managers);
-        
-        // Filter out managers assigned to OTHER stores
-        const assignedManagerIds = allStores
-            .filter(s => s.storeManager && s.id !== store.id)
-            .map(s => s.storeManager!.id); // Use ! since we filtered out undefined values
-            
-        console.log('Assigned manager IDs:', assignedManagerIds);
-        
-        const availableManagers = managers.filter(manager => 
-            !assignedManagerIds.includes(manager.id)
-        );
-        
-        console.log('Available managers:', availableManagers);
-        
-        setManagers(availableManagers);
-    } catch (error) {
-        console.error('Failed to fetch managers:', error);
-        setManagers([]);
-    } finally {
-        setLoading(false);
-    }
-};
+    };
 
     useEffect(() => {
         if (open) {
             fetchAvailableManagers();
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open]);
 
-    const handleAssignManager = async (values: { userId: string }, { setSubmitting, setStatus }: any) => {
+    const handleAssignManager = async (values: AssignManagerValues, { setSubmitting, setStatus }: FormikHelpers<AssignManagerValues>) => {
         try {
             await assignManager(store.id, values.userId);
             setOpen(false);
             onSuccess?.();
-        } catch (error: any) {
+        } catch (err) {
+            const error = err as AxiosError<{ message?: string }>;
+
             let errorMessage = 'Failed to assign manager';
-            
+
             if (error?.response?.data?.message) {
                 errorMessage = error.response.data.message;
             } else if (error?.message) {
                 errorMessage = error.message;
             }
-            
+
             setStatus(errorMessage);
         } finally {
             setSubmitting(false);
@@ -101,8 +109,8 @@ export const AssignManagerDialog: React.FC<AssignManagerDialogProps> = ({
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button 
-                    variant={store.storeManager ? "outline" : "default"} 
+                <Button
+                    variant={store.storeManager ? "outline" : "default"}
                     size="sm"
                     className="gap-2"
                 >
@@ -130,7 +138,7 @@ export const AssignManagerDialog: React.FC<AssignManagerDialogProps> = ({
                     )}
                 </DialogHeader>
 
-                <Formik
+                <Formik<AssignManagerValues>
                     initialValues={{ userId: '' }}
                     validationSchema={assignManagerSchema}
                     onSubmit={handleAssignManager}
@@ -182,8 +190,8 @@ export const AssignManagerDialog: React.FC<AssignManagerDialogProps> = ({
                                         Cancel
                                     </Button>
                                 </DialogClose>
-                                <Button 
-                                    type="submit" 
+                                <Button
+                                    type="submit"
                                     disabled={isSubmitting || !values.userId || loading}
                                 >
                                     {isSubmitting ? "Assigning..." : "Assign Manager"}

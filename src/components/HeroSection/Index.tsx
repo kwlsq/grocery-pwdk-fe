@@ -1,13 +1,15 @@
 "use client"
-import React, {useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import Image
+    from 'next/image';
 const ChevronLeftIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m15 18-6-6 6-6"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m15 18-6-6 6-6" /></svg>
 );
 const ChevronRightIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m9 18 6-6-6-6"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m9 18 6-6-6-6" /></svg>
 );
 export const HeroSection = () => {
-    
+
     const slides = [
         {
             image: "/hero.jpg",
@@ -32,17 +34,22 @@ export const HeroSection = () => {
     const next = () => setCurrent((curr) => (curr === slides.length - 1 ? 0 : curr + 1));
 
     useEffect(() => {
-        const slideInterval = setInterval(next, 10000); 
+        const slideInterval = setInterval(next, 10000);
         return () => clearInterval(slideInterval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return (
         <div className="relative w-full overflow-hidden  shadow-lg">
             <div className="flex transition-transform ease-out duration-500" style={{ transform: `translateX(-${current * 100}%)` }}>
                 {slides.map((s, i) => (
-                    <div key={i} className="w-full flex-shrink-0 relative">
-                        <img src={s.image} alt={s.title} className="w-full h-64 md:h-96 object-cover" />
-                       
+                    <div key={i} className="w-full flex-shrink-0 relative h-64 md:h-96">
+                        <Image
+                            src={s.image}
+                            alt={s.title}
+                            fill
+                            className="object-cover"
+                        />
                     </div>
                 ))}
             </div>
