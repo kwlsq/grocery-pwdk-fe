@@ -4,29 +4,30 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
-import { resetPassword } from '@/services/authService'; 
+import { resetPassword } from '@/services/authService';
 import { GrocereachLogo } from '@/components/GrocereachLogo';
 import { PasswordField } from '@/components/ui/PasswordField';
+import { AxiosError } from 'axios';
 
 interface ResetPasswordFormProps {
-  token: string;
+    token: string;
 }
 
 const resetPasswordSchema = Yup.object().shape({
-  newPassword: Yup.string()
-    .min(8, 'Password must be at least 8 characters')
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one uppercase letter, one lowercase letter, and one number')
-    .required('New password is required'),
-  confirmPassword: Yup.string()
-    .oneOf([Yup.ref('newPassword')], 'Passwords must match')
-    .required('Please confirm your password'),
+    newPassword: Yup.string()
+        .min(8, 'Password must be at least 8 characters')
+        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one uppercase letter, one lowercase letter, and one number')
+        .required('New password is required'),
+    confirmPassword: Yup.string()
+        .oneOf([Yup.ref('newPassword')], 'Passwords must match')
+        .required('Please confirm your password'),
 });
 
 export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ token }) => {
     const router = useRouter();
     const [serverError, setServerError] = useState('');
     const [success, setSuccess] = useState('');
-    
+
     return (
         <div className="w-full">
             <GrocereachLogo />
@@ -46,8 +47,9 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ token }) =
                         setTimeout(() => {
                             router.push('/auth');
                         }, 2000);
-                    } catch (err: any) {
-                        setServerError(err.response?.data || 'Password reset failed. The link may be invalid or expired.');
+                    } catch (err) {
+                        const error = err as AxiosError<{ message?: string }>;
+                        setServerError(error.response?.data.message || 'Password reset failed. The link may be invalid or expired.');
                     } finally {
                         setSubmitting(false);
                     }
@@ -57,15 +59,15 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ token }) =
                     <Form className="mt-8 space-y-6">
                         {serverError && <p className="text-red-500 bg-red-100 p-3 rounded-md text-sm text-center">{serverError}</p>}
                         {success && <p className="text-green-600 bg-green-100 p-3 rounded-md text-sm text-center">{success}</p>}
-                        
-                        <PasswordField 
+
+                        <PasswordField
                             label="New Password"
                             name="newPassword"
                             error={errors.newPassword}
                             touched={touched.newPassword}
                         />
 
-                        <PasswordField 
+                        <PasswordField
                             label="Confirm New Password"
                             name="confirmPassword"
                             error={errors.confirmPassword}

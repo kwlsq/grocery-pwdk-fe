@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { confirmEmailChange } from '../../../services/authService'; 
 import Link from 'next/link';
+import { AxiosError } from 'axios';
 
 export default function ConfirmEmailChangePage() {
     const params = useParams();
@@ -30,9 +31,10 @@ export default function ConfirmEmailChangePage() {
                     router.push('/auth'); 
                 }, 3000);
 
-            } catch (error: any) {
+            } catch (err) {
+                  const error = err as AxiosError<{ message?: string }>;
                 setStatus('error');
-                setMessage(error.response?.data || 'An error occurred. The token may be invalid or expired.');
+                setMessage(error.response?.data?.message || 'An error occurred. The token may be invalid or expired.');
             }
         };
 

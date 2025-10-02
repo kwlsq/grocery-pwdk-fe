@@ -3,12 +3,13 @@
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import RedirectService from '@/services/redirectService';
+import { User } from '@/types/user';
 
 export const useAuthSuccess = () => {
     const router = useRouter();
     const { login } = useAuthStore();
 
-    const handleLoginSuccess = (userData: any) => {
+    const handleLoginSuccess = (userData: User) => {
         login(userData);
         const redirectTo = RedirectService.handlePostLoginRedirect();
         setTimeout(() => {
@@ -16,7 +17,7 @@ export const useAuthSuccess = () => {
         }, 100);
     };
 
-    const handleRegisterSuccess = (userData: any) => {
+    const handleRegisterSuccess = (userData: User) => {
         handleLoginSuccess(userData);
     };
 

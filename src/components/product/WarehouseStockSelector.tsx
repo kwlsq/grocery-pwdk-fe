@@ -1,6 +1,6 @@
 'use client';
 
-import { Control, useFieldArray, useFormContext, FieldValues } from 'react-hook-form';
+import { useFieldArray, useFormContext, FieldValues } from 'react-hook-form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from "@/components/ui/input";
 import { Label } from '../ui/label';
@@ -17,14 +17,12 @@ interface FormData extends FieldValues {
 
 interface WarehouseStockSelectorProps {
   warehouses: UniqueWarehouse[];
-  control: Control<FormData>;
 }
 
-export default function WarehouseStockSelector({ warehouses, control }: WarehouseStockSelectorProps) {
+export default function WarehouseStockSelector({ warehouses }: WarehouseStockSelectorProps) {
   const { watch, setValue, register, formState: { errors } } = useFormContext<FormData>();
 
   const { fields } = useFieldArray({
-    control,
     name: 'stocks',
   });
 

@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { requestEmailChange } from '@/services/userService';
+import { AxiosError } from 'axios';
 
 const changeEmailSchema = Yup.object().shape({
     newEmail: Yup.string().email('Invalid email address').required('New email is required'),
@@ -31,7 +32,7 @@ export const ChangeEmailDialog = () => {
                 <Formik
                     initialValues={{ newEmail: '', currentPassword: '' }}
                     validationSchema={changeEmailSchema}
-                    onSubmit={async (values, { setSubmitting, setStatus }) => {
+                    onSubmit={async (values, { setSubmitting }) => {
                         setServerMessage('');
                         setIsSuccess(false);
                         try {
@@ -39,8 +40,9 @@ export const ChangeEmailDialog = () => {
                             setServerMessage(response.data);
                             setIsSuccess(true);
                             setSubmitting(false);
-                        } catch (error: any) {
-                            setServerMessage(error.response?.data || 'An unexpected error occurred.');
+                        } catch (err) {
+                            const error = err as AxiosError<{ message?: string }>;
+                            setServerMessage(error.response?.data?.message || 'An unexpected error occurred.');
                             setIsSuccess(false);
                             setSubmitting(false);
                         }
@@ -68,7 +70,7 @@ export const ChangeEmailDialog = () => {
                                     </div>
                                 </>
                             )}
-                            
+
                             <DialogFooter>
                                 <DialogClose asChild>
                                     <Button type="button" variant="secondary">Close</Button>

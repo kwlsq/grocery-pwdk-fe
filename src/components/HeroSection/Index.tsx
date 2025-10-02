@@ -36,6 +36,7 @@ export const HeroSection = () => {
     useEffect(() => {
         const slideInterval = setInterval(next, 10000);
         return () => clearInterval(slideInterval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return (

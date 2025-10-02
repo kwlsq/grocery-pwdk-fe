@@ -269,7 +269,7 @@ export default function CreateProduct({ storeID }: { storeID: string }) {
           </div>
 
           {/* Stock per warehouse */}
-          <WarehouseStockSelector warehouses={uniqueWarehouses} control={control} />
+          <WarehouseStockSelector warehouses={uniqueWarehouses}/>
 
           {/* Upload Image */}
           <ProductImageUpload

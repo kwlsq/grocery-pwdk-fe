@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { StoreRequestData } from '@/types/store';
 import { StoreLocationInput } from './StoreLocation'; // Fixed import
+import { AxiosError } from 'axios';
 
 const addStoreSchema = Yup.object().shape({
     name: Yup.string()
@@ -44,26 +45,26 @@ export const AddStoreDialog = () => {
                     Add Store
                 </button>
             </DialogTrigger>
-           <DialogContent 
-    className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto"
-    onInteractOutside={(e) => {
-        // Type cast to Element to access querySelector
-        if (e.currentTarget && e.currentTarget instanceof Element) {
-            const isSubmitting = e.currentTarget.querySelector('[type="submit"][disabled]');
-            if (isSubmitting) e.preventDefault();
-        }
-    }}
->
+            <DialogContent
+                className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto"
+                onInteractOutside={(e) => {
+                    // Type cast to Element to access querySelector
+                    if (e.currentTarget && e.currentTarget instanceof Element) {
+                        const isSubmitting = e.currentTarget.querySelector('[type="submit"][disabled]');
+                        if (isSubmitting) e.preventDefault();
+                    }
+                }}
+            >
                 <DialogHeader>
                     <DialogTitle>Add New Store</DialogTitle>
                 </DialogHeader>
                 <Formik
-                    initialValues={{ 
-                        name: '', 
-                        description: '', 
-                        address: '', 
-                        latitude: 0, 
-                        longitude: 0 
+                    initialValues={{
+                        name: '',
+                        description: '',
+                        address: '',
+                        latitude: 0,
+                        longitude: 0
                     }}
                     validationSchema={addStoreSchema}
                     onSubmit={async (values: StoreRequestData, { setSubmitting, setStatus, resetForm }) => {
@@ -73,10 +74,12 @@ export const AddStoreDialog = () => {
                             resetForm();
                             setOpen(false);
                             // You might want to add a toast notification here
-                        } catch (error: any) {
-                            const errorMessage = error?.response?.data?.message || 
-                                                error?.message || 
-                                                'Failed to create store. Please try again.';
+                        } catch (err) {
+                            const error = err as AxiosError<{ message?: string }>;
+
+                            const errorMessage = error?.response?.data?.message ||
+                                error?.message ||
+                                'Failed to create store. Please try again.';
                             setStatus(errorMessage);
                         } finally {
                             setSubmitting(false);
@@ -90,31 +93,31 @@ export const AddStoreDialog = () => {
                                     <p className="text-red-600 text-sm">{status}</p>
                                 </div>
                             )}
-                            
+
                             <div>
                                 <Label htmlFor="name">Store Name *</Label>
-                                <Field 
-                                    as={Input} 
-                                    name="name" 
-                                    id="name" 
+                                <Field
+                                    as={Input}
+                                    name="name"
+                                    id="name"
                                     placeholder="Enter store name"
                                 />
                                 <ErrorMessage name="name" component="p" className="text-red-500 text-xs mt-1" />
                             </div>
-                            
+
                             <div>
                                 <Label htmlFor="description">Description</Label>
-                                <Field 
-                                    as={Textarea} 
-                                    name="description" 
-                                    id="description" 
+                                <Field
+                                    as={Textarea}
+                                    name="description"
+                                    id="description"
                                     placeholder="Store description (optional)"
                                     rows={3}
                                 />
                                 <ErrorMessage name="description" component="p" className="text-red-500 text-xs mt-1" />
                             </div>
 
-                            <StoreLocationInput 
+                            <StoreLocationInput
                                 onLocationSelect={(address, lat, lng) => {
                                     setFieldValue('address', address);
                                     setFieldValue('latitude', lat);
@@ -122,7 +125,7 @@ export const AddStoreDialog = () => {
                                     setStatus(''); // Clear errors when location is selected
                                 }}
                             />
-                            
+
                             {/* Location validation feedback */}
                             {values.address && values.latitude !== 0 && values.longitude !== 0 && (
                                 <div className="text-green-600 text-sm flex items-center gap-2 p-2 bg-green-50 rounded-lg">
@@ -132,7 +135,7 @@ export const AddStoreDialog = () => {
                                     Location confirmed: {values.address}
                                 </div>
                             )}
-                            
+
                             <ErrorMessage name="address" component="p" className="text-red-500 text-xs mt-1" />
 
                             {/* Hidden fields for coordinates */}
@@ -145,8 +148,8 @@ export const AddStoreDialog = () => {
                                         Cancel
                                     </Button>
                                 </DialogClose>
-                                <Button 
-                                    type="submit" 
+                                <Button
+                                    type="submit"
                                     disabled={isSubmitting || !values.address || values.latitude === 0}
                                     className="min-w-[100px]"
                                 >

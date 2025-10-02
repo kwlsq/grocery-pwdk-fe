@@ -8,26 +8,32 @@ import * as Yup from 'yup';
 import { updateUserProfile } from '../../../services/userService';
 import { ChangeEmailDialog } from '@/components/profile/ChangeEmailDialog';
 import { ChangePasswordForm } from './ChangePasswordForm';
+import Image from 'next/image';
+import { AxiosError } from 'axios';
 
-const CameraIcon = (props: React.SVGProps<SVGSVGElement>) => ( 
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-    <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
-    <circle cx="12" cy="13" r="3"/>
-  </svg> 
+const CameraIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+        <circle cx="12" cy="13" r="3" />
+    </svg>
 );
 
-const profileSchema = Yup.object().shape({
-  fullName: Yup.string().required('Full name is required'),
-  profileImage: Yup
-    .mixed()
-    .test('fileSize', 'The file is too large (max 1MB)', (value: any) => {
-      if (!value) return true; 
-      return value.size <= 1024 * 1024; 
-    })
-    .test('fileType', 'Unsupported format (JPG, PNG, GIF only)', (value: any) => {
-      if (!value) return true;
-      return ['image/jpeg', 'image/png', 'image/gif'].includes(value.type);
-    }),
+interface ProfileFormValues {
+    fullName: string;
+    profileImage?: File;
+}
+
+const profileSchema: Yup.Schema<ProfileFormValues> = Yup.object().shape({
+    fullName: Yup.string().required('Full name is required'),
+    profileImage: Yup.mixed<File>()
+        .test('fileSize', 'The file is too large (max 1MB)', (value) => {
+            if (!value) return true;
+            return value.size <= 1024 * 1024;
+        })
+        .test('fileType', 'Unsupported format (JPG, PNG, GIF only)', (value) => {
+            if (!value) return true;
+            return ['image/jpeg', 'image/png', 'image/gif'].includes(value.type);
+        }),
 });
 
 export const ProfileForm = () => {
@@ -67,7 +73,7 @@ export const ProfileForm = () => {
 
             {showChangePassword ? (
                 <div className="mt-8">
-                    <button 
+                    <button
                         onClick={() => setShowChangePassword(false)}
                         className="mb-4 text-blue-600 hover:text-blue-800 flex items-center gap-2"
                     >
@@ -76,7 +82,7 @@ export const ProfileForm = () => {
                         </svg>
                         Back to Profile
                     </button>
-                    <ChangePasswordForm 
+                    <ChangePasswordForm
                         onSuccess={() => setShowChangePassword(false)}
                         onCancel={() => setShowChangePassword(false)}
                     />
@@ -91,12 +97,12 @@ export const ProfileForm = () => {
                     validationSchema={profileSchema}
                     onSubmit={async (values, { setSubmitting }) => {
                         if (isDisabled) return;
-                        
+
                         setServerError('');
                         setSuccess('');
 
                         const formData = new FormData();
-                        
+
                         const profileData = { fullName: values.fullName };
                         formData.append('request', new Blob([JSON.stringify(profileData)], { type: 'application/json' }));
 
@@ -108,8 +114,10 @@ export const ProfileForm = () => {
                             await updateUserProfile(formData);
                             await checkAuthStatus();
                             setSuccess('Profile updated successfully!');
-                        } catch (err: any) {
-                            setServerError(err.response?.data?.message || 'Failed to update profile.');
+                        } catch (err) {
+                            const error = err as AxiosError<{ message?: string }>;
+
+                            setServerError(error.response?.data?.message || 'Failed to update profile.');
                         } finally {
                             setSubmitting(false);
                         }
@@ -122,19 +130,23 @@ export const ProfileForm = () => {
 
                             <div className="flex items-center space-x-4">
                                 <div className="relative">
-                                    <img 
-                                        src={imagePreview || `https://ui-avatars.com/api/?name=${user.fullName}&background=random`} 
-                                        alt="Profile" 
-                                        className={`h-24 w-24 rounded-full object-cover ${isDisabled ? 'opacity-50' : ''}`}
+                                    <Image
+                                        src={
+                                            imagePreview ||
+                                            `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=random`
+                                        }
+                                        alt="Profile"
+                                        width={96}
+                                        height={96}
+                                        className={`h-24 w-24 rounded-full object-cover ${isDisabled ? "opacity-50" : ""}`}
                                     />
-                                    <label 
-                                        htmlFor="profileImage" 
-                                        className={`absolute -bottom-1 -right-1 bg-white p-1.5 rounded-full shadow-md ${
-                                            isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:bg-gray-100'
-                                        }`}
+                                    <label
+                                        htmlFor="profileImage"
+                                        className={`absolute -bottom-1 -right-1 bg-white p-1.5 rounded-full shadow-md ${isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:bg-gray-100'
+                                            }`}
                                     >
                                         <CameraIcon className="h-5 w-5 text-gray-600" />
-                                        <input 
+                                        <input
                                             id="profileImage"
                                             name="profileImage"
                                             type="file"
@@ -156,13 +168,12 @@ export const ProfileForm = () => {
 
                             <div>
                                 <label htmlFor="fullName" className="block text-sm font-medium text-gray-700">Full Name</label>
-                                <Field 
-                                    type="text" 
-                                    name="fullName" 
+                                <Field
+                                    type="text"
+                                    name="fullName"
                                     disabled={isDisabled}
-                                    className={`mt-1 block w-full px-4 py-3 border rounded-md shadow-sm focus:outline-none focus:ring-2 sm:text-sm ${
-                                        errors.fullName && touched.fullName ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-emerald-500'
-                                    } ${isDisabled ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`} 
+                                    className={`mt-1 block w-full px-4 py-3 border rounded-md shadow-sm focus:outline-none focus:ring-2 sm:text-sm ${errors.fullName && touched.fullName ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-emerald-500'
+                                        } ${isDisabled ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
                                 />
                                 <ErrorMessage name="fullName" component="p" className="text-red-500 text-xs mt-1" />
                             </div>
@@ -172,11 +183,11 @@ export const ProfileForm = () => {
                                     Email Address
                                 </label>
                                 <div className="flex items-center gap-4">
-                                    <Field 
-                                        type="email" 
-                                        name="email" 
-                                        disabled 
-                                        className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm bg-gray-100 text-gray-500 cursor-not-allowed sm:text-sm" 
+                                    <Field
+                                        type="email"
+                                        name="email"
+                                        disabled
+                                        className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm bg-gray-100 text-gray-500 cursor-not-allowed sm:text-sm"
                                     />
                                     {isVerified && <ChangeEmailDialog />}
                                 </div>
@@ -195,15 +206,14 @@ export const ProfileForm = () => {
                                         type="button"
                                         disabled={!isVerified}
                                         onClick={() => setShowChangePassword(true)}
-                                        className={`flex items-center justify-center gap-2 py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium ${
-                                            !isVerified 
-                                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                                                : 'text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500'
-                                        } transition-colors`}
+                                        className={`flex items-center justify-center gap-2 py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium ${!isVerified
+                                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                            : 'text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500'
+                                            } transition-colors`}
                                     >
                                         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4l-2.3-2.3a1 1 0 0 0-1.4 0L15.5 5.5a1 1 0 0 0 0 1.4l.7.7-5.3 5.3"/>
-                                            <path d="m9 11 3 3L6 21l-3-3 6-7"/>
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4l-2.3-2.3a1 1 0 0 0-1.4 0L15.5 5.5a1 1 0 0 0 0 1.4l.7.7-5.3 5.3" />
+                                            <path d="m9 11 3 3L6 21l-3-3 6-7" />
                                         </svg>
                                         Change Password
                                     </button>
@@ -214,14 +224,13 @@ export const ProfileForm = () => {
                             </div>
 
                             <div className="pt-2">
-                                <button 
-                                    type="submit" 
-                                    disabled={isSubmitting || isDisabled} 
-                                    className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
-                                        isDisabled 
-                                            ? 'bg-gray-400 cursor-not-allowed' 
-                                            : 'bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:bg-emerald-400'
-                                    }`}
+                                <button
+                                    type="submit"
+                                    disabled={isSubmitting || isDisabled}
+                                    className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${isDisabled
+                                        ? 'bg-gray-400 cursor-not-allowed'
+                                        : 'bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:bg-emerald-400'
+                                        }`}
                                 >
                                     {isDisabled ? 'Verify Account to Save Changes' : (isSubmitting ? 'Saving...' : 'Save Changes')}
                                 </button>

@@ -1,14 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
-import { useAuthStore } from '../../../store/authStore'; 
-import { loginUser } from '../../../services/authService'; 
+import { useAuthStore } from '../../../store/authStore';
+import { loginUser } from '../../../services/authService';
 import { GrocereachLogo } from '../../GrocereachLogo';
 import { GoogleOAuthButton } from '@/components/ui/GoogleOauthButton';
 import { PasswordField } from '@/components/ui/PasswordField';
+import { AxiosError } from 'axios';
 
 const loginSchema = Yup.object().shape({
   email: Yup.string().email('Invalid email address').required('Email is required'),
@@ -17,7 +17,6 @@ const loginSchema = Yup.object().shape({
 
 export const LoginForm = ({ setView }: { setView: (view: 'login' | 'register') => void }) => {
   const [serverError, setServerError] = useState('');
-  const router = useRouter();
   const { login } = useAuthStore();
 
   return (
@@ -25,7 +24,7 @@ export const LoginForm = ({ setView }: { setView: (view: 'login' | 'register') =
       <GrocereachLogo />
       <div className="text-center mt-4">
         <h2 className="text-2xl font-bold text-gray-900">Welcome to Grocereach</h2>
-        <p className="text-gray-500 mt-1">Let's login into your account first</p>
+        <p className="text-gray-500 mt-1">Let&apos;s login into your account first</p>
       </div>
 
       <Formik
@@ -36,15 +35,17 @@ export const LoginForm = ({ setView }: { setView: (view: 'login' | 'register') =
           try {
             const response = await loginUser(values);
             login(response.data.user);
-          } catch (err: any) {
+          } catch (err) {
+            const error = err as AxiosError<{ message?: string }>;
+
             console.error('Login failed:', err);
-            if (err.response && err.response.data) {
-              if (typeof err.response.data === 'string') {
-                  setServerError(err.response.data);
-              } else if (err.response.data.message) {
-                  setServerError(err.response.data.message);
+            if (error.response && error.response.data) {
+              if (typeof error.response.data === 'string') {
+                setServerError(error.response.data);
+              } else if (error.response.data.message) {
+                setServerError(error.response.data.message);
               } else {
-                  setServerError('An unexpected error occurred.');
+                setServerError('An unexpected error occurred.');
               }
             } else {
               setServerError('Login failed. Unable to connect to the server.');
@@ -57,7 +58,7 @@ export const LoginForm = ({ setView }: { setView: (view: 'login' | 'register') =
         {({ isSubmitting, errors, touched }) => (
           <Form className="mt-8 space-y-6">
             {serverError && <p className="text-red-500 bg-red-100 p-3 rounded-md text-sm text-center">{serverError}</p>}
-            
+
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email Address</label>
               <Field
@@ -68,11 +69,11 @@ export const LoginForm = ({ setView }: { setView: (view: 'login' | 'register') =
               <ErrorMessage name="email" component="p" className="text-red-500 text-xs mt-1" />
             </div>
 
-            <PasswordField 
-                label="Password"
-                name="password"
-                error={errors.password}
-                touched={touched.password}
+            <PasswordField
+              label="Password"
+              name="password"
+              error={errors.password}
+              touched={touched.password}
             />
 
             <div className="text-right">
@@ -108,7 +109,7 @@ export const LoginForm = ({ setView }: { setView: (view: 'login' | 'register') =
       </div>
 
       <p className="mt-8 text-center text-sm text-gray-600">
-        Don't have an account?{' '}
+        Don&apos;t have an account?{' '}
         <button onClick={() => setView('register')} className="font-medium text-emerald-600 hover:text-emerald-500">
           Register
         </button>

@@ -32,6 +32,7 @@ const UserSearchFilter: FC<UserSearchFilterProps> = ({
       onChange({ search, role, sortBy, sortDirection });
     }, debounceMs);
     return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, role, sortBy, sortDirection, debounceMs]);
 
   return (
